@@ -1,0 +1,193 @@
+// === [ Terminators ] =========================================================
+
+Terminator
+	: RetTerm
+	| BrTerm
+	| CondBrTerm
+	| SwitchTerm
+	| IndirectBrTerm
+	| InvokeTerm
+	| ResumeTerm
+	| CatchSwitchTerm
+	| CatchRetTerm
+	| CleanupRetTerm
+	| UnreachableTerm
+;
+
+// ~~~ [ ret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RetTerm
+	: "ret" VoidType               << &ast.TermRet{}, nil >>
+	| "ret" FirstClassType Value   << astx.NewRetTerm($1, $2) >>
+;
+
+// ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+BrTerm
+	: "br" LabelType LocalIdent   << astx.NewBrTerm($1, $2) >>
+;
+
+// ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CondBrTerm
+	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent   << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8) >>
+;
+
+// ~~~ [ switch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SwitchTerm
+	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]"   << astx.NewSwitchTerm($1, $2, $4, $5, $7) >>
+;
+
+Cases
+	: empty
+	| CastList
+;
+
+CastList
+	: Case            << astx.NewCaseList($0) >>
+	| CastList Case   << astx.AppendCase($0, $1) >>
+;
+
+Case
+	: IntType Value "," LabelType LocalIdent   << astx.NewCase($0, $1, $3, $4) >>
+;
+
+// ~~~ [ indirectbr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+IndirectBrTerm
+	: "indirectbr" FirstClassType Value "," "[" Labels "]"   << nil, nil >>
+;
+
+// ~~~ [ invoke ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+InvokeTerm
+	: "invoke" OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent   << nil, nil >>
+;
+
+OptCallConv
+	: empty
+	| CallConv
+;
+
+// From spec and src of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#callingconv
+CallConv
+	: "amdgpu_cs"
+	| "amdgpu_gs"
+	| "amdgpu_kernel"
+	| "amdgpu_ps"
+	| "amdgpu_vs"
+	| "anyregcc"
+	| "arm_aapcs_vfpcc"
+	| "arm_aapcscc"
+	| "arm_apcscc"
+	| "avr_intrcc"
+	| "avr_signalcc"
+	| "cc" int_lit
+	| "ccc"
+	| "coldcc"
+	| "cxx_fast_tlscc"
+	| "fastcc"
+	| "ghccc"
+	| "hhvm_ccc"
+	| "hhvmcc"
+	| "intel_ocl_bicc"
+	| "msp430_intrcc"
+	| "preserve_allcc"
+	| "preserve_mostcc"
+	| "ptx_device"
+	| "ptx_kernel"
+	| "spir_func"
+	| "spir_kernel"
+	| "swiftcc"
+	| "webkit_jscc"
+	| "x86_64_sysvcc"
+	| "x86_64_win64cc"
+	| "x86_fastcallcc"
+	| "x86_intrcc"
+	| "x86_regcallcc"
+	| "x86_stdcallcc"
+	| "x86_thiscallcc"
+	| "x86_vectorcallcc"
+;
+
+OptOperandBundle
+	: empty
+	| OperandBundle
+;
+
+OperandBundle
+	: "[" TagValues "]"
+;
+
+TagValues
+	: empty
+	| TagValueList
+;
+
+TagValueList
+	: TagValue
+	| TagValueList "," TagValue
+;
+
+TagValue
+	: string_lit "(" Values ")"
+;
+
+Values
+	: empty
+	| ValueList
+;
+
+ValueList
+	: FirstClassType Value
+	| ValueList "," FirstClassType Value
+;
+
+// ~~~ [ resume ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ResumeTerm
+	: "resume" FirstClassType Value   << nil, nil >>
+;
+
+// ~~~ [ catchswitch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CatchSwitchTerm
+	: "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" "to" "caller"          << nil, nil >>
+	| "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" LabelType LocalIdent   << nil, nil >>
+;
+
+Labels
+	: empty
+	| LabelList
+;
+
+LabelList
+	: Label
+	| LabelList "," Label
+;
+
+Label
+	: LabelType LocalIdent
+;
+
+// ~~~ [ catchret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CatchRetTerm
+	: "catchret" "from" Value "to" LabelType LocalIdent   << nil, nil >>
+;
+
+// ~~~ [ cleanupret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CleanupRetTerm
+	: "cleanupret" "from" Value "unwind" "to" "caller"          << nil, nil >>
+	| "cleanupret" "from" Value "unwind" LabelType LocalIdent   << nil, nil >>
+;
+
+// ~~~ [ unreachable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+UnreachableTerm
+	: "unreachable"   << &ast.TermUnreachable{}, nil >>
+;

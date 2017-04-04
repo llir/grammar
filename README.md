@@ -1,6 +1,6 @@
 # Modules
 
-`01_module.bnf`
+`01_modules.bnf`
 
 ## Source filename
 

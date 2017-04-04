@@ -1,0 +1,26 @@
+// === [ Identifiers ] =========================================================
+
+GlobalIdent
+	: global_ident   << astx.NewGlobalIdent($0) >>
+;
+
+LocalIdent
+	: local_ident   << astx.NewLocalIdent($0) >>
+;
+
+LabelIdent
+	: label_ident   << astx.NewLabelIdent($0) >>
+;
+
+AttrGroupID
+	: attr_group_id
+;
+
+MetadataName
+	: metadata_name
+;
+
+MetadataID
+	: metadata_id
+;
+
