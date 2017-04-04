@@ -1,0 +1,115 @@
+// --- [ Binary instructions ] -------------------------------------------------
+
+// ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AddInst
+	: "add" OverflowFlags FirstClassType Value "," Value   << astx.NewAddInst($2, $3, $5) >>
+;
+
+// ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FAddInst
+	: "fadd" FastMathFlags FirstClassType Value "," Value   << astx.NewFAddInst($2, $3, $5) >>
+;
+
+// ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SubInst
+	: "sub" OverflowFlags FirstClassType Value "," Value   << astx.NewSubInst($2, $3, $5) >>
+;
+
+// ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FSubInst
+	: "fsub" FastMathFlags FirstClassType Value "," Value   << astx.NewFSubInst($2, $3, $5) >>
+;
+
+// ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MulInst
+	: "mul" OverflowFlags FirstClassType Value "," Value   << astx.NewMulInst($2, $3, $5) >>
+;
+
+// ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FMulInst
+	: "fmul" FastMathFlags FirstClassType Value "," Value   << astx.NewFMulInst($2, $3, $5) >>
+;
+
+// ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+UDivInst
+	: "udiv" FirstClassType Value "," Value   << astx.NewUDivInst($1, $2, $4) >>
+;
+
+// ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SDivInst
+	: "sdiv" ExactFlags FirstClassType Value "," Value   << astx.NewSDivInst($2, $3, $5) >>
+;
+
+// ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FDivInst
+	: "fdiv" FastMathFlags FirstClassType Value "," Value   << astx.NewFDivInst($2, $3, $5) >>
+;
+
+// ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+URemInst
+	: "urem" ExactFlags FirstClassType Value "," Value   << astx.NewURemInst($2, $3, $5) >>
+;
+
+// ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SRemInst
+	: "srem" FirstClassType Value "," Value   << astx.NewSRemInst($1, $2, $4) >>
+;
+
+// ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FRemInst
+	: "frem" FastMathFlags FirstClassType Value "," Value   << astx.NewFRemInst($2, $3, $5) >>
+;
+
+OverflowFlags
+	: empty
+	| OverflowFlagList
+;
+
+OverflowFlagList
+	: OverflowFlag
+	| OverflowFlagList OverflowFlag
+;
+
+OverflowFlag
+	: "nuw"
+	| "nsw"
+;
+
+FastMathFlags
+	: empty
+	| FastMathFlagList
+;
+
+FastMathFlagList
+	: FastMathFlag
+	| FastMathFlagList FastMathFlag
+;
+
+// From spec and src of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#fast-math-flags
+FastMathFlag
+	: "arcp"
+	| "fast"
+	| "ninf"
+	| "nnan"
+	| "nsz"
+;
+
+ExactFlags
+	: empty
+	| "exact"
+;
+

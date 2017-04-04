@@ -1,0 +1,116 @@
+// --- [ Memory instructions ] -------------------------------------------------
+
+// ~~~ [ alloca ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AllocaInst
+	: "alloca" FirstClassType AllocaOptions   << astx.NewAllocaInst($1, $2) >>
+;
+
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 rune lookahead.
+//
+// Structured in this way to allow for naiive 1 rune lookahead parser
+// generators.
+AllocaOptions
+	: "," NElems OptCommaAlign   << $1, nil >>
+	| OptCommaAlign              << nil, nil >>
+;
+
+NElems
+	: FirstClassType Value   << astx.NewValue($0, $1) >>
+;
+
+// ~~~ [ load ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LoadInst
+	: "load" OptVolatile FirstClassType "," PointerType Value OptCommaAlign   << astx.NewLoadInst($2, $4, $5) >>
+;
+
+OptVolatile
+	: empty
+	| "volatile"
+;
+
+// ~~~ [ store ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+StoreInst
+	: "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAlign   << astx.NewStoreInst($2, $3, $5, $6) >>
+;
+
+// ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FenceInst
+	: "fence" OptSinglethread Ordering   << nil, nil >>
+;
+
+OptSinglethread
+	: empty
+	| "singlethread"
+;
+
+// From spec and src of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#ordering
+Ordering
+	: "acq_rel"
+	| "acquire"
+	| "monotonic"
+	| "release"
+	| "seq_cst"
+	| "unordered"
+;
+
+// ~~~ [ cmpxchg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CmpXchgInst
+	: "cmpxchg" OptWeak OptVolatile FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptSinglethread Ordering Ordering   << nil, nil >>
+;
+
+OptWeak
+	: empty
+	| "weak"
+;
+
+// ~~~ [ atomicrmw ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AtomicRMWInst
+	: "atomicrmw" OptVolatile AtomicOperation FirstClassType Value "," FirstClassType Value OptSinglethread Ordering   << nil, nil >>
+;
+
+// From spec and src of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#atomicrmw-instruction
+AtomicOperation
+	: "add"
+	| "and"
+	| "max"
+	| "min"
+	| "nand"
+	| "or"
+	| "sub"
+	| "umax"
+	| "umin"
+	| "xchg"
+	| "xor"
+;
+
+// ~~~ [ getelementptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GetElementPtrInst
+	: "getelementptr" OptInbounds FirstClassType "," FirstClassType Value Indices   << astx.NewGetElementPtrInst($2, $4, $5, $6) >>
+;
+
+Indices
+	: empty
+	| "," IndexList   << $1, nil >>
+;
+
+IndexList
+	: Index                 << astx.NewValueList($0) >>
+	| IndexList "," Index   << astx.AppendValue($0, $2) >>
+;
+
+Index
+	: IntType Value   << astx.NewValue($0, $1) >>
+;
+

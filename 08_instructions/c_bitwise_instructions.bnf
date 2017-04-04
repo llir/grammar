@@ -1,0 +1,38 @@
+// --- [ Bitwise instructions ] ------------------------------------------------
+
+// ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ShlInst
+	: "shl" OverflowFlags FirstClassType Value "," Value   << astx.NewShlInst($2, $3, $5) >>
+;
+
+// ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LShrInst
+	: "lshr" ExactFlags FirstClassType Value "," Value   << astx.NewLShrInst($2, $3, $5) >>
+;
+
+// ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AShrInst
+	: "ashr" ExactFlags FirstClassType Value "," Value   << astx.NewAShrInst($2, $3, $5) >>
+;
+
+// ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AndInst
+	: "and" FirstClassType Value "," Value   << astx.NewAndInst($1, $2, $4) >>
+;
+
+// ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+OrInst
+	: "or" FirstClassType Value "," Value   << astx.NewOrInst($1, $2, $4) >>
+;
+
+// ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+XorInst
+	: "xor" FirstClassType Value "," Value   << astx.NewXorInst($1, $2, $4) >>
+;
+

@@ -1,0 +1,80 @@
+// --- [ Conversion instructions ] ---------------------------------------------
+
+// ~~~ [ trunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TruncInst
+	: "trunc" FirstClassType Value "to" FirstClassType   << astx.NewTruncInst($1, $2, $4) >>
+;
+
+// ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ZExtInst
+	: "zext" FirstClassType Value "to" FirstClassType   << astx.NewZExtInst($1, $2, $4) >>
+;
+
+// ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SExtInst
+	: "sext" FirstClassType Value "to" FirstClassType   << astx.NewSExtInst($1, $2, $4) >>
+;
+
+// ~~~ [ fptrunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FPTruncInst
+	: "fptrunc" FirstClassType Value "to" FirstClassType   << astx.NewFPTruncInst($1, $2, $4) >>
+;
+
+// ~~~ [ fpext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FPExtInst
+	: "fpext" FirstClassType Value "to" FirstClassType   << astx.NewFPExtInst($1, $2, $4) >>
+;
+
+// ~~~ [ fptoui ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FPToUIInst
+	: "fptoui" FirstClassType Value "to" FirstClassType   << astx.NewFPToUIInst($1, $2, $4) >>
+;
+
+// ~~~ [ fptosi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+FPToSIInst
+	: "fptosi" FirstClassType Value "to" FirstClassType   << astx.NewFPToSIInst($1, $2, $4) >>
+;
+
+// ~~~ [ uitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+UIToFPInst
+	: "uitofp" FirstClassType Value "to" FirstClassType   << astx.NewUIToFPInst($1, $2, $4) >>
+;
+
+// ~~~ [ sitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SIToFPInst
+	: "sitofp" FirstClassType Value "to" FirstClassType   << astx.NewSIToFPInst($1, $2, $4) >>
+;
+
+// ~~~ [ ptrtoint ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PtrToIntInst
+	: "ptrtoint" FirstClassType Value "to" FirstClassType   << astx.NewPtrToIntInst($1, $2, $4) >>
+;
+
+// ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+IntToPtrInst
+	: "inttoptr" FirstClassType Value "to" FirstClassType   << astx.NewIntToPtrInst($1, $2, $4) >>
+;
+
+// ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+BitCastInst
+	: "bitcast" FirstClassType Value "to" FirstClassType   << astx.NewBitCastInst($1, $2, $4) >>
+;
+
+// ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AddrSpaceCastInst
+	: "addrspacecast" FirstClassType Value "to" FirstClassType   << astx.NewAddrSpaceCastInst($1, $2, $4) >>
+;
+
