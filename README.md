@@ -1,5 +1,7 @@
 # Modules
 
+`01_module.bnf`
+
 ## Source filename
 
 ## Target specifiers
@@ -16,7 +18,11 @@
 
 # Identifiers
 
+`02_identifiers.bnf`
+
 # Types
+
+`03_types.bnf`
 
 * void type
 * function type
@@ -32,7 +38,11 @@
 
 # Values
 
+`04_values.bnf`
+
 # Constants
+
+`05_constants.bnf`
 
 * integer constant
 * floating-point constant
@@ -44,6 +54,8 @@
 
 # Constant expressions
 
+`06_constant_expressions.bnf`
+
 * Binary expressions
 * Bitwise expressions
 * Vector expressions
@@ -54,7 +66,11 @@
 
 # Basic blocks
 
+`07_basic_blocks.bnf`
+
 # Instructions
+
+`08_instructions.bnf`
 
 * Binary instructions
 * Bitwise instructions
@@ -65,3 +81,5 @@
 * Other instructions
 
 # Terminators
+
+`09_terminators.bnf`
