@@ -1,0 +1,50 @@
+// --- [ Binary expressions ] --------------------------------------------------
+
+AddExpr
+	: "add" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewAddExpr($2, $3, $5, $6) >>
+;
+
+FAddExpr
+	: "fadd" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewFAddExpr($2, $3, $5, $6) >>
+;
+
+SubExpr
+	: "sub" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewSubExpr($2, $3, $5, $6) >>
+;
+
+FSubExpr
+	: "fsub" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewFSubExpr($2, $3, $5, $6) >>
+;
+
+MulExpr
+	: "mul" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewMulExpr($2, $3, $5, $6) >>
+;
+
+FMulExpr
+	: "fmul" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewFMulExpr($2, $3, $5, $6) >>
+;
+
+UDivExpr
+	: "udiv" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewUDivExpr($2, $3, $5, $6) >>
+;
+
+SDivExpr
+	: "sdiv" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewSDivExpr($2, $3, $5, $6) >>
+;
+
+FDivExpr
+	: "fdiv" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewFDivExpr($2, $3, $5, $6) >>
+;
+
+URemExpr
+	: "urem" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewURemExpr($2, $3, $5, $6) >>
+;
+
+SRemExpr
+	: "srem" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewSRemExpr($2, $3, $5, $6) >>
+;
+
+FRemExpr
+	: "frem" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewFRemExpr($2, $3, $5, $6) >>
+;
+

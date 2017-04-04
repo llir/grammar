@@ -1,0 +1,26 @@
+// --- [ Bitwise expressions ] -------------------------------------------------
+
+ShlExpr
+	: "shl" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewShlExpr($2, $3, $5, $6) >>
+;
+
+LShrExpr
+	: "lshr" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewLShrExpr($2, $3, $5, $6) >>
+;
+
+AShrExpr
+	: "ashr" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewAShrExpr($2, $3, $5, $6) >>
+;
+
+AndExpr
+	: "and" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewAndExpr($2, $3, $5, $6) >>
+;
+
+OrExpr
+	: "or" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewOrExpr($2, $3, $5, $6) >>
+;
+
+XorExpr
+	: "xor" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewXorExpr($2, $3, $5, $6) >>
+;
+

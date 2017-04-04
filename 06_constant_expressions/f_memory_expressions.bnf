@@ -1,0 +1,25 @@
+// --- [ Memory expressions ] --------------------------------------------------
+
+GetElementPtrExpr
+	: "getelementptr" OptInbounds "(" FirstClassType "," FirstClassType Constant ConstIndices ")"   << astx.NewGetElementPtrExpr($3, $5, $6, $7) >>
+;
+
+OptInbounds
+	: empty
+	| "inbounds"
+;
+
+ConstIndices
+	: empty
+	| "," ConstIndexList   << $1, nil >>
+;
+
+ConstIndexList
+	: ConstIndex                      << astx.NewConstantList($0) >>
+	| ConstIndexList "," ConstIndex   << astx.AppendConstant($0, $2) >>
+;
+
+ConstIndex
+	: IntType Constant   << astx.NewConstant($0, $1) >>
+;
+

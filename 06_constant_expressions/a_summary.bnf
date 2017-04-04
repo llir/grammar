@@ -1,0 +1,56 @@
+// === [ constant expressions ] ================================================
+
+ConstExpr
+	// Binary expressions
+	: AddExpr
+	| FAddExpr
+	| SubExpr
+	| FSubExpr
+	| MulExpr
+	| FMulExpr
+	| UDivExpr
+	| SDivExpr
+	| FDivExpr
+	| URemExpr
+	| SRemExpr
+	| FRemExpr
+	// Bitwise expressions
+	| ShlExpr
+	| LShrExpr
+	| AShrExpr
+	| AndExpr
+	| OrExpr
+	| XorExpr
+	// Vector expressions
+
+	// TODO: extractelement
+	// TODO: insertelement
+	// TODO: shufflevector
+
+	// Aggregate expressions
+
+	// TODO: extractvalue
+	// TODO: insertvalue
+
+	// Memory expressions
+	| GetElementPtrExpr
+	// Conversion expressions
+	| TruncExpr
+	| ZExtExpr
+	| SExtExpr
+	| FPTruncExpr
+	| FPExtExpr
+	| FPToUIExpr
+	| FPToSIExpr
+	| UIToFPExpr
+	| SIToFPExpr
+	| PtrToIntExpr
+	| IntToPtrExpr
+	| BitCastExpr
+	| AddrSpaceCastExpr
+	// Other expressions
+	| ICmpExpr
+	| FCmpExpr
+	| SelectExpr
+;
+
