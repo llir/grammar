@@ -1,4 +1,3 @@
-ll.bnf
-syntax.bnf
-06_constant_expressions.bnf
-08_instructions.bnf
+sections/syntax.bnf
+sections/06_constant_expressions.bnf
+sections/08_instructions.bnf
