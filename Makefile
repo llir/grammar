@@ -15,5 +15,4 @@ syntax.bnf: 01_modules.bnf 02_identifiers.bnf 03_types.bnf 04_values.bnf 05_cons
 clean:
 	rm -f ll.bnf syntax.bnf 06_constant_expressions.bnf 08_instructions.bnf
 
-
 .PHONY: all clean

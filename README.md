@@ -2,19 +2,13 @@
 
 `01_modules.bnf`
 
-## Source filename
-
-## Target specifiers
-
-## Type definitions
-
-## Global variables
-
-## Functions
-
-## Attribute group definitions
-
-## Metadata definitions
+* Source filename
+* Target specifiers
+* Type definitions
+* Global variables
+* Functions
+* Attribute group definitions
+* Metadata definitions
 
 # Identifiers
 
