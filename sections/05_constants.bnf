@@ -47,20 +47,6 @@ VectorConst
 	: "<" Elems ">"   << astx.NewVectorConst($1) >>
 ;
 
-Elems
-	: empty
-	| ElemList
-;
-
-ElemList
-	: Elem                << astx.NewConstantList($0) >>
-	| ElemList "," Elem   << astx.AppendConstant($0, $2) >>
-;
-
-Elem
-	: FirstClassType Value   << astx.NewConstant($0, $1) >>
-;
-
 // --- [ array constant ] ------------------------------------------------------
 
 ArrayConst

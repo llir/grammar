@@ -65,54 +65,6 @@ InvokeTerm
 	: "invoke" OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent   << nil, nil >>
 ;
 
-OptCallConv
-	: empty
-	| CallConv
-;
-
-// From spec and src of v4.0.
-//
-// ref: http://llvm.org/docs/LangRef.html#callingconv
-CallConv
-	: "amdgpu_cs"
-	| "amdgpu_gs"
-	| "amdgpu_kernel"
-	| "amdgpu_ps"
-	| "amdgpu_vs"
-	| "anyregcc"
-	| "arm_aapcs_vfpcc"
-	| "arm_aapcscc"
-	| "arm_apcscc"
-	| "avr_intrcc"
-	| "avr_signalcc"
-	| "cc" int_lit
-	| "ccc"
-	| "coldcc"
-	| "cxx_fast_tlscc"
-	| "fastcc"
-	| "ghccc"
-	| "hhvm_ccc"
-	| "hhvmcc"
-	| "intel_ocl_bicc"
-	| "msp430_intrcc"
-	| "preserve_allcc"
-	| "preserve_mostcc"
-	| "ptx_device"
-	| "ptx_kernel"
-	| "spir_func"
-	| "spir_kernel"
-	| "swiftcc"
-	| "webkit_jscc"
-	| "x86_64_sysvcc"
-	| "x86_64_win64cc"
-	| "x86_fastcallcc"
-	| "x86_intrcc"
-	| "x86_regcallcc"
-	| "x86_stdcallcc"
-	| "x86_thiscallcc"
-	| "x86_vectorcallcc"
-;
-
 OptOperandBundle
 	: empty
 	| OperandBundle
@@ -159,20 +111,6 @@ CatchSwitchTerm
 	| "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" LabelType LocalIdent   << nil, nil >>
 ;
 
-Labels
-	: empty
-	| LabelList
-;
-
-LabelList
-	: Label
-	| LabelList "," Label
-;
-
-Label
-	: LabelType LocalIdent
-;
-
 // ~~~ [ catchret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CatchRetTerm
@@ -191,3 +129,4 @@ CleanupRetTerm
 UnreachableTerm
 	: "unreachable"   << &ast.TermUnreachable{}, nil >>
 ;
+

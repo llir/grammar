@@ -4,11 +4,6 @@ GetElementPtrExpr
 	: "getelementptr" OptInbounds "(" FirstClassType "," FirstClassType Constant ConstIndices ")"   << astx.NewGetElementPtrExpr($3, $5, $6, $7) >>
 ;
 
-OptInbounds
-	: empty
-	| "inbounds"
-;
-
 ConstIndices
 	: empty
 	| "," ConstIndexList   << $1, nil >>

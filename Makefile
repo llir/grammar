@@ -3,7 +3,7 @@ all: ll.bnf
 ll.bnf: sections/lex.bnf sections/syntax.bnf
 	cat $^ > $@
 
-sections/syntax.bnf: sections/01_modules.bnf sections/02_identifiers.bnf sections/03_types.bnf sections/04_values.bnf sections/05_constants.bnf sections/06_constant_expressions.bnf sections/07_basic_blocks.bnf sections/08_instructions.bnf sections/09_terminators.bnf
+sections/syntax.bnf: sections/01_modules.bnf sections/02_identifiers.bnf sections/03_types.bnf sections/04_values.bnf sections/05_constants.bnf sections/06_constant_expressions.bnf sections/07_basic_blocks.bnf sections/08_instructions.bnf sections/09_terminators.bnf sections/10_helpers.bnf
 	cat $^ > $@
 
 sections/06_constant_expressions.bnf: sections/06_constant_expressions/a_summary.bnf sections/06_constant_expressions/b_binary_expressions.bnf sections/06_constant_expressions/c_bitwise_expressions.bnf sections/06_constant_expressions/d_vector_expressions.bnf sections/06_constant_expressions/e_aggregate_expressions.bnf sections/06_constant_expressions/f_memory_expressions.bnf sections/06_constant_expressions/g_conversion_expressions.bnf sections/06_constant_expressions/h_other_expressions.bnf
