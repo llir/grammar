@@ -161,6 +161,6 @@ MetadataNode
 	: Metadata
 	| MetadataID
 	| "!" string_lit
-	| Type Value
+	| Type Constant
 ;
 
