@@ -17,10 +17,10 @@ AttrGroupID
 ;
 
 MetadataName
-	: metadata_name
+	: metadata_name   << astx.NewMetadataName($0) >>
 ;
 
 MetadataID
-	: metadata_id
+	: metadata_id   << astx.NewMetadataID($0) >>
 ;
 
