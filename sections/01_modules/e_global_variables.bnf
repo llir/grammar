@@ -1,0 +1,15 @@
+// --- [ Global variables ] ----------------------------------------------------
+
+GlobalDecl
+	: GlobalIdent "=" ExternLinkage OptUnnamedAddr Immutable FirstClassType OptCommaAlign   << astx.NewGlobalDecl($0, $4, $5) >>
+;
+
+GlobalDef
+	: GlobalIdent "=" OptLinkage OptUnnamedAddr Immutable FirstClassType Constant OptCommaAlign   << astx.NewGlobalDef($0, $4, $5, $6) >>
+;
+
+Immutable
+	: "constant"   << true, nil >>
+	| "global"     << false, nil >>
+;
+

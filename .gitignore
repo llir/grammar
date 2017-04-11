@@ -1,3 +1,4 @@
 sections/syntax.bnf
+sections/01_modules.bnf
 sections/06_constant_expressions.bnf
 sections/08_instructions.bnf

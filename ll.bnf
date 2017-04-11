@@ -210,13 +210,13 @@ TopLevelDecl
 	| MetadataDef
 ;
 
-// === [ Source filename ] =====================================================
+// --- [ Source filename ] -----------------------------------------------------
 
 SourceFilename
 	: "source_filename" "=" string_lit   << nil, nil >>
 ;
 
-// === [ Target specifiers ] ===================================================
+// --- [ Target specifiers ] ---------------------------------------------------
 
 TargetSpec
 	: "target" DataLayout     << nil, nil >>
@@ -231,14 +231,14 @@ TargetTriple
 	: "triple" "=" string_lit
 ;
 
-// === [ Type definitions ] ====================================================
+// --- [ Type definitions ] ----------------------------------------------------
 
 TypeDef
 	: LocalIdent "=" "type" Type       << astx.NewTypeDef($0, $3) >>
 	| LocalIdent "=" "type" "opaque"   << astx.NewTypeDefOpaque($0) >>
 ;
 
-// === [ Global variables ] ====================================================
+// --- [ Global variables ] ----------------------------------------------------
 
 GlobalDecl
 	: GlobalIdent "=" ExternLinkage OptUnnamedAddr Immutable FirstClassType OptCommaAlign   << astx.NewGlobalDecl($0, $4, $5) >>
@@ -253,7 +253,7 @@ Immutable
 	| "global"     << false, nil >>
 ;
 
-// === [ Functions ] ===========================================================
+// --- [ Functions ] -----------------------------------------------------------
 
 FuncDecl
 	: "declare" OptExternLinkage FuncHeader     << $2, nil >>
@@ -288,13 +288,13 @@ FuncBody
 	: "{" BasicBlocks "}"   << $1, nil >>
 ;
 
-// === [ Attribute group definitions ] =========================================
+// --- [ Attribute group definitions ] -----------------------------------------
 
 AttrGroupDef
 	: "attributes" AttrGroupID "=" "{" FuncAttrs "}"   << nil, nil >>
 ;
 
-// === [ Metadata definitions ] ================================================
+// --- [ Metadata definitions ] ------------------------------------------------
 
 NamedMetadataDef
 	: MetadataName "=" "!" "{" MetadataIDs "}"   << nil, nil >>

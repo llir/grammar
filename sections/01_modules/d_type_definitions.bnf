@@ -1,0 +1,7 @@
+// --- [ Type definitions ] ----------------------------------------------------
+
+TypeDef
+	: LocalIdent "=" "type" Type       << astx.NewTypeDef($0, $3) >>
+	| LocalIdent "=" "type" "opaque"   << astx.NewTypeDefOpaque($0) >>
+;
+

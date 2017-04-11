@@ -1,0 +1,6 @@
+// --- [ Source filename ] -----------------------------------------------------
+
+SourceFilename
+	: "source_filename" "=" string_lit   << nil, nil >>
+;
+

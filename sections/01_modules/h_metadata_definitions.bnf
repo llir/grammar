@@ -1,0 +1,46 @@
+// --- [ Metadata definitions ] ------------------------------------------------
+
+NamedMetadataDef
+	: MetadataName "=" "!" "{" MetadataIDs "}"   << nil, nil >>
+;
+
+MetadataIDs
+	: empty
+	| MetadataIDList
+;
+
+MetadataIDList
+	: MetadataID
+	| MetadataIDList "," MetadataID
+;
+
+MetadataDef
+	: MetadataID "=" OptDistinct Metadata   << nil, nil >>
+;
+
+OptDistinct
+	: empty
+	| "distinct"
+;
+
+Metadata
+	: "!" "{" MetadataNodes "}"
+;
+
+MetadataNodes
+	: empty
+	| MetadataNodeList
+;
+
+MetadataNodeList
+	: MetadataNode
+	| MetadataNodeList "," MetadataNode
+;
+
+MetadataNode
+	: Metadata
+	| MetadataID
+	| "!" string_lit
+	| Type Constant
+;
+

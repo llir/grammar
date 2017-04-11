@@ -1,0 +1,36 @@
+// ### [ Syntactic part ] ######################################################
+
+<< import (
+	"github.com/llir/llvm/asm/internal/ast"
+	"github.com/llir/llvm/asm/internal/astx"
+) >>
+
+// === [ Modules ] =============================================================
+
+Module
+	: TopLevelDecls   << astx.NewModule($0) >>
+;
+
+TopLevelDecls
+	: empty
+	| TopLevelDeclList
+;
+
+TopLevelDeclList
+	: TopLevelDecl                    << astx.NewTopLevelDeclList($0) >>
+	| TopLevelDeclList TopLevelDecl   << astx.AppendTopLevelDecl($0, $1) >>
+;
+
+TopLevelDecl
+	: SourceFilename
+	| TargetSpec
+	| TypeDef
+	| GlobalDecl
+	| GlobalDef
+	| FuncDecl
+	| FuncDef
+	| AttrGroupDef
+	| NamedMetadataDef
+	| MetadataDef
+;
+

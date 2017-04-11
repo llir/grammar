@@ -1,0 +1,15 @@
+// --- [ Target specifiers ] ---------------------------------------------------
+
+TargetSpec
+	: "target" DataLayout     << nil, nil >>
+	| "target" TargetTriple   << nil, nil >>
+;
+
+DataLayout
+	: "datalayout" "=" string_lit
+;
+
+TargetTriple
+	: "triple" "=" string_lit
+;
+

@@ -1,0 +1,35 @@
+// --- [ Functions ] -----------------------------------------------------------
+
+FuncDecl
+	: "declare" OptExternLinkage FuncHeader     << $2, nil >>
+;
+
+FuncDef
+	: "define" OptLinkage FuncHeader FuncBody   << astx.NewFuncDef($2, $3) >>
+;
+
+FuncHeader
+	: ParamAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptAlign   << astx.NewFuncDecl($1, $2, $4) >>
+;
+
+Params
+	: empty
+	| "..."                 << astx.NewParams(nil, true) >>
+	| ParamList             << astx.NewParams($0, false) >>
+	| ParamList "," "..."   << astx.NewParams($0, true) >>
+;
+
+ParamList
+	: Param                 << astx.NewParamList($0) >>
+	| ParamList "," Param   << astx.AppendParam($0, $2) >>
+;
+
+Param
+	: FirstClassType ParamAttrs              << astx.NewParam($0, nil) >>
+	| FirstClassType ParamAttrs LocalIdent   << astx.NewParam($0, $2) >>
+;
+
+FuncBody
+	: "{" BasicBlocks "}"   << $1, nil >>
+;
+
