@@ -247,3 +247,13 @@ AttachedMDList
 AttachedMD
 	: MetadataName Metadata   << astx.NewAttachedMD($0, $1) >>
 ;
+
+CommaAttachedMDs
+	: empty
+	| CommaAttachedMDList
+;
+
+CommaAttachedMDList
+	: "," AttachedMD                       << astx.NewAttachedMDList($1) >>
+	| CommaAttachedMDList "," AttachedMD   << astx.AppendAttachedMD($0, $2) >>
+;
