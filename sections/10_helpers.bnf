@@ -233,3 +233,17 @@ OptInbounds
 	: empty
 	| "inbounds"
 ;
+
+AttachedMDs
+	: empty
+	| AttachedMDList
+;
+
+AttachedMDList
+	: AttachedMD                  << astx.NewAttachedMDList($0) >>
+	| AttachedMDList AttachedMD   << astx.AppendAttachedMD($0, $1) >>
+;
+
+AttachedMD
+	: MetadataName Metadata   << astx.NewAttachedMD($0, $1) >>
+;

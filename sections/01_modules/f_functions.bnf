@@ -1,15 +1,15 @@
 // --- [ Functions ] -----------------------------------------------------------
 
 FuncDecl
-	: "declare" OptExternLinkage FuncHeader     << $2, nil >>
+	: "declare" AttachedMDs OptExternLinkage FuncHeader   << astx.NewFuncDecl($1, $3) >>
 ;
 
 FuncDef
-	: "define" OptLinkage FuncHeader FuncBody   << astx.NewFuncDef($2, $3) >>
+	: "define" OptLinkage FuncHeader AttachedMDs FuncBody   << astx.NewFuncDef($2, $3, $4) >>
 ;
 
 FuncHeader
-	: ParamAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptAlign   << astx.NewFuncDecl($1, $2, $4) >>
+	: ParamAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptAlign   << astx.NewFuncHeader($1, $2, $4) >>
 ;
 
 Params
