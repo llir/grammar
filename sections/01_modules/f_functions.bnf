@@ -9,7 +9,8 @@ FuncDef
 ;
 
 FuncHeader
-	: OptCallConv ParamAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptAlign   << astx.NewFuncHeader($0, $2, $3, $5) >>
+	: OptVisibility OptDLLStorageClass OptCallConv ParamAttrs Type GlobalIdent
+		"(" Params ")" OptUnnamedAddr FuncAttrs OptAlign   << astx.NewFuncHeader($2, $4, $5, $7) >>
 ;
 
 Params

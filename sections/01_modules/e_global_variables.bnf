@@ -1,11 +1,24 @@
 // --- [ Global variables ] ----------------------------------------------------
 
 GlobalDecl
-	: GlobalIdent "=" ExternLinkage OptUnnamedAddr Immutable FirstClassType GlobalOptions   << astx.NewGlobalDecl($0, $4, $5, $6) >>
+	: GlobalIdent "=" ExternLinkage GlobalOptions1 Immutable FirstClassType GlobalOptions2   << astx.NewGlobalDecl($0, $4, $5, $6) >>
 ;
 
 GlobalDef
-	: GlobalIdent "=" OptLinkage OptUnnamedAddr Immutable FirstClassType Constant GlobalOptions   << astx.NewGlobalDef($0, $4, $5, $6, $7) >>
+	: GlobalIdent "=" OptLinkage GlobalOptions1 Immutable FirstClassType Constant GlobalOptions2   << astx.NewGlobalDef($0, $4, $5, $6, $7) >>
+;
+
+GlobalOptions1
+	: OptVisibility OptDLLStorageClass OptTLSModel OptUnnamedAddr OptAddrSpace OptExternallyInitialized
+;
+
+OptExternallyInitialized
+	: empty
+	| ExternallyInitialized
+;
+
+ExternallyInitialized
+	: "externally_initialized"
 ;
 
 Immutable
@@ -18,7 +31,7 @@ Immutable
 //
 // Structured in this way to allow for naiive 1 rune lookahead parser
 // generators.
-GlobalOptions
+GlobalOptions2
 	: "," Align CommaAttachedMDs   << $2, nil >>
 	| CommaAttachedMDs             << $0, nil >>
 ;

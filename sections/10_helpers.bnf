@@ -33,6 +33,47 @@ ExternLinkage
 	| "external"
 ;
 
+OptVisibility
+	: empty
+	| Visibility
+;
+
+// From spec of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#visibility-styles
+Visibility
+	: "default"
+	| "hidden"
+	| "protected"
+;
+
+OptDLLStorageClass
+	: empty
+	| DLLStorageClass
+;
+
+// From spec of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#dllstorageclass
+DLLStorageClass
+	: "dllimport"
+	| "dllexport"
+;
+
+OptTLSModel
+	: empty
+	| TLSModel
+;
+
+// From spec of v4.0.
+//
+// ref: http://llvm.org/docs/LangRef.html#tls-model
+TLSModel
+	: "localdynamic"
+	| "initialexec"
+	| "localexec"
+;
+
 OptUnnamedAddr
 	: empty
 	| UnnamedAddr
@@ -253,6 +294,8 @@ MD
 	| MetadataID
 ;
 
+// TODO: Rename to OptCommaAttachedMDList after
+// https://github.com/llir/llvm/pull/21 has been merged.
 CommaAttachedMDs
 	: empty
 	| CommaAttachedMDList
