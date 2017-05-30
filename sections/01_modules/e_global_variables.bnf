@@ -1,14 +1,38 @@
 // --- [ Global variables ] ----------------------------------------------------
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//
+//    GlobalDecl
+//       : GlobalIdent "=" ExternLinkage GlobalOptions Immutable FirstClassType OptCommaAlign OptCommaAttachedMDList   << astx.NewGlobalDecl($0, $4, $5, $7) >>
+//    ;
 GlobalDecl
-	: GlobalIdent "=" ExternLinkage GlobalOptions1 Immutable FirstClassType GlobalOptions2   << astx.NewGlobalDecl($0, $4, $5, $6) >>
+	: GlobalIdent "=" ExternLinkage GlobalOptions Immutable FirstClassType OptCommaAttachedMDList             << astx.NewGlobalDecl($0, $4, $5, $6) >>
+	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable FirstClassType "," Align OptCommaAttachedMDList   << astx.NewGlobalDecl($0, $4, $5, $8) >>
 ;
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//
+//    GlobalDef
+//       : GlobalIdent "=" OptLinkage GlobalOptions Immutable FirstClassType Constant OptCommaAlign OptCommaAttachedMDList   << astx.NewGlobalDef($0, $4, $5, $6, $8) >>
+//    ;
 GlobalDef
-	: GlobalIdent "=" OptLinkage GlobalOptions1 Immutable FirstClassType Constant GlobalOptions2   << astx.NewGlobalDef($0, $4, $5, $6, $7) >>
+	: GlobalIdent "=" OptLinkage GlobalOptions Immutable FirstClassType Constant OptCommaAttachedMDList             << astx.NewGlobalDef($0, $4, $5, $6, $7) >>
+	| GlobalIdent "=" OptLinkage GlobalOptions Immutable FirstClassType Constant "," Align OptCommaAttachedMDList   << astx.NewGlobalDef($0, $4, $5, $6, $9) >>
 ;
 
-GlobalOptions1
+GlobalOptions
 	: OptVisibility OptDLLStorageClass OptTLSModel OptUnnamedAddr OptAddrSpace OptExternallyInitialized
 ;
 
@@ -24,15 +48,5 @@ ExternallyInitialized
 Immutable
 	: "constant"   << true, nil >>
 	| "global"     << false, nil >>
-;
-
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 rune lookahead.
-//
-// Structured in this way to allow for naiive 1 rune lookahead parser
-// generators.
-GlobalOptions2
-	: "," Align CommaAttachedMDs   << $2, nil >>
-	| CommaAttachedMDs             << $0, nil >>
 ;
 

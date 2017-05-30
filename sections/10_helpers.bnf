@@ -84,11 +84,6 @@ UnnamedAddr
 	| "unnamed_addr"
 ;
 
-OptCommaAlign
-	: empty
-	| "," Align
-;
-
 OptAlign
 	: empty
 	| Align
@@ -153,7 +148,8 @@ FuncAttr
 	| string_lit "=" string_lit
 	| AttrGroupID
 	| "alignstack" "(" int_lit ")"
-	| "allocsize" "(" int_lit OptAllocSizeNElems ")"
+	| "allocsize" "(" int_lit ")"
+	| "allocsize" "(" int_lit "," int_lit ")"
 	| "alwaysinline"
 	| "argmemonly"
 	| "builtin"
@@ -188,10 +184,6 @@ FuncAttr
 	| "sspstrong"
 	| "uwtable"
 	| "writeonly"
-;
-
-OptAllocSizeNElems
-	: "," int_lit
 ;
 
 Elems
@@ -294,9 +286,7 @@ MD
 	| MetadataID
 ;
 
-// TODO: Rename to OptCommaAttachedMDList after
-// https://github.com/llir/llvm/pull/21 has been merged.
-CommaAttachedMDs
+OptCommaAttachedMDList
 	: empty
 	| CommaAttachedMDList
 ;

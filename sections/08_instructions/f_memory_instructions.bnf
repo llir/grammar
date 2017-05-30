@@ -2,18 +2,27 @@
 
 // ~~~ [ alloca ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-AllocaInst
-	: "alloca" FirstClassType AllocaOptions   << astx.NewAllocaInst($1, $2) >>
-;
-
 // TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 rune lookahead.
+// through the limitation of 1 token lookahead.
 //
-// Structured in this way to allow for naiive 1 rune lookahead parser
+// Structured in this way to allow for naiive 1 token lookahead parser
 // generators.
-AllocaOptions
-	: "," NElems OptCommaAlign   << $1, nil >>
-	| OptCommaAlign              << nil, nil >>
+//
+// Original production rule.
+//
+//    AllocaInst
+//       : "alloca" FirstClassType OptCommaNElems OptCommaAlign OptCommaAttachedMDList   << astx.NewAllocaInst($1, $2) >>
+//    ;
+//
+//    OptCommaNElems
+//       : empty
+//       | "," NElems   << $1 >>
+//    ;
+AllocaInst
+	: "alloca" FirstClassType OptCommaAttachedMDList                       << astx.NewAllocaInst($1, nil) >>
+	| "alloca" FirstClassType "," Align OptCommaAttachedMDList             << astx.NewAllocaInst($1, nil) >>
+	| "alloca" FirstClassType "," NElems OptCommaAttachedMDList            << astx.NewAllocaInst($1, $3) >>
+	| "alloca" FirstClassType "," NElems "," Align OptCommaAttachedMDList  << astx.NewAllocaInst($1, $3) >>
 ;
 
 NElems
@@ -22,8 +31,20 @@ NElems
 
 // ~~~ [ load ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//
+//    LoadInst
+//       : "load" OptVolatile FirstClassType "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5) >>
+//    ;
 LoadInst
-	: "load" OptVolatile FirstClassType "," PointerType Value OptCommaAlign   << astx.NewLoadInst($2, $4, $5) >>
+	: "load" OptVolatile FirstClassType "," PointerType Value OptCommaAttachedMDList             << astx.NewLoadInst($2, $4, $5) >>
+	| "load" OptVolatile FirstClassType "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5) >>
 ;
 
 OptVolatile
@@ -33,14 +54,26 @@ OptVolatile
 
 // ~~~ [ store ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//
+//    StoreInst
+//       : "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6) >>
+//    ;
 StoreInst
-	: "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAlign   << astx.NewStoreInst($2, $3, $5, $6) >>
+	: "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAttachedMDList             << astx.NewStoreInst($2, $3, $5, $6) >>
+	| "store" OptVolatile FirstClassType Value "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6) >>
 ;
 
 // ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FenceInst
-	: "fence" OptSinglethread Ordering   << nil, nil >>
+	: "fence" OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
 ;
 
 OptSinglethread
@@ -63,7 +96,7 @@ Ordering
 // ~~~ [ cmpxchg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CmpXchgInst
-	: "cmpxchg" OptWeak OptVolatile FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptSinglethread Ordering Ordering   << nil, nil >>
+	: "cmpxchg" OptWeak OptVolatile FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptSinglethread Ordering Ordering OptCommaAttachedMDList   << nil, nil >>
 ;
 
 OptWeak
@@ -74,7 +107,7 @@ OptWeak
 // ~~~ [ atomicrmw ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AtomicRMWInst
-	: "atomicrmw" OptVolatile AtomicOperation FirstClassType Value "," FirstClassType Value OptSinglethread Ordering   << nil, nil >>
+	: "atomicrmw" OptVolatile AtomicOperation FirstClassType Value "," FirstClassType Value OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // From spec and src of v4.0.
@@ -96,13 +129,24 @@ AtomicOperation
 
 // ~~~ [ getelementptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//    GetElementPtrInst
+//       : "getelementptr" OptInbounds FirstClassType "," FirstClassType Value Indices OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $6) >>
+//    ;
+//
+//    Indices
+//       : empty
+//       | "," IndexList   << $1, nil >>
+//    ;
 GetElementPtrInst
-	: "getelementptr" OptInbounds FirstClassType "," FirstClassType Value Indices   << astx.NewGetElementPtrInst($2, $4, $5, $6) >>
-;
-
-Indices
-	: empty
-	| "," IndexList   << $1, nil >>
+	: "getelementptr" OptInbounds FirstClassType "," FirstClassType Value OptCommaAttachedMDList                 << astx.NewGetElementPtrInst($2, $4, $5, nil) >>
+	| "getelementptr" OptInbounds FirstClassType "," FirstClassType Value "," IndexList OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $7) >>
 ;
 
 IndexList

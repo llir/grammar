@@ -100,14 +100,28 @@ ArrayType
 
 // --- [ struct type ] ---------------------------------------------------------
 
+// TODO: Clean up when the parser generator no longer introduces ambiguities
+// through the limitation of 1 token lookahead.
+//
+// Structured in this way to allow for naiive 1 token lookahead parser
+// generators.
+//
+// Original production rule.
+//
+//    StructType
+//       : "{" Fields "}"
+//       | "<" "{" Fields "}" ">"
+//    ;
+//
+//    Fields
+//       : empty
+//       | FieldList
+//    ;
 StructType
-	: "{" Fields "}"           << astx.NewStructType($1) >>
-	| "<" "{" Fields "}" ">"   << astx.NewStructType($2) >>
-;
-
-Fields
-	: empty
-	| FieldList
+	: "{" "}"                     << astx.NewStructType(nil) >>
+	| "{" FieldList "}"           << astx.NewStructType($1) >>
+	| "<" "{" "}" ">"             << astx.NewStructType(nil) >>
+	| "<" "{" FieldList "}" ">"   << astx.NewStructType($2) >>
 ;
 
 FieldList

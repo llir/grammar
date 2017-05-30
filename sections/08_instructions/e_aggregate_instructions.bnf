@@ -3,7 +3,7 @@
 // ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ExtractValueInst
-	: "extractvalue" FirstClassType Value "," IntLitList   << astx.NewExtractValueInst($1, $2, $4) >>
+	: "extractvalue" FirstClassType Value "," IntLitList OptCommaAttachedMDList   << astx.NewExtractValueInst($1, $2, $4) >>
 ;
 
 IntLitList
@@ -14,6 +14,6 @@ IntLitList
 // ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 InsertValueInst
-	: "insertvalue" FirstClassType Value "," FirstClassType Value "," IntLitList   << astx.NewInsertValueInst($1, $2, $4, $5, $7) >>
+	: "insertvalue" FirstClassType Value "," FirstClassType Value "," IntLitList OptCommaAttachedMDList   << astx.NewInsertValueInst($1, $2, $4, $5, $7) >>
 ;
 

@@ -3,7 +3,7 @@
 // ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ICmpInst
-	: "icmp" IntPred FirstClassType Value "," Value   << astx.NewICmpInst($1, $2, $3, $5) >>
+	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewICmpInst($1, $2, $3, $5) >>
 ;
 
 IntPred
@@ -22,7 +22,7 @@ IntPred
 // ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FCmpInst
-	: "fcmp" FastMathFlags FloatPred FirstClassType Value "," Value   << astx.NewFCmpInst($2, $3, $4, $6) >>
+	: "fcmp" FastMathFlags FloatPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6) >>
 ;
 
 FloatPred
@@ -47,7 +47,7 @@ FloatPred
 // ~~~ [ phi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PhiInst
-	: "phi" FirstClassType IncomingList   << astx.NewPhiInst($1, $2) >>
+	: "phi" FirstClassType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2) >>
 ;
 
 IncomingList
@@ -62,13 +62,18 @@ Incoming
 // ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SelectInst
-	: "select" FirstClassType Value "," FirstClassType Value "," FirstClassType Value   << astx.NewSelectInst($1, $2, $4, $5, $7, $8) >>
+	: "select" FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8) >>
 ;
 
 // ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CallInst
-	: "call" FastMathFlags ParamAttrs Type Value "(" Args ")" FuncAttrs   << astx.NewCallInst($3, $4, $6) >>
+	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($5, $6, $8) >>
+;
+
+OptTail
+	: empty
+	| "tail"
 ;
 
 Args
@@ -88,14 +93,14 @@ Arg
 // ~~~ [ va_arg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 VAArgInst
-	: "va_arg" FirstClassType Value "," FirstClassType   << nil, nil >>
+	: "va_arg" FirstClassType Value "," FirstClassType OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ landingpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LandingPadInst
-	: "landingpad" FirstClassType ClauseList          << nil, nil >>
-	| "landingpad" FirstClassType "cleanup" Clauses   << nil, nil >>
+	: "landingpad" FirstClassType ClauseList OptCommaAttachedMDList          << nil, nil >>
+	| "landingpad" FirstClassType "cleanup" Clauses OptCommaAttachedMDList   << nil, nil >>
 ;
 
 Clauses
@@ -116,13 +121,13 @@ Clause
 // ~~~ [ catchpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CatchPadInst
-	: "catchpad" "within" LocalIdent ArrayConst   << nil, nil >>
+	: "catchpad" "within" LocalIdent ArrayConst OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ cleanuppad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CleanupPadInst
-	: "cleanuppad" "within" ExceptionParent ArrayConst   << nil, nil >>
+	: "cleanuppad" "within" ExceptionParent ArrayConst OptCommaAttachedMDList   << nil, nil >>
 ;
 
 ExceptionParent

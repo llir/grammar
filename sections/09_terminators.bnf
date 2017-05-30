@@ -17,26 +17,26 @@ Terminator
 // ~~~ [ ret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 RetTerm
-	: "ret" VoidType               << &ast.TermRet{}, nil >>
-	| "ret" FirstClassType Value   << astx.NewRetTerm($1, $2) >>
+	: "ret" VoidType OptCommaAttachedMDList               << &ast.TermRet{}, nil >>
+	| "ret" FirstClassType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2) >>
 ;
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 BrTerm
-	: "br" LabelType LocalIdent   << astx.NewBrTerm($1, $2) >>
+	: "br" LabelType LocalIdent OptCommaAttachedMDList  << astx.NewBrTerm($1, $2) >>
 ;
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CondBrTerm
-	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent   << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8) >>
+	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaAttachedMDList  << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8) >>
 ;
 
 // ~~~ [ switch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SwitchTerm
-	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]"   << astx.NewSwitchTerm($1, $2, $4, $5, $7) >>
+	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]" OptCommaAttachedMDList   << astx.NewSwitchTerm($1, $2, $4, $5, $7) >>
 ;
 
 Cases
@@ -56,13 +56,13 @@ Case
 // ~~~ [ indirectbr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 IndirectBrTerm
-	: "indirectbr" FirstClassType Value "," "[" Labels "]"   << nil, nil >>
+	: "indirectbr" FirstClassType Value "," "[" Labels "]" OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ invoke ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 InvokeTerm
-	: "invoke" OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent   << nil, nil >>
+	: "invoke" OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
 ;
 
 OptOperandBundle
@@ -101,32 +101,32 @@ ValueList
 // ~~~ [ resume ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ResumeTerm
-	: "resume" FirstClassType Value   << nil, nil >>
+	: "resume" FirstClassType Value OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ catchswitch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CatchSwitchTerm
-	: "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" "to" "caller"          << nil, nil >>
-	| "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" LabelType LocalIdent   << nil, nil >>
+	: "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" "to" "caller" OptCommaAttachedMDList          << nil, nil >>
+	| "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ catchret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CatchRetTerm
-	: "catchret" "from" Value "to" LabelType LocalIdent   << nil, nil >>
+	: "catchret" "from" Value "to" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ cleanupret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CleanupRetTerm
-	: "cleanupret" "from" Value "unwind" "to" "caller"          << nil, nil >>
-	| "cleanupret" "from" Value "unwind" LabelType LocalIdent   << nil, nil >>
+	: "cleanupret" "from" Value "unwind" "to" "caller" OptCommaAttachedMDList          << nil, nil >>
+	| "cleanupret" "from" Value "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ unreachable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UnreachableTerm
-	: "unreachable"   << &ast.TermUnreachable{}, nil >>
+	: "unreachable" OptCommaAttachedMDList   << &ast.TermUnreachable{}, nil >>
 ;
 
