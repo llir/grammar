@@ -84,6 +84,15 @@ UnnamedAddr
 	| "unnamed_addr"
 ;
 
+OptSection
+	: empty
+	| Section
+;
+
+Section
+	: "section" string_lit
+;
+
 OptComdat
 	: empty
 	| Comdat
