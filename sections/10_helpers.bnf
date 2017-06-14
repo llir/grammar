@@ -112,6 +112,15 @@ Align
 	: "align" int_lit
 ;
 
+OptGC
+	: empty
+	| GC
+;
+
+GC
+	: "gc" string_lit
+;
+
 ParamAttrs
 	: empty
 	| ParamAttrList
