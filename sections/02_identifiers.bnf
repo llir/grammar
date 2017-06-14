@@ -16,6 +16,10 @@ AttrGroupID
 	: attr_group_id
 ;
 
+ComdatName
+	: comdat_name
+;
+
 MetadataName
 	: metadata_name   << astx.NewMetadataName($0) >>
 ;

@@ -84,6 +84,16 @@ UnnamedAddr
 	| "unnamed_addr"
 ;
 
+OptComdat
+	: empty
+	| Comdat
+;
+
+Comdat
+	: "comdat"
+	| "comdat" "(" ComdatName ")"
+;
+
 OptAlign
 	: empty
 	| Align

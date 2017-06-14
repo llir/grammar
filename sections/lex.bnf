@@ -95,6 +95,12 @@ attr_group_id
 	: '#' _id
 ;
 
+// --- [ Comdat identifiers ] --------------------------------------------------
+
+comdat_name
+	: '$' ( _name | _quoted_name )
+;
+
 // --- [ Metadata identifiers ] ------------------------------------------------
 
 metadata_name
