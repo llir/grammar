@@ -1,0 +1,7 @@
+// --- [ Module-level inline assembly ] ----------------------------------------
+
+// ref: http://llvm.org/docs/LangRef.html#module-level-inline-assembly
+ModuleAsm
+	: "module" "asm" string_lit   << nil, nil >>
+;
+

@@ -24,7 +24,9 @@ TopLevelDeclList
 TopLevelDecl
 	: SourceFilename
 	| TargetSpec
+	| ModuleAsm
 	| TypeDef
+	| ComdatDef
 	| GlobalDecl
 	| GlobalDef
 	| FuncDecl
