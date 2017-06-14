@@ -11,7 +11,7 @@ FuncDef
 FuncHeader
 	: OptVisibility OptDLLStorageClass OptCallConv ParamAttrs Type GlobalIdent
 		"(" Params ")" OptUnnamedAddr FuncAttrs OptSection OptComdat OptAlign
-		OptGC   << astx.NewFuncHeader($2, $4, $5, $7) >>
+		OptGC OptPrefix OptPrologue OptPersonality   << astx.NewFuncHeader($2, $4, $5, $7) >>
 ;
 
 Params

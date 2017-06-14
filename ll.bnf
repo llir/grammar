@@ -321,7 +321,7 @@ FuncDef
 FuncHeader
 	: OptVisibility OptDLLStorageClass OptCallConv ParamAttrs Type GlobalIdent
 		"(" Params ")" OptUnnamedAddr FuncAttrs OptSection OptComdat OptAlign
-		OptGC   << astx.NewFuncHeader($2, $4, $5, $7) >>
+		OptGC OptPrefix OptPrologue OptPersonality   << astx.NewFuncHeader($2, $4, $5, $7) >>
 ;
 
 Params
@@ -1814,6 +1814,36 @@ OptGC
 
 GC
 	: "gc" string_lit
+;
+
+OptPrefix
+	: empty
+	| Prefix
+;
+
+// ref: http://llvm.org/docs/LangRef.html#prefix-data
+Prefix
+	: "prefix" FirstClassType Constant
+;
+
+OptPrologue
+	: empty
+	| Prologue
+;
+
+// ref: http://llvm.org/docs/LangRef.html#prologue-data
+Prologue
+	: "prologue" FirstClassType Constant
+;
+
+OptPersonality
+	: empty
+	| Personality
+;
+
+// ref: http://llvm.org/docs/LangRef.html#personality-function
+Personality
+	: "personality" FirstClassType Constant
 ;
 
 ParamAttrs
