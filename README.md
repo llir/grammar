@@ -4,7 +4,9 @@
 
 * Source filename
 * Target specifiers
+* Module-level inline assembly
 * Type definitions
+* Comdat definitions
 * Global variables
 * Functions
 * Attribute group definitions
@@ -13,6 +15,13 @@
 # Identifiers
 
 `02_identifiers.bnf`
+
+* Global identifier
+* Local identifier
+* Label identifier
+* Attribute group ID
+* Comdat name
+* Metadata identifier
 
 # Types
 
