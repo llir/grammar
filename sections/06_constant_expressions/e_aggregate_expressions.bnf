@@ -1,6 +1,10 @@
 // --- [ Aggregate expressions ] -----------------------------------------------
 
-// TODO: extractvalue
+ExtractValueExpr
+	: "extractvalue" "(" FirstClassType Constant "," IntLitList ")"   << astx.NewExtractValueExpr($2, $3, $5) >>
+;
 
-// TODO: insertvalue
+InsertValueExpr
+	: "insertvalue" "(" FirstClassType Constant "," FirstClassType Constant "," IntLitList ")"   << astx.NewInsertValueExpr($2, $3, $5, $6, $8) >>
+;
 

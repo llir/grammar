@@ -22,16 +22,12 @@ ConstExpr
 	| OrExpr
 	| XorExpr
 	// Vector expressions
-
-	// TODO: extractelement
-	// TODO: insertelement
-	// TODO: shufflevector
-
+	| ExtractElementExpr
+	| InsertElementExpr
+	| ShuffleVectorExpr
 	// Aggregate expressions
-
-	// TODO: extractvalue
-	// TODO: insertvalue
-
+	| ExtractValueExpr
+	| InsertValueExpr
 	// Memory expressions
 	| GetElementPtrExpr
 	// Conversion expressions

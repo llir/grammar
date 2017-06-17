@@ -1,8 +1,14 @@
 // --- [ Vector expressions ] --------------------------------------------------
 
-// TODO: extractelement
+ExtractElementExpr
+	: "extractelement" "(" FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewExtractElementExpr($2, $3, $5, $6) >>
+;
 
-// TODO: insertelement
+InsertElementExpr
+	: "insertelement" "(" FirstClassType Constant "," FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewInsertElementExpr($2, $3, $5, $6, $8, $9) >>
+;
 
-// TODO: shufflevector
+ShuffleVectorExpr
+	: "shufflevector" "(" FirstClassType Constant "," FirstClassType Constant "," FirstClassType Constant ")"   << astx.NewShuffleVectorExpr($2, $3, $5, $6, $8, $9) >>
+;
 
