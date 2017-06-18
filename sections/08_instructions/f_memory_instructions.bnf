@@ -19,10 +19,10 @@
 //       | "," NElems   << $1 >>
 //    ;
 AllocaInst
-	: "alloca" FirstClassType OptCommaAttachedMDList                       << astx.NewAllocaInst($1, nil) >>
-	| "alloca" FirstClassType "," Align OptCommaAttachedMDList             << astx.NewAllocaInst($1, nil) >>
-	| "alloca" FirstClassType "," NElems OptCommaAttachedMDList            << astx.NewAllocaInst($1, $3) >>
-	| "alloca" FirstClassType "," NElems "," Align OptCommaAttachedMDList  << astx.NewAllocaInst($1, $3) >>
+	: "alloca" FirstClassType OptCommaAttachedMDList                        << astx.NewAllocaInst($1, nil) >>
+	| "alloca" FirstClassType "," Align OptCommaAttachedMDList              << astx.NewAllocaInst($1, nil) >>
+	| "alloca" FirstClassType "," NElems OptCommaAttachedMDList             << astx.NewAllocaInst($1, $3) >>
+	| "alloca" FirstClassType "," NElems "," Align OptCommaAttachedMDList   << astx.NewAllocaInst($1, $3) >>
 ;
 
 NElems

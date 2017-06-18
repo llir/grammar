@@ -9,7 +9,7 @@ TruncInst
 // ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ZExtInst
-	: "zext" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList  << astx.NewZExtInst($1, $2, $4) >>
+	: "zext" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewZExtInst($1, $2, $4) >>
 ;
 
 // ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,13 +63,13 @@ PtrToIntInst
 // ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 IntToPtrInst
-	: "inttoptr" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList  << astx.NewIntToPtrInst($1, $2, $4) >>
+	: "inttoptr" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewIntToPtrInst($1, $2, $4) >>
 ;
 
 // ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 BitCastInst
-	: "bitcast" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList  << astx.NewBitCastInst($1, $2, $4) >>
+	: "bitcast" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewBitCastInst($1, $2, $4) >>
 ;
 
 // ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

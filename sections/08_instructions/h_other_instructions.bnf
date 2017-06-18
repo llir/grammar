@@ -3,7 +3,7 @@
 // ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ICmpInst
-	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewICmpInst($1, $2, $3, $5) >>
+	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5) >>
 ;
 
 IntPred

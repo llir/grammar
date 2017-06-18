@@ -3,73 +3,73 @@
 // ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AddInst
-	: "add" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewAddInst($2, $3, $5) >>
+	: "add" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewAddInst($2, $3, $5) >>
 ;
 
 // ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FAddInst
-	: "fadd" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewFAddInst($2, $3, $5) >>
+	: "fadd" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFAddInst($2, $3, $5) >>
 ;
 
 // ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SubInst
-	: "sub" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewSubInst($2, $3, $5) >>
+	: "sub" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewSubInst($2, $3, $5) >>
 ;
 
 // ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FSubInst
-	: "fsub" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewFSubInst($2, $3, $5) >>
+	: "fsub" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFSubInst($2, $3, $5) >>
 ;
 
 // ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 MulInst
-	: "mul" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewMulInst($2, $3, $5) >>
+	: "mul" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewMulInst($2, $3, $5) >>
 ;
 
 // ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FMulInst
-	: "fmul" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewFMulInst($2, $3, $5) >>
+	: "fmul" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFMulInst($2, $3, $5) >>
 ;
 
 // ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UDivInst
-	: "udiv" FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewUDivInst($1, $2, $4) >>
+	: "udiv" OptExact FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewUDivInst($2, $3, $5) >>
 ;
 
 // ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SDivInst
-	: "sdiv" ExactFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewSDivInst($2, $3, $5) >>
+	: "sdiv" OptExact FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewSDivInst($2, $3, $5) >>
 ;
 
 // ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FDivInst
-	: "fdiv" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewFDivInst($2, $3, $5) >>
+	: "fdiv" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFDivInst($2, $3, $5) >>
 ;
 
 // ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 URemInst
-	: "urem" ExactFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewURemInst($2, $3, $5) >>
+	: "urem" FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewURemInst($1, $2, $4) >>
 ;
 
 // ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SRemInst
-	: "srem" FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewSRemInst($1, $2, $4) >>
+	: "srem" FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewSRemInst($1, $2, $4) >>
 ;
 
 // ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FRemInst
-	: "frem" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList  << astx.NewFRemInst($2, $3, $5) >>
+	: "frem" FastMathFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFRemInst($2, $3, $5) >>
 ;
 
 OverflowFlags
@@ -108,7 +108,7 @@ FastMathFlag
 	| "nsz"
 ;
 
-ExactFlags
+OptExact
 	: empty
 	| "exact"
 ;
