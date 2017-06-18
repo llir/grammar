@@ -3,7 +3,7 @@
 // ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ICmpInst
-	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5) >>
+	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5, $6) >>
 ;
 
 IntPred
@@ -22,7 +22,7 @@ IntPred
 // ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FCmpInst
-	: "fcmp" FastMathFlags FloatPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6) >>
+	: "fcmp" FastMathFlags FloatPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6, $7) >>
 ;
 
 FloatPred
@@ -47,7 +47,7 @@ FloatPred
 // ~~~ [ phi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PhiInst
-	: "phi" FirstClassType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2) >>
+	: "phi" FirstClassType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2, $3) >>
 ;
 
 IncomingList
@@ -62,13 +62,13 @@ Incoming
 // ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SelectInst
-	: "select" FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8) >>
+	: "select" FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8, $9) >>
 ;
 
 // ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CallInst
-	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($5, $6, $8) >>
+	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($5, $6, $8, $11) >>
 ;
 
 OptTail

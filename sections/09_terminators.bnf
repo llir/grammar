@@ -17,26 +17,26 @@ Terminator
 // ~~~ [ ret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 RetTerm
-	: "ret" VoidType OptCommaAttachedMDList               << &ast.TermRet{}, nil >>
-	| "ret" FirstClassType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2) >>
+	: "ret" VoidType OptCommaAttachedMDList               << astx.NewRetTerm(nil, nil, $2) >>
+	| "ret" FirstClassType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2, $3) >>
 ;
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 BrTerm
-	: "br" LabelType LocalIdent OptCommaAttachedMDList  << astx.NewBrTerm($1, $2) >>
+	: "br" LabelType LocalIdent OptCommaAttachedMDList  << astx.NewBrTerm($1, $2, $3) >>
 ;
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CondBrTerm
-	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaAttachedMDList  << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8) >>
+	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaAttachedMDList  << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8, $9) >>
 ;
 
 // ~~~ [ switch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SwitchTerm
-	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]" OptCommaAttachedMDList   << astx.NewSwitchTerm($1, $2, $4, $5, $7) >>
+	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]" OptCommaAttachedMDList   << astx.NewSwitchTerm($1, $2, $4, $5, $7, $9) >>
 ;
 
 Cases
@@ -127,6 +127,6 @@ CleanupRetTerm
 // ~~~ [ unreachable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UnreachableTerm
-	: "unreachable" OptCommaAttachedMDList   << &ast.TermUnreachable{}, nil >>
+	: "unreachable" OptCommaAttachedMDList   << astx.NewUnreachableTerm($1) >>
 ;
 
