@@ -71,7 +71,7 @@ PointerType
 
 OptAddrSpace
 	: empty
-	| "addrspace" "(" int_lit ")"
+	| "addrspace" "(" IntLit ")"
 ;
 
 // --- [ vector type ] ---------------------------------------------------------
