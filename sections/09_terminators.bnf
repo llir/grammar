@@ -23,12 +23,12 @@ RetTerm
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// Unconditional branch terminator.
 BrTerm
 	: "br" LabelType LocalIdent OptCommaAttachedMDList  << astx.NewBrTerm($1, $2, $3) >>
 ;
 
-// ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+// Conditional branch terminator.
 CondBrTerm
 	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaAttachedMDList  << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8, $9) >>
 ;

@@ -73,7 +73,13 @@ CallInst
 
 OptTail
 	: empty
-	| "tail"
+	| Tail
+;
+
+Tail
+	: "tail"
+	| "musttail"
+	| "notail"
 ;
 
 Args
