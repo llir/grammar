@@ -1526,7 +1526,7 @@ SelectInst
 // ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CallInst
-	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($5, $6, $8, $11) >>
+	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($3, $5, $6, $8, $11) >>
 ;
 
 OptTail
