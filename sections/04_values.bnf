@@ -3,6 +3,5 @@
 Value
 	: LocalIdent
 	| Constant
-	| "undef"      << nil, nil >>
 ;
 

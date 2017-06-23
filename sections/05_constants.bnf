@@ -10,6 +10,7 @@ Constant
 	| StructConst
 	| ZeroInitializerConst
 	| GlobalIdent
+	| UndefConst
 	| ConstExpr
 ;
 
@@ -82,5 +83,11 @@ StructConst
 
 ZeroInitializerConst
 	: "zeroinitializer"   << &astx.ZeroInitializerLit{}, nil >>
+;
+
+// --- [ undefined value constant ] --------------------------------------------
+
+UndefConst
+	: "undef"   << &astx.UndefLit{}, nil >>
 ;
 
