@@ -60,14 +60,19 @@ DLLStorageClass
 	| "dllexport"
 ;
 
-OptTLSModel
+OptThreadLocal
 	: empty
-	| TLSModel
+	| ThreadLocal
 ;
 
 // From spec of v4.0.
 //
-// ref: http://llvm.org/docs/LangRef.html#tls-model
+// ref: http://llvm.org/docs/LangRef.html#thread-local-storage-models
+ThreadLocal
+	: "thread_local"
+	| "thread_local" "(" TLSModel ")"
+;
+
 TLSModel
 	: "localdynamic"
 	| "initialexec"
