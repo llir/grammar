@@ -27,17 +27,17 @@
 
 `03_types.bnf`
 
-* void type
-* function type
-* integer type
-* floating-point type
-* pointer type
-* vector type
-* label type
-* metadata type
-* array type
-* struct type
-* named type
+* Void type
+* Function type
+* Integer type
+* Floating-point type
+* Pointer type
+* Vector type
+* Label type
+* Metadata type
+* Array type
+* Struct type
+* Named type
 
 # Values
 
@@ -47,13 +47,14 @@
 
 `05_constants.bnf`
 
-* integer constant
-* floating-point constant
-* pointer constant
-* vector constant
-* array constant
-* struct constant
-* zero initializer constant
+* Integer constant
+* Floating-point constant
+* Pointer constant
+* Vector constant
+* Array constant
+* Struct constant
+* Zero initializer constant
+* Undefined value constant
 
 # Constant expressions
 
