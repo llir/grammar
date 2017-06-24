@@ -1,10 +1,5 @@
 // === [ Basic blocks ] ========================================================
 
-BasicBlocks
-	: empty
-	| BasicBlockList
-;
-
 BasicBlockList
 	: BasicBlock                  << astx.NewBasicBlockList($0) >>
 	| BasicBlockList BasicBlock   << astx.AppendBasicBlock($0, $1) >>

@@ -32,6 +32,6 @@ Param
 ;
 
 FuncBody
-	: "{" BasicBlocks "}"   << $1, nil >>
+	: "{" BasicBlockList "}"   << $1, nil >>
 ;
 
