@@ -1,7 +1,7 @@
 // --- [ Memory expressions ] --------------------------------------------------
 
 GetElementPtrExpr
-	: "getelementptr" OptInbounds "(" FirstClassType "," FirstClassType Constant ConstIndices ")"   << astx.NewGetElementPtrExpr($3, $5, $6, $7) >>
+	: "getelementptr" OptInbounds "(" ConcreteType "," ConcreteType Constant ConstIndices ")"   << astx.NewGetElementPtrExpr($3, $5, $6, $7) >>
 ;
 
 ConstIndices

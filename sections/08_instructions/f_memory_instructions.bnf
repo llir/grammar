@@ -11,7 +11,7 @@
 // Original production rule.
 //
 //    AllocaInst
-//       : "alloca" FirstClassType OptCommaNElems OptCommaAlign OptCommaAttachedMDList   << astx.NewAllocaInst($1, $2, $4) >>
+//       : "alloca" ConcreteType OptCommaNElems OptCommaAlign OptCommaAttachedMDList   << astx.NewAllocaInst($1, $2, $4) >>
 //    ;
 //
 //    OptCommaNElems
@@ -19,14 +19,14 @@
 //       | "," NElems   << $1 >>
 //    ;
 AllocaInst
-	: "alloca" FirstClassType OptCommaAttachedMDList                        << astx.NewAllocaInst($1, nil, $2) >>
-	| "alloca" FirstClassType "," Align OptCommaAttachedMDList              << astx.NewAllocaInst($1, nil, $4) >>
-	| "alloca" FirstClassType "," NElems OptCommaAttachedMDList             << astx.NewAllocaInst($1, $3, $4) >>
-	| "alloca" FirstClassType "," NElems "," Align OptCommaAttachedMDList   << astx.NewAllocaInst($1, $3, $6) >>
+	: "alloca" ConcreteType OptCommaAttachedMDList                        << astx.NewAllocaInst($1, nil, $2) >>
+	| "alloca" ConcreteType "," Align OptCommaAttachedMDList              << astx.NewAllocaInst($1, nil, $4) >>
+	| "alloca" ConcreteType "," NElems OptCommaAttachedMDList             << astx.NewAllocaInst($1, $3, $4) >>
+	| "alloca" ConcreteType "," NElems "," Align OptCommaAttachedMDList   << astx.NewAllocaInst($1, $3, $6) >>
 ;
 
 NElems
-	: FirstClassType Value   << astx.NewValue($0, $1) >>
+	: ConcreteType Value   << astx.NewValue($0, $1) >>
 ;
 
 // ~~~ [ load ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,11 +40,11 @@ NElems
 // Original production rule.
 //
 //    LoadInst
-//       : "load" OptVolatile FirstClassType "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $7) >>
+//       : "load" OptVolatile ConcreteType "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $7) >>
 //    ;
 LoadInst
-	: "load" OptVolatile FirstClassType "," PointerType Value OptCommaAttachedMDList             << astx.NewLoadInst($2, $4, $5, $6) >>
-	| "load" OptVolatile FirstClassType "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $8) >>
+	: "load" OptVolatile ConcreteType "," PointerType Value OptCommaAttachedMDList             << astx.NewLoadInst($2, $4, $5, $6) >>
+	| "load" OptVolatile ConcreteType "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $8) >>
 ;
 
 OptVolatile
@@ -63,11 +63,11 @@ OptVolatile
 // Original production rule.
 //
 //    StoreInst
-//       : "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $8) >>
+//       : "store" OptVolatile ConcreteType Value "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $8) >>
 //    ;
 StoreInst
-	: "store" OptVolatile FirstClassType Value "," PointerType Value OptCommaAttachedMDList             << astx.NewStoreInst($2, $3, $5, $6, $7) >>
-	| "store" OptVolatile FirstClassType Value "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $9) >>
+	: "store" OptVolatile ConcreteType Value "," PointerType Value OptCommaAttachedMDList             << astx.NewStoreInst($2, $3, $5, $6, $7) >>
+	| "store" OptVolatile ConcreteType Value "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $9) >>
 ;
 
 // ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,7 +96,7 @@ Ordering
 // ~~~ [ cmpxchg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CmpXchgInst
-	: "cmpxchg" OptWeak OptVolatile FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptSinglethread Ordering Ordering OptCommaAttachedMDList   << nil, nil >>
+	: "cmpxchg" OptWeak OptVolatile ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptSinglethread Ordering Ordering OptCommaAttachedMDList   << nil, nil >>
 ;
 
 OptWeak
@@ -107,7 +107,7 @@ OptWeak
 // ~~~ [ atomicrmw ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AtomicRMWInst
-	: "atomicrmw" OptVolatile AtomicOperation FirstClassType Value "," FirstClassType Value OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
+	: "atomicrmw" OptVolatile AtomicOperation ConcreteType Value "," ConcreteType Value OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // From spec and src of v4.0.
@@ -137,7 +137,7 @@ AtomicOperation
 //
 // Original production rule.
 //    GetElementPtrInst
-//       : "getelementptr" OptInbounds FirstClassType "," FirstClassType Value Indices OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $6, $7) >>
+//       : "getelementptr" OptInbounds ConcreteType "," ConcreteType Value Indices OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $6, $7) >>
 //    ;
 //
 //    Indices
@@ -145,8 +145,8 @@ AtomicOperation
 //       | "," IndexList   << $1, nil >>
 //    ;
 GetElementPtrInst
-	: "getelementptr" OptInbounds FirstClassType "," FirstClassType Value OptCommaAttachedMDList                 << astx.NewGetElementPtrInst($2, $4, $5, nil, $6) >>
-	| "getelementptr" OptInbounds FirstClassType "," FirstClassType Value "," IndexList OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $7, $8) >>
+	: "getelementptr" OptInbounds ConcreteType "," ConcreteType Value OptCommaAttachedMDList                 << astx.NewGetElementPtrInst($2, $4, $5, nil, $6) >>
+	| "getelementptr" OptInbounds ConcreteType "," ConcreteType Value "," IndexList OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $7, $8) >>
 ;
 
 IndexList

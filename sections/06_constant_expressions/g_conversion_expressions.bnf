@@ -1,54 +1,54 @@
 // --- [ Conversion expressions ] ----------------------------------------------
 
 TruncExpr
-	: "trunc" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewTruncExpr($2, $3, $5) >>
+	: "trunc" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewTruncExpr($2, $3, $5) >>
 ;
 
 ZExtExpr
-	: "zext" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewZExtExpr($2, $3, $5) >>
+	: "zext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewZExtExpr($2, $3, $5) >>
 ;
 
 SExtExpr
-	: "sext" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewSExtExpr($2, $3, $5) >>
+	: "sext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewSExtExpr($2, $3, $5) >>
 ;
 
 FPTruncExpr
-	: "fptrunc" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewFPTruncExpr($2, $3, $5) >>
+	: "fptrunc" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPTruncExpr($2, $3, $5) >>
 ;
 
 FPExtExpr
-	: "fpext" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewFPExtExpr($2, $3, $5) >>
+	: "fpext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPExtExpr($2, $3, $5) >>
 ;
 
 FPToUIExpr
-	: "fptoui" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewFPToUIExpr($2, $3, $5) >>
+	: "fptoui" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPToUIExpr($2, $3, $5) >>
 ;
 
 FPToSIExpr
-	: "fptosi" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewFPToSIExpr($2, $3, $5) >>
+	: "fptosi" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPToSIExpr($2, $3, $5) >>
 ;
 
 UIToFPExpr
-	: "uitofp" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewUIToFPExpr($2, $3, $5) >>
+	: "uitofp" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewUIToFPExpr($2, $3, $5) >>
 ;
 
 SIToFPExpr
-	: "sitofp" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewSIToFPExpr($2, $3, $5) >>
+	: "sitofp" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewSIToFPExpr($2, $3, $5) >>
 ;
 
 PtrToIntExpr
-	: "ptrtoint" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewPtrToIntExpr($2, $3, $5) >>
+	: "ptrtoint" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewPtrToIntExpr($2, $3, $5) >>
 ;
 
 IntToPtrExpr
-	: "inttoptr" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewIntToPtrExpr($2, $3, $5) >>
+	: "inttoptr" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewIntToPtrExpr($2, $3, $5) >>
 ;
 
 BitCastExpr
-	: "bitcast" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewBitCastExpr($2, $3, $5) >>
+	: "bitcast" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewBitCastExpr($2, $3, $5) >>
 ;
 
 AddrSpaceCastExpr
-	: "addrspacecast" "(" FirstClassType Constant "to" FirstClassType ")"   << astx.NewAddrSpaceCastExpr($2, $3, $5) >>
+	: "addrspacecast" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewAddrSpaceCastExpr($2, $3, $5) >>
 ;
 

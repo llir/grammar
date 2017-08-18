@@ -3,78 +3,78 @@
 // ~~~ [ trunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TruncInst
-	: "trunc" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewTruncInst($1, $2, $4, $5) >>
+	: "trunc" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewTruncInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ZExtInst
-	: "zext" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewZExtInst($1, $2, $4, $5) >>
+	: "zext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewZExtInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SExtInst
-	: "sext" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewSExtInst($1, $2, $4, $5) >>
+	: "sext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewSExtInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ fptrunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPTruncInst
-	: "fptrunc" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewFPTruncInst($1, $2, $4, $5) >>
+	: "fptrunc" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPTruncInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ fpext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPExtInst
-	: "fpext" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewFPExtInst($1, $2, $4, $5) >>
+	: "fpext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPExtInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ fptoui ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPToUIInst
-	: "fptoui" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewFPToUIInst($1, $2, $4, $5) >>
+	: "fptoui" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPToUIInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ fptosi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPToSIInst
-	: "fptosi" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewFPToSIInst($1, $2, $4, $5) >>
+	: "fptosi" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPToSIInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ uitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 UIToFPInst
-	: "uitofp" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewUIToFPInst($1, $2, $4, $5) >>
+	: "uitofp" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewUIToFPInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ sitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SIToFPInst
-	: "sitofp" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewSIToFPInst($1, $2, $4, $5) >>
+	: "sitofp" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewSIToFPInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ ptrtoint ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PtrToIntInst
-	: "ptrtoint" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewPtrToIntInst($1, $2, $4, $5) >>
+	: "ptrtoint" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewPtrToIntInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 IntToPtrInst
-	: "inttoptr" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewIntToPtrInst($1, $2, $4, $5) >>
+	: "inttoptr" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewIntToPtrInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 BitCastInst
-	: "bitcast" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewBitCastInst($1, $2, $4, $5) >>
+	: "bitcast" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewBitCastInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AddrSpaceCastInst
-	: "addrspacecast" FirstClassType Value "to" FirstClassType OptCommaAttachedMDList   << astx.NewAddrSpaceCastInst($1, $2, $4, $5) >>
+	: "addrspacecast" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewAddrSpaceCastInst($1, $2, $4, $5) >>
 ;
 

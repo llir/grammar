@@ -3,36 +3,36 @@
 // ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ShlInst
-	: "shl" OverflowFlags FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewShlInst($2, $3, $5, $6) >>
+	: "shl" OverflowFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewShlInst($2, $3, $5, $6) >>
 ;
 
 // ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LShrInst
-	: "lshr" OptExact FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewLShrInst($2, $3, $5, $6) >>
+	: "lshr" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewLShrInst($2, $3, $5, $6) >>
 ;
 
 // ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AShrInst
-	: "ashr" OptExact FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewAShrInst($2, $3, $5, $6) >>
+	: "ashr" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewAShrInst($2, $3, $5, $6) >>
 ;
 
 // ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 AndInst
-	: "and" FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewAndInst($1, $2, $4, $5) >>
+	: "and" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewAndInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 OrInst
-	: "or" FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewOrInst($1, $2, $4, $5) >>
+	: "or" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewOrInst($1, $2, $4, $5) >>
 ;
 
 // ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 XorInst
-	: "xor" FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewXorInst($1, $2, $4, $5) >>
+	: "xor" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewXorInst($1, $2, $4, $5) >>
 ;
 

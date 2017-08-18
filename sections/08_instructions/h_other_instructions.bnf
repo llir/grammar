@@ -3,7 +3,7 @@
 // ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ICmpInst
-	: "icmp" IntPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5, $6) >>
+	: "icmp" IntPred ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5, $6) >>
 ;
 
 IntPred
@@ -22,7 +22,7 @@ IntPred
 // ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FCmpInst
-	: "fcmp" FastMathFlags FloatPred FirstClassType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6, $7) >>
+	: "fcmp" FastMathFlags FloatPred ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6, $7) >>
 ;
 
 FloatPred
@@ -47,7 +47,7 @@ FloatPred
 // ~~~ [ phi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PhiInst
-	: "phi" FirstClassType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2, $3) >>
+	: "phi" ConcreteType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2, $3) >>
 ;
 
 IncomingList
@@ -62,7 +62,7 @@ Incoming
 // ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SelectInst
-	: "select" FirstClassType Value "," FirstClassType Value "," FirstClassType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8, $9) >>
+	: "select" ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8, $9) >>
 ;
 
 // ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,20 +93,21 @@ ArgList
 ;
 
 Arg
-	: FirstClassType ParamAttrs Value   << astx.NewValue($0, $2) >>
+	: ConcreteType ParamAttrs Value   << astx.NewValue($0, $2) >>
+	| MetadataType MetadataNode       << astx.NewMetadataArg($1) >>
 ;
 
 // ~~~ [ va_arg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 VAArgInst
-	: "va_arg" FirstClassType Value "," FirstClassType OptCommaAttachedMDList   << nil, nil >>
+	: "va_arg" ConcreteType Value "," ConcreteType OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ landingpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LandingPadInst
-	: "landingpad" FirstClassType ClauseList OptCommaAttachedMDList          << nil, nil >>
-	| "landingpad" FirstClassType "cleanup" Clauses OptCommaAttachedMDList   << nil, nil >>
+	: "landingpad" ConcreteType ClauseList OptCommaAttachedMDList          << nil, nil >>
+	| "landingpad" ConcreteType "cleanup" Clauses OptCommaAttachedMDList   << nil, nil >>
 ;
 
 Clauses
@@ -120,8 +121,8 @@ ClauseList
 ;
 
 Clause
-	: "catch" FirstClassType Value
-	| "filter" FirstClassType ArrayConst
+	: "catch" ConcreteType Value
+	| "filter" ConcreteType ArrayConst
 ;
 
 // ~~~ [ catchpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

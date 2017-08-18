@@ -17,8 +17,8 @@ Terminator
 // ~~~ [ ret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 RetTerm
-	: "ret" VoidType OptCommaAttachedMDList               << astx.NewRetTerm(nil, nil, $2) >>
-	| "ret" FirstClassType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2, $3) >>
+	: "ret" VoidType OptCommaAttachedMDList             << astx.NewRetTerm(nil, nil, $2) >>
+	| "ret" ConcreteType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2, $3) >>
 ;
 
 // ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,7 +56,7 @@ Case
 // ~~~ [ indirectbr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 IndirectBrTerm
-	: "indirectbr" FirstClassType Value "," "[" Labels "]" OptCommaAttachedMDList   << nil, nil >>
+	: "indirectbr" ConcreteType Value "," "[" Labels "]" OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ invoke ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,14 +94,14 @@ Values
 ;
 
 ValueList
-	: FirstClassType Value
-	| ValueList "," FirstClassType Value
+	: ConcreteType Value
+	| ValueList "," ConcreteType Value
 ;
 
 // ~~~ [ resume ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ResumeTerm
-	: "resume" FirstClassType Value OptCommaAttachedMDList   << nil, nil >>
+	: "resume" ConcreteType Value OptCommaAttachedMDList   << nil, nil >>
 ;
 
 // ~~~ [ catchswitch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
