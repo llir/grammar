@@ -3,5 +3,6 @@
 Value
 	: LocalIdent
 	| Constant
+	| MetadataNode
 ;
 

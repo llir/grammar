@@ -595,6 +595,7 @@ NamedType
 Value
 	: LocalIdent
 	| Constant
+	| MetadataNode
 ;
 
 // === [ Constants ] ===========================================================
