@@ -44,3 +44,8 @@ MetadataNode
 	| Type Constant    << astx.NewConstant($0, $1) >>
 ;
 
+MetadataValue
+	: MetadataNode
+	| ConcreteType LocalIdent   << astx.NewValue($0, $1) >>
+;
+

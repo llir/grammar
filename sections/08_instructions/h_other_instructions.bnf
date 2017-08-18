@@ -94,7 +94,7 @@ ArgList
 
 Arg
 	: ConcreteType ParamAttrs Value   << astx.NewValue($0, $2) >>
-	| MetadataType MetadataNode       << astx.NewMetadataArg($1) >>
+	| MetadataType MetadataValue      << astx.NewMetadataValue($1) >>
 ;
 
 // ~~~ [ va_arg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
