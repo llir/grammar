@@ -312,6 +312,25 @@ CallConv
 	| "x86_vectorcallcc"   << ast.CallConvX86_VectorCall, nil >>
 ;
 
+InlineAsm
+	: "asm" OptSideEffect OptAlignStack OptIntelDialect string_lit "," string_lit   << astx.NewInlineAsm($4, $6) >>
+;
+
+OptSideEffect
+	: empty
+	| "sideeffect"
+;
+
+OptAlignStack
+	: empty
+	| "alignstack"
+;
+
+OptIntelDialect
+	: empty
+	| "inteldialect"
+;
+
 Labels
 	: empty
 	| LabelList

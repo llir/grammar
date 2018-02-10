@@ -62,7 +62,7 @@ IndirectBrTerm
 // ~~~ [ invoke ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 InvokeTerm
-	: "invoke" OptCallConv ParamAttrs Type Value "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
+	: "invoke" OptCallConv ParamAttrs Type Callee "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
 ;
 
 OptOperandBundle
