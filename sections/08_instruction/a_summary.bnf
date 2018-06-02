@@ -1,0 +1,90 @@
+// === [ Instructions ] ========================================================
+
+// https://llvm.org/docs/LangRef.html#instruction-reference
+
+// ref: ParseInstruction
+
+Instructions
+	: empty
+	<< ([]ir.Instruction)(nil), nil >>
+	| InstructionList
+;
+
+InstructionList
+	: Instruction
+	<< []ir.Instruction{$0.(ir.Instruction)}, nil >>
+	| InstructionList Instruction
+	<< append($0.([]ir.Instruction), $1.(ir.Instruction)), nil >>
+;
+
+Instruction
+	// Instructions not producing values.
+	: StoreInst
+	| FenceInst
+	| CmpXchgInst
+	| AtomicRMWInst
+	// Instructions producing values.
+	| LocalIdent "=" ValueInstruction
+	<< &ir.LocalDef{Name: astx.LocalIdent($0), Inst: $2.(ir.ValueInstruction)}, nil >>
+	| ValueInstruction
+	<< &ir.LocalDef{Inst: $0.(ir.ValueInstruction)}, nil >>
+;
+
+ValueInstruction
+	// Binary instructions
+	: AddInst
+	| FAddInst
+	| SubInst
+	| FSubInst
+	| MulInst
+	| FMulInst
+	| UDivInst
+	| SDivInst
+	| FDivInst
+	| URemInst
+	| SRemInst
+	| FRemInst
+	// Bitwise instructions
+	| ShlInst
+	| LShrInst
+	| AShrInst
+	| AndInst
+	| OrInst
+	| XorInst
+	// Vector instructions
+	| ExtractElementInst
+	| InsertElementInst
+	| ShuffleVectorInst
+	// Aggregate instructions
+	| ExtractValueInst
+	| InsertValueInst
+	// Memory instructions
+	| AllocaInst
+	| LoadInst
+	| GetElementPtrInst
+	// Conversion instructions
+	| TruncInst
+	| ZExtInst
+	| SExtInst
+	| FPTruncInst
+	| FPExtInst
+	| FPToUIInst
+	| FPToSIInst
+	| UIToFPInst
+	| SIToFPInst
+	| PtrToIntInst
+	| IntToPtrInst
+	| BitCastInst
+	| AddrSpaceCastInst
+	// Other instructions
+	| ICmpInst
+	| FCmpInst
+	| PhiInst
+	| SelectInst
+	| CallInst
+	| VAArgInst
+	| LandingPadInst
+	| CatchPadInst
+	| CleanupPadInst
+;
+

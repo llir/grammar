@@ -1,0 +1,31 @@
+// --- [ Other expressions ] ---------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+ICmpExpr
+	: "icmp" IPred "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprICmp{Pred: $1.(ir.IPred), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FCmpExpr
+	: "fcmp" FPred "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFCmp{Pred: $1.(ir.FPred), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+SelectExpr
+	: "select" "(" Type Constant "," Type Constant "," Type Constant ")"
+	<< &constant.ExprSelect{Cond: astx.TypeConst($2, $3), X: astx.TypeConst($5, $6), Y: astx.TypeConst($8, $9)}, nil >>
+;
+

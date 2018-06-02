@@ -1,0 +1,75 @@
+// ~~~ [ Function Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#functions
+
+// ref: ParseDeclare
+//
+//   ::= 'declare' FunctionHeader
+
+FunctionDecl
+	: "declare" MetadataAttachments OptExternLinkage FunctionHeader
+	<< irx.NewFunctionDecl($1, $2, $3) >>
+;
+
+// ~~~ [ Function Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#functions
+
+// ref: ParseDefine
+//
+//   ::= 'define' FunctionHeader (!dbg !56)* '{' ...
+
+FunctionDef
+	: "define" OptLinkage FunctionHeader MetadataAttachments FunctionBody
+	<< irx.NewFunctionDef($1, $2, $3, $4) >>
+;
+
+// ref: ParseFunctionHeader
+//
+//   ::= OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
+//       OptionalCallingConv OptRetAttrs OptUnnamedAddr Type GlobalName
+//       '(' ArgList ')' OptFuncAttrs OptSection OptionalAlign OptGC
+//       OptionalPrefix OptionalPrologue OptPersonalityFn
+
+// TODO: Add OptAlignment before OptGC once the LR-1 conflict has been resolved,
+// as FuncAttrs also contains "align".
+
+FunctionHeader
+	: OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptCallingConv ReturnAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptSection OptComdat OptGC OptPrefix OptPrologue OptPersonality
+	<< &irx.FunctionHeader{Preemption: $0.(ir.Preemption), Visibility: $1.(ir.Visibility), DLLStorageClass: $2.(ir.DLLStorageClass), CallingConv: $3.(ir.CallingConv), ReturnAttrs: $4.([]ir.ReturnAttribute), RetType: $5.(types.Type), Name: astx.GlobalIdent($6), Params: $8.(*astx.Params).Params, Variadic: $8.(*astx.Params).Variadic, UnnamedAddr: $10.(ir.UnnamedAddr), FuncAttrs: $11.([]ir.FuncAttribute), Section: $12.(*ir.Section), Comdat: $13.(*ir.Comdat), GC: $14.(string), Prefix: astx.OptConstant($15), Prologue: astx.OptConstant($16), Personality: astx.OptConstant($17)}, nil >>
+;
+
+OptGC
+	: empty
+	<< "", nil >>
+	| "gc" StringLit
+	<< $1.(string), nil >>
+;
+
+OptPrefix
+	: empty
+	| "prefix" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+OptPrologue
+	: empty
+	| "prologue" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+OptPersonality
+	: empty
+	| "personality" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+// ref: ParseFunctionBody
+//
+//   ::= '{' BasicBlock+ UseListOrderDirective* '}'
+
+FunctionBody
+	: "{" BasicBlockList UseListOrders "}"
+	<< &irx.FunctionBody{Blocks: $1.([]*ir.BasicBlock), UseListOrders: $2.([]*ir.UseListOrder)}, nil >>
+;
+

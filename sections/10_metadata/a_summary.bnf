@@ -1,0 +1,142 @@
+// === [ Metadata Nodes and Metadata Strings ] =================================
+
+// https://llvm.org/docs/LangRef.html#metadata-nodes-and-metadata-strings
+
+// --- [ Metadata Tuple ] ------------------------------------------------------
+
+// ref: ParseMDTuple
+
+MDTuple
+	: "!" MDFields
+	<< &metadata.MDTuple{Fields: $1.([]metadata.MDField)}, nil >>
+;
+
+// ref: ParseMDNodeVector
+//
+//   ::= { Element (',' Element)* }
+//  Element
+//   ::= 'null' | TypeAndValue
+
+// ref: ParseMDField(MDFieldList &)
+
+MDFields
+	: "{" "}"
+	<< ([]metadata.MDField)(nil), nil >>
+	| "{" MDFieldList "}"
+	<< $1, nil >>
+;
+
+MDFieldList
+	: MDField
+	<< []metadata.MDField{$0.(metadata.MDField)}, nil >>
+	| MDFieldList "," MDField
+	<< append($0.([]metadata.MDField), $2.(metadata.MDField)), nil >>
+;
+
+// ref: ParseMDField(MDField &)
+
+MDField
+	// Null is a special case since it is typeless.
+	: "null"
+	<< &metadata.MDNull{}, nil >>
+	| Metadata
+;
+
+// --- [ Metadata ] ------------------------------------------------------------
+
+// ref: ParseMetadata
+//
+//  ::= i32 %local
+//  ::= i32 @global
+//  ::= i32 7
+//  ::= !42
+//  ::= !{...}
+//  ::= !"string"
+//  ::= !DILocation(...)
+
+Metadata
+	: Type Value
+	<< astx.TypeValue($0, $1), nil >>
+	| MDString
+	// !{ ... }
+	| MDTuple
+	// !7
+	| MetadataID
+	| SpecializedMDNode
+;
+
+// --- [ Metadata String ] -----------------------------------------------------
+
+// ref: ParseMDString
+//
+//   ::= '!' STRINGCONSTANT
+
+MDString
+	: "!" StringLit
+	<< &metadata.MDString{Value: $1.(string)}, nil >>
+;
+
+// --- [ Metadata Attachment ] -------------------------------------------------
+
+// ref: ParseMetadataAttachment
+//
+//   ::= !dbg !42
+
+MetadataAttachment
+	: MetadataName MDNode
+	<< &metadata.MetadataAttachment{Name: astx.MetadataName($0), Node: $1.(metadata.MDNode)}, nil >>
+;
+
+// --- [ Metadata Node ] -------------------------------------------------------
+
+// ref: ParseMDNode
+//
+//  ::= !{ ... }
+//  ::= !7
+//  ::= !DILocation(...)
+
+MDNode
+	// !{ ... }
+	: MDTuple
+	// !42
+	| MetadataID
+	| SpecializedMDNode
+;
+
+// ### [ Helper productions ] ##################################################
+
+// ref: ParseOptionalFunctionMetadata
+//
+//   ::= (!dbg !57)*
+
+MetadataAttachments
+	: empty
+	<< ([]*metadata.MetadataAttachment)(nil), nil >>
+	| MetadataAttachmentList
+;
+
+MetadataAttachmentList
+	: MetadataAttachment
+	<< []*metadata.MetadataAttachment{$0.(*metadata.MetadataAttachment)}, nil >>
+	| MetadataAttachmentList MetadataAttachment
+	<< append($0.([]*metadata.MetadataAttachment), $1.(*metadata.MetadataAttachment)), nil >>
+;
+
+// ref: ParseInstructionMetadata
+//
+//   ::= !dbg !42 (',' !dbg !57)*
+
+OptCommaSepMetadataAttachmentList
+	: empty
+	<< ([]*metadata.MetadataAttachment)(nil), nil >>
+	| "," CommaSepMetadataAttachmentList
+	<< $1, nil >>
+;
+
+CommaSepMetadataAttachmentList
+	: MetadataAttachment
+	<< []*metadata.MetadataAttachment{$0.(*metadata.MetadataAttachment)}, nil >>
+	| CommaSepMetadataAttachmentList "," MetadataAttachment
+	<< append($0.([]*metadata.MetadataAttachment), $2.(*metadata.MetadataAttachment)), nil >>
+;
+

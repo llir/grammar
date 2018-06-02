@@ -1,29 +1,35 @@
-# Modules
+# BNF of LLVM IR assembly grammar
+
+[ll.bnf](ll.bnf)
+
+## Modules
 
 `01_modules.bnf`
 
 * Source filename
-* Target specifiers
+* Target definitions
 * Module-level inline assembly
 * Type definitions
 * Comdat definitions
 * Global variables
+* Indirect symbols
 * Functions
 * Attribute group definitions
 * Metadata definitions
+* Use-list order directives
 
-# Identifiers
+## Identifiers
 
 `02_identifiers.bnf`
 
-* Global identifier
-* Local identifier
-* Label identifier
-* Attribute group ID
-* Comdat name
-* Metadata identifier
+* Global identifiers
+* Local identifiers
+* Label identifiers
+* Attribute group identifiers
+* Comdat identifiers
+* Metadata identifiers
 
-# Types
+## Types
 
 `03_types.bnf`
 
@@ -34,29 +40,39 @@
 * Pointer type
 * Vector type
 * Label type
-* Metadata type
 * Array type
 * Struct type
 * Named type
+* MMX type
+* Metadata type
 
-# Values
+## Values
 
 `04_values.bnf`
 
-# Constants
+* Constants
+* Local identifiers
+* Inline assembler expressions
+
+## Constants
 
 `05_constants.bnf`
 
-* Integer constant
-* Floating-point constant
-* Pointer constant
-* Vector constant
-* Array constant
-* Struct constant
-* Zero initializer constant
-* Undefined value constant
+* Boolean constants
+* Integer constants
+* Floating-point constants
+* Null pointer constants
+* Token constants
+* Structure constants
+* Array constants
+* Vector constants
+* Zero initialization constants
+* Global identifiers
+* Undefined values
+* Addresses of basic blocks
+* Constant expressions
 
-# Constant expressions
+## Constant expressions
 
 `06_constant_expressions.bnf`
 
@@ -68,11 +84,11 @@
 * Conversion expressions
 * Other expressions
 
-# Basic blocks
+## Basic blocks
 
 `07_basic_blocks.bnf`
 
-# Instructions
+## Instructions
 
 `08_instructions.bnf`
 
@@ -84,6 +100,15 @@
 * Conversion instructions
 * Other instructions
 
-# Terminators
+## Terminators
 
 `09_terminators.bnf`
+
+## Metadata
+
+* Metadata tuples
+* metadata
+* Metadata strings
+* Metadata attachments
+* Metadata nodes
+* Specialized metadata nodes

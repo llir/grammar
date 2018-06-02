@@ -1,0 +1,1269 @@
+// --- [ Specialized Metadata Nodes ] ------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#specialized-metadata-nodes
+
+// ref: ParseSpecializedMDNode
+
+SpecializedMDNode
+	: DICompileUnit
+	| DIFile
+	| DIBasicType
+	| DISubroutineType
+	| DIDerivedType
+	| DICompositeType
+	| DISubrange
+	| DIEnumerator
+	| DITemplateTypeParameter
+	| DITemplateValueParameter
+	| DIModule // not in spec as of 2018-02-21
+	| DINamespace
+	| DIGlobalVariable
+	| DISubprogram
+	| DILexicalBlock
+	| DILexicalBlockFile
+	| DILocation
+	| DILocalVariable
+	| DIExpression
+	| DIGlobalVariableExpression // not in spec as of 2018-02-21
+	| DIObjCProperty
+	| DIImportedEntity
+	| DIMacro
+	| DIMacroFile
+	| GenericDINode // not in spec as of 2018-02-21
+;
+
+// ~~~ [ DICompileUnit ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dicompileunit
+
+// ref: ParseDICompileUnit
+//
+//   ::= !DICompileUnit(language: DW_LANG_C99, file: !0, producer: "clang",
+//                      isOptimized: true, flags: "-O2", runtimeVersion: 1,
+//                      splitDebugFilename: "abc.debug",
+//                      emissionKind: FullDebug, enums: !1, retainedTypes: !2,
+//                      globals: !4, imports: !5, macros: !6, dwoId: 0x0abcd)
+//
+//  REQUIRED(language, DwarfLangField, );
+//  REQUIRED(file, MDField, (AllowNull false));
+//  OPTIONAL(producer, MDStringField, );
+//  OPTIONAL(isOptimized, MDBoolField, );
+//  OPTIONAL(flags, MDStringField, );
+//  OPTIONAL(runtimeVersion, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(splitDebugFilename, MDStringField, );
+//  OPTIONAL(emissionKind, EmissionKindField, );
+//  OPTIONAL(enums, MDField, );
+//  OPTIONAL(retainedTypes, MDField, );
+//  OPTIONAL(globals, MDField, );
+//  OPTIONAL(imports, MDField, );
+//  OPTIONAL(macros, MDField, );
+//  OPTIONAL(dwoId, MDUnsignedField, );
+//  OPTIONAL(splitDebugInlining, MDBoolField, = true);
+//  OPTIONAL(debugInfoForProfiling, MDBoolField, = false);
+//  OPTIONAL(gnuPubnames, MDBoolField, = false);
+
+DICompileUnit
+	: "!DICompileUnit" "(" DICompileUnitFields ")"
+	<< astx.NewDICompileUnit($2.([]*astx.SpecializedMDField)) >>
+;
+
+DICompileUnitFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DICompileUnitFieldList
+;
+
+DICompileUnitFieldList
+	: DICompileUnitField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DICompileUnitFieldList "," DICompileUnitField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DICompileUnitField
+	: "language:" DwarfLang
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FileField
+	| "producer:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| IsOptimizedField
+	| "flags:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "runtimeVersion:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "splitDebugFilename:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "emissionKind:" EmissionKind
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "enums:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "retainedTypes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "globals:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "imports:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "macros:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "dwoId:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "splitDebugInlining:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "debugInfoForProfiling:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "gnuPubnames:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#difile
+
+// ref: ParseDIFileType
+//
+//   ::= !DIFileType(filename: "path/to/file", directory: "/path/to/dir"
+//                   checksumkind: CSK_MD5,
+//                   checksum: "000102030405060708090a0b0c0d0e0f")
+//
+//  REQUIRED(filename, MDStringField, );
+//  REQUIRED(directory, MDStringField, );
+//  OPTIONAL(checksumkind, ChecksumKindField, (DIFile::CSK_MD5));
+//  OPTIONAL(checksum, MDStringField, );
+
+DIFile
+	: "!DIFile" "(" DIFileFields ")"
+	<< astx.NewDIFile($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIFileFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIFileFieldList
+;
+
+DIFileFieldList
+	: DIFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIFileFieldList "," DIFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIFileField
+	: "filename:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "directory:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "checksumkind:" ChecksumKind
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "checksum:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIBasicType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dibasictype
+
+// ref: ParseDIBasicType
+//
+//   ::= !DIBasicType(tag: DW_TAG_base_type, name: "int", size: 32, align: 32)
+//
+//  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_base_type));
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(encoding, DwarfAttEncodingField, );
+
+DIBasicType
+	: "!DIBasicType" "(" DIBasicTypeFields ")"
+	<< astx.NewDIBasicType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIBasicTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIBasicTypeFieldList
+;
+
+DIBasicTypeFieldList
+	: DIBasicTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIBasicTypeFieldList "," DIBasicTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIBasicTypeField
+	: TagField
+	| NameField
+	| SizeField
+	| AlignField
+	| "encoding:" DwarfAttEncoding
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DISubroutineType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubroutinetype
+
+// ref: ParseDISubroutineType
+//
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(cc, DwarfCCField, );
+//  REQUIRED(types, MDField, );
+
+DISubroutineType
+	: "!DISubroutineType" "(" DISubroutineTypeFields ")"
+	<< astx.NewDISubroutineType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubroutineTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubroutineTypeFieldList
+;
+
+DISubroutineTypeFieldList
+	: DISubroutineTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubroutineTypeFieldList "," DISubroutineTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubroutineTypeField
+	: FlagsField
+	| "cc:" DwarfCC
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "types:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diderivedtype
+
+// ref: ParseDIDerivedType
+//
+//   ::= !DIDerivedType(tag: DW_TAG_pointer_type, name: "int", file: !0,
+//                      line: 7, scope: !1, baseType: !2, size: 32,
+//                      align: 32, offset: 0, flags: 0, extraData: !3,
+//                      dwarfAddressSpace: 3)
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(baseType, MDField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(offset, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(extraData, MDField, );
+//  OPTIONAL(dwarfAddressSpace, MDUnsignedField, (UINT32_MAX, UINT32_MAX));
+
+DIDerivedType
+	: "!DIDerivedType" "(" DIDerivedTypeFields ")"
+	<< astx.NewDIDerivedType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIDerivedTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIDerivedTypeFieldList
+;
+
+DIDerivedTypeFieldList
+	: DIDerivedTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIDerivedTypeFieldList "," DIDerivedTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIDerivedTypeField
+	: TagField
+	| NameField
+	| ScopeField
+	| FileField
+	| LineField
+	| BaseTypeField
+	| SizeField
+	| AlignField
+	| OffsetField
+	| FlagsField
+	| "extraData:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "dwarfAddressSpace:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DICompositeType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dicompositetype
+
+// ref: ParseDICompositeType
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(baseType, MDField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(offset, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(elements, MDField, );
+//  OPTIONAL(runtimeLang, DwarfLangField, );
+//  OPTIONAL(vtableHolder, MDField, );
+//  OPTIONAL(templateParams, MDField, );
+//  OPTIONAL(identifier, MDStringField, );
+//  OPTIONAL(discriminator, MDField, );
+
+DICompositeType
+	: "!DICompositeType" "(" DICompositeTypeFields ")"
+	<< astx.NewDICompositeType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DICompositeTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DICompositeTypeFieldList
+;
+
+DICompositeTypeFieldList
+	: DICompositeTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DICompositeTypeFieldList "," DICompositeTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DICompositeTypeField
+	: TagField
+	| NameField
+	| ScopeField
+	| FileField
+	| LineField
+	| BaseTypeField
+	| SizeField
+	| AlignField
+	| OffsetField
+	| FlagsField
+	| "elements:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "runtimeLang:" DwarfLang
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "vtableHolder:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TemplateParamsField
+	| "identifier:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "discriminator:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DISubrange ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubrange
+
+// ref: ParseDISubrange
+//
+//   ::= !DISubrange(count: 30, lowerBound: 2)
+//   ::= !DISubrange(count: !node, lowerBound: 2)
+//
+//  REQUIRED(count, MDSignedOrMDField, (-1, -1, INT64_MAX, false));
+//  OPTIONAL(lowerBound, MDSignedField, );
+
+DISubrange
+	: "!DISubrange" "(" DISubrangeFields ")"
+	<< astx.NewDISubrange($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubrangeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubrangeFieldList
+;
+
+DISubrangeFieldList
+	: DISubrangeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubrangeFieldList "," DISubrangeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubrangeField
+	: "count:" IntOrMDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "lowerBound:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIEnumerator ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dienumerator
+
+// ref: ParseDIEnumerator
+//
+//   ::= !DIEnumerator(value: 30, isUnsigned: true, name: "SomeKind")
+//
+//  REQUIRED(name, MDStringField, );
+//  REQUIRED(value, MDSignedOrUnsignedField, );
+//  OPTIONAL(isUnsigned, MDBoolField, (false));
+
+DIEnumerator
+	: "!DIEnumerator" "(" DIEnumeratorFields ")"
+	<< astx.NewDIEnumerator($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIEnumeratorFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIEnumeratorFieldList
+;
+
+DIEnumeratorFieldList
+	: DIEnumeratorField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIEnumeratorFieldList "," DIEnumeratorField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIEnumeratorField
+	: NameField
+	| "value:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "isUnsigned:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DITemplateTypeParameter ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ditemplatetypeparameter
+
+// ref: ParseDITemplateTypeParameter
+//
+//   ::= !DITemplateTypeParameter(name: "Ty", type: !1)
+//
+//  OPTIONAL(name, MDStringField, );
+//  REQUIRED(type, MDField, );
+
+DITemplateTypeParameter
+	: "!DITemplateTypeParameter" "(" DITemplateTypeParameterFields ")"
+	<< astx.NewDITemplateTypeParameter($2.([]*astx.SpecializedMDField)) >>
+;
+
+DITemplateTypeParameterFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DITemplateTypeParameterFieldList
+;
+
+DITemplateTypeParameterFieldList
+	: DITemplateTypeParameterField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DITemplateTypeParameterFieldList "," DITemplateTypeParameterField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DITemplateTypeParameterField
+	: NameField
+	| TypeField
+;
+
+// ~~~ [ DITemplateValueParameter ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ditemplatevalueparameter
+
+// ref: ParseDITemplateValueParameter
+//
+//   ::= !DITemplateValueParameter(tag: DW_TAG_template_value_parameter,
+//                                 name: "V", type: !1, value: i32 7)
+//
+//  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_template_value_parameter));
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(type, MDField, );
+//  REQUIRED(value, MDField, );
+
+DITemplateValueParameter
+	: "!DITemplateValueParameter" "(" DITemplateValueParameterFields ")"
+	<< astx.NewDITemplateValueParameter($2.([]*astx.SpecializedMDField)) >>
+;
+
+DITemplateValueParameterFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DITemplateValueParameterFieldList
+;
+
+DITemplateValueParameterFieldList
+	: DITemplateValueParameterField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DITemplateValueParameterFieldList "," DITemplateValueParameterField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DITemplateValueParameterField
+	: TagField
+	| NameField
+	| TypeField
+	| "value:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIModule ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseDIModule
+//
+//   ::= !DIModule(scope: !0, name: "SomeModule", configMacros: "-DNDEBUG",
+//                 includePath: "/usr/include", isysroot: "/")
+//
+//  REQUIRED(scope, MDField, );
+//  REQUIRED(name, MDStringField, );
+//  OPTIONAL(configMacros, MDStringField, );
+//  OPTIONAL(includePath, MDStringField, );
+//  OPTIONAL(isysroot, MDStringField, );
+
+DIModule
+	: "!DIModule" "(" DIModuleFields ")"
+	<< astx.NewDIModule($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIModuleFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIModuleFieldList
+;
+
+DIModuleFieldList
+	: DIModuleField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIModuleFieldList "," DIModuleField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIModuleField
+	: ScopeField
+	| NameField
+	| "configMacros:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "includePath:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "isysroot:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dinamespace
+
+// ref: ParseDINamespace
+//
+//   ::= !DINamespace(scope: !0, file: !2, name: "SomeNamespace", line: 9)
+//
+//  REQUIRED(scope, MDField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(exportSymbols, MDBoolField, );
+
+DINamespace
+	: "!DINamespace" "(" DINamespaceFields ")"
+	<< astx.NewDINamespace($2.([]*astx.SpecializedMDField)) >>
+;
+
+DINamespaceFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DINamespaceFieldList
+;
+
+DINamespaceFieldList
+	: DINamespaceField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DINamespaceFieldList "," DINamespaceField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DINamespaceField
+	: ScopeField
+	| NameField
+	| "exportSymbols:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIGlobalVariable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diglobalvariable
+
+// ref: ParseDIGlobalVariable
+//
+//   ::= !DIGlobalVariable(scope: !0, name: "foo", linkageName: "foo",
+//                         file: !1, line: 7, type: !2, isLocal: false,
+//                         isDefinition: true, declaration: !3, align: 8)
+//
+//  REQUIRED(name, MDStringField, (AllowEmpty false));
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(linkageName, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(isLocal, MDBoolField, );
+//  OPTIONAL(isDefinition, MDBoolField, (true));
+//  OPTIONAL(declaration, MDField, );
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+
+DIGlobalVariable
+	: "!DIGlobalVariable" "(" DIGlobalVariableFields ")"
+	<< astx.NewDIGlobalVariable($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIGlobalVariableFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIGlobalVariableFieldList
+;
+
+DIGlobalVariableFieldList
+	: DIGlobalVariableField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIGlobalVariableFieldList "," DIGlobalVariableField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIGlobalVariableField
+	: NameField
+	| ScopeField
+	| LinkageNameField
+	| FileField
+	| LineField
+	| TypeField
+	| IsLocalField
+	| IsDefinitionField
+	| DeclarationField
+	| AlignField
+;
+
+// ~~~ [ DISubprogram ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubprogram
+
+// ref: ParseDISubprogram
+//
+//   ::= !DISubprogram(scope: !0, name: "foo", linkageName: "_Zfoo",
+//                     file: !1, line: 7, type: !2, isLocal: false,
+//                     isDefinition: true, scopeLine: 8, containingType: !3,
+//                     virtuality: DW_VIRTUALTIY_pure_virtual,
+//                     virtualIndex: 10, thisAdjustment: 4, flags: 11,
+//                     isOptimized: false, templateParams: !4, declaration: !5,
+//                     variables: !6, thrownTypes: !7)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(linkageName, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(isLocal, MDBoolField, );
+//  OPTIONAL(isDefinition, MDBoolField, (true));
+//  OPTIONAL(scopeLine, LineField, );
+//  OPTIONAL(containingType, MDField, );
+//  OPTIONAL(virtuality, DwarfVirtualityField, );
+//  OPTIONAL(virtualIndex, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(thisAdjustment, MDSignedField, (0, INT32_MIN, INT32_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(isOptimized, MDBoolField, );
+//  OPTIONAL(unit, MDField, );
+//  OPTIONAL(templateParams, MDField, );
+//  OPTIONAL(declaration, MDField, );
+//  OPTIONAL(variables, MDField, );
+//  OPTIONAL(thrownTypes, MDField, );
+
+DISubprogram
+	: "!DISubprogram" "(" DISubprogramFields ")"
+	<< astx.NewDISubprogram($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubprogramFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubprogramFieldList
+;
+
+DISubprogramFieldList
+	: DISubprogramField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubprogramFieldList "," DISubprogramField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubprogramField
+	: NameField
+	| ScopeField
+	| LinkageNameField
+	| FileField
+	| LineField
+	| TypeField
+	| IsLocalField
+	| IsDefinitionField
+	| "scopeLine:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "containingType:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "virtuality:" DwarfVirtuality
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "virtualIndex:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "thisAdjustment:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FlagsField
+	| IsOptimizedField
+	| "unit:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TemplateParamsField
+	| DeclarationField
+	| "variables:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "thrownTypes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILexicalBlock ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilexicalblock
+
+// ref: ParseDILexicalBlock
+//
+//   ::= !DILexicalBlock(scope: !0, file: !2, line: 7, column: 9)
+//
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(column, ColumnField, );
+
+DILexicalBlock
+	: "!DILexicalBlock" "(" DILexicalBlockFields ")"
+	<< astx.NewDILexicalBlock($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILexicalBlockFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILexicalBlockFieldList
+;
+
+DILexicalBlockFieldList
+	: DILexicalBlockField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILexicalBlockFieldList "," DILexicalBlockField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILexicalBlockField
+	: ScopeField
+	| FileField
+	| LineField
+	| ColumnField
+;
+
+// ~~~ [ DILexicalBlockFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilexicalblockfile
+
+// ref: ParseDILexicalBlockFile
+//
+//   ::= !DILexicalBlockFile(scope: !0, file: !2, discriminator: 9)
+//
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  REQUIRED(discriminator, MDUnsignedField, (0, UINT32_MAX));
+
+DILexicalBlockFile
+	: "!DILexicalBlockFile" "(" DILexicalBlockFileFields ")"
+	<< astx.NewDILexicalBlockFile($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILexicalBlockFileFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILexicalBlockFileFieldList
+;
+
+DILexicalBlockFileFieldList
+	: DILexicalBlockFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILexicalBlockFileFieldList "," DILexicalBlockFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILexicalBlockFileField
+	: ScopeField
+	| FileField
+	| "discriminator:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILocation ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilocation
+
+// ref: ParseDILocation
+//
+//   ::= !DILocation(line: 43, column: 8, scope: !5, inlinedAt: !6)
+//
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(column, ColumnField, );
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(inlinedAt, MDField, );
+
+DILocation
+	: "!DILocation" "(" DILocationFields ")"
+	<< astx.NewDILocation($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILocationFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILocationFieldList
+;
+
+DILocationFieldList
+	: DILocationField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILocationFieldList "," DILocationField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILocationField
+	: LineField
+	| ColumnField
+	| ScopeField
+	| "inlinedAt:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILocalVariable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilocalvariable
+
+// ref: ParseDILocalVariable
+//
+//   ::= !DILocalVariable(arg: 7, scope: !0, name: "foo",
+//                        file: !1, line: 7, type: !2, arg: 2, flags: 7,
+//                        align: 8)
+//   ::= !DILocalVariable(scope: !0, name: "foo",
+//                        file: !1, line: 7, type: !2, arg: 2, flags: 7,
+//                        align: 8)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(arg, MDUnsignedField, (0, UINT16_MAX));
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+
+DILocalVariable
+	: "!DILocalVariable" "(" DILocalVariableFields ")"
+	<< astx.NewDILocalVariable($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILocalVariableFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILocalVariableFieldList
+;
+
+DILocalVariableFieldList
+	: DILocalVariableField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILocalVariableFieldList "," DILocalVariableField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILocalVariableField
+	: NameField
+	| "arg:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| ScopeField
+	| FileField
+	| LineField
+	| TypeField
+	| FlagsField
+	| AlignField
+;
+
+// ~~~ [ DIExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diexpression
+
+// ref: ParseDIExpression
+//
+//   ::= !DIExpression(0, 7, -1)
+
+DIExpression
+	: "!DIExpression" "(" DIExpressionFields ")"
+	<< &metadata.DIExpression{Fields: $2.([]metadata.DIExpressionField)}, nil >>
+;
+
+DIExpressionFields
+	: empty
+	<< ([]metadata.DIExpressionField)(nil), nil >>
+	| DIExpressionFieldList
+;
+
+DIExpressionFieldList
+	: DIExpressionField
+	<< []metadata.DIExpressionField{$0.(metadata.DIExpressionField)}, nil >>
+	| DIExpressionFieldList "," DIExpressionField
+	<< append($0.([]metadata.DIExpressionField), $2.(metadata.DIExpressionField)), nil >>
+;
+
+DIExpressionField
+	: int_lit
+	<< metadata.NewMDIntFromString(astx.String($0)), nil >>
+	| DwarfOp
+;
+
+// ~~~ [ DIGlobalVariableExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseDIGlobalVariableExpression
+//
+//   ::= !DIGlobalVariableExpression(var: !0, expr: !1)
+//
+//  REQUIRED(var, MDField, );
+//  REQUIRED(expr, MDField, );
+
+DIGlobalVariableExpression
+	: "!DIGlobalVariableExpression" "(" DIGlobalVariableExpressionFields ")"
+	<< astx.NewDIGlobalVariableExpression($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIGlobalVariableExpressionFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIGlobalVariableExpressionFieldList
+;
+
+DIGlobalVariableExpressionFieldList
+	: DIGlobalVariableExpressionField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIGlobalVariableExpressionFieldList "," DIGlobalVariableExpressionField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIGlobalVariableExpressionField
+	: "var:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "expr:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIObjCProperty ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diobjcproperty
+
+// ref: ParseDIObjCProperty
+//
+//   ::= !DIObjCProperty(name: "foo", file: !1, line: 7, setter: "setFoo",
+//                       getter: "getFoo", attributes: 7, type: !2)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(setter, MDStringField, );
+//  OPTIONAL(getter, MDStringField, );
+//  OPTIONAL(attributes, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(type, MDField, );
+
+DIObjCProperty
+	: "!DIObjCProperty" "(" DIObjCPropertyFields ")"
+	<< astx.NewDIObjCProperty($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIObjCPropertyFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIObjCPropertyFieldList
+;
+
+DIObjCPropertyFieldList
+	: DIObjCPropertyField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIObjCPropertyFieldList "," DIObjCPropertyField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIObjCPropertyField
+	: NameField
+	| FileField
+	| LineField
+	| "setter:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "getter:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "attributes:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TypeField
+;
+
+// ~~~ [ DIImportedEntity ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diimportedentity
+
+// ref: ParseDIImportedEntity
+//
+//   ::= !DIImportedEntity(tag: DW_TAG_imported_module, scope: !0, entity: !1,
+//                         line: 7, name: "foo")
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  REQUIRED(scope, MDField, );
+//  OPTIONAL(entity, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(name, MDStringField, );
+
+DIImportedEntity
+	: "!DIImportedEntity" "(" DIImportedEntityFields ")"
+	<< astx.NewDIImportedEntity($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIImportedEntityFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIImportedEntityFieldList
+;
+
+DIImportedEntityFieldList
+	: DIImportedEntityField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIImportedEntityFieldList "," DIImportedEntityField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIImportedEntityField
+	: TagField
+	| ScopeField
+	| "entity:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FileField
+	| LineField
+	| NameField
+;
+
+// ~~~ [ DIMacro ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dimacro
+
+// ref: ParseDIMacro
+//
+//   ::= !DIMacro(macinfo: type, line: 9, name: "SomeMacro", value: "SomeValue")
+//
+//  REQUIRED(type, DwarfMacinfoTypeField, );
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(name, MDStringField, );
+//  OPTIONAL(value, MDStringField, );
+
+DIMacro
+	: "!DIMacro" "(" DIMacroFields ")"
+	<< astx.NewDIMacro($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIMacroFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIMacroFieldList
+;
+
+DIMacroFieldList
+	: DIMacroField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIMacroFieldList "," DIMacroField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIMacroField
+	: TypeMacinfoField
+	| LineField
+	| NameField
+	| "value:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIMacroFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dimacrofile
+
+// ref: ParseDIMacroFile
+//
+//   ::= !DIMacroFile(line: 9, file: !2, nodes: !3)
+//
+//  OPTIONAL(type, DwarfMacinfoTypeField, (dwarf::DW_MACINFO_start_file));
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(file, MDField, );
+//  OPTIONAL(nodes, MDField, );
+
+DIMacroFile
+	: "!DIMacroFile" "(" DIMacroFileFields ")"
+	<< astx.NewDIMacroFile($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIMacroFileFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIMacroFileFieldList
+;
+
+DIMacroFileFieldList
+	: DIMacroFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIMacroFileFieldList "," DIMacroFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIMacroFileField
+	: TypeMacinfoField
+	| LineField
+	| FileField
+	| "nodes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ GenericDINode ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseGenericDINode
+//
+//   ::= !GenericDINode(tag: 15, header: "...", operands: {...})
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(header, MDStringField, );
+//  OPTIONAL(operands, MDFieldList, );
+
+GenericDINode
+	: "!GenericDINode" "(" GenericDINodeFields ")"
+	<< astx.NewGenericDINode($2.([]*astx.SpecializedMDField)) >>
+;
+
+GenericDINodeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| GenericDINodeFieldList
+;
+
+GenericDINodeFieldList
+	: GenericDINodeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| GenericDINodeFieldList "," GenericDINodeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+GenericDINodeField
+	: TagField
+	| "header:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "operands:" MDFields
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ### [ Helper productions ] ##################################################
+
+FileField
+	: "file:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsOptimizedField
+	: "isOptimized:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TagField
+	: "tag:" DwarfTag
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+NameField
+	: "name:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+SizeField
+	: "size:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+AlignField
+	: "align:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+FlagsField
+	: "flags:" DIFlagList
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+LineField
+	: "line:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+ScopeField
+	: "scope:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+BaseTypeField
+	: "baseType:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+OffsetField
+	: "offset:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TemplateParamsField
+	: "templateParams:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ref: ParseMDField(MDSignedOrMDField &)
+
+IntOrMDField
+	: int_lit
+	<< metadata.NewMDIntFromString(astx.String($0)), nil >>
+	| MDField
+;
+
+TypeField
+	: "type:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+LinkageNameField
+	: "linkageName:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsLocalField
+	: "isLocal:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsDefinitionField
+	: "isDefinition:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+DeclarationField
+	: "declaration:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+ColumnField
+	: "column:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TypeMacinfoField
+	: "type:" DwarfMacinfo
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+

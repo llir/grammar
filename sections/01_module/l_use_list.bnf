@@ -1,0 +1,37 @@
+// ~~~ [ Use-list Order Directives ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#use-list-order-directives
+
+// ref: ParseUseListOrder
+//
+//   ::= 'uselistorder' Type Value ',' UseListOrderIndexes
+//  UseListOrderIndexes
+//   ::= '{' uint32 (',' uint32)+ '}'
+
+UseListOrders
+	: empty
+	<< ([]*ir.UseListOrder)(nil), nil >>
+	| UseListOrderList
+;
+
+UseListOrderList
+	: UseListOrder
+	<< []*ir.UseListOrder{$0.(*ir.UseListOrder)}, nil >>
+	| UseListOrderList UseListOrder
+	<< append($0.([]*ir.UseListOrder), $1.(*ir.UseListOrder)), nil >>
+;
+
+UseListOrder
+	: "uselistorder" Type Value "," "{" IndexList "}"
+	<< &ir.UseListOrder{Value: astx.TypeValue($1, $2), Indices: $5.([]int64)}, nil >>
+;
+
+// ref: ParseUseListOrderBB
+//
+//   ::= 'uselistorder_bb' @foo ',' %bar ',' UseListOrderIndexes
+
+UseListOrderBB
+	: "uselistorder_bb" GlobalIdent "," LocalIdent "," "{" IndexList "}"
+	<< &ir.UseListOrderBB{Func: &ir.Function{Name: astx.GlobalIdent($1)}, Block: &ir.BasicBlock{Name: astx.LocalIdent($3)}, Indices: $6.([]int64)}, nil >>
+;
+

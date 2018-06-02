@@ -1,0 +1,58 @@
+// --- [ Bitwise expressions ] -------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+ShlExpr
+	: "shl" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprShl{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+LShrExpr
+	: "lshr" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprLShr{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+AShrExpr
+	: "ashr" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAShr{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+AndExpr
+	: "and" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAnd{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+OrExpr
+	: "or" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprOr{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+XorExpr
+	: "xor" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprXor{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+

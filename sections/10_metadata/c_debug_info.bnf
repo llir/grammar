@@ -1,0 +1,100 @@
+ChecksumKind
+	// CSK_foo
+	: checksum_kind
+	<< astx.NewChecksumKind($0) >>
+;
+
+// ref: ParseMDField(DIFlagField &)
+//
+//  ::= uint32
+//  ::= DIFlagVector
+//  ::= DIFlagVector '|' DIFlagFwdDecl '|' uint32 '|' DIFlagPublic
+
+DIFlagList
+	: DIFlag
+	<< []metadata.DIFlag{$0.(metadata.DIFlag)}, nil >>
+	| DIFlagList "|" DIFlag
+	<< append($0.([]metadata.DIFlag), $2.(metadata.DIFlag)), nil >>
+;
+
+DIFlag
+	: IntLit
+	<< metadata.DIFlag($0.(int64)), nil >>
+	// DIFlagFoo
+	| di_flag
+	<< astx.NewDIFlag($0) >>
+;
+
+// ref: ParseMDField(DwarfAttEncodingField &)
+
+DwarfAttEncoding
+	: IntLit
+	<< metadata.DwarfAttEncoding($0.(int64)), nil >>
+	// DW_ATE_foo
+	| dwarf_att_encoding
+	<< astx.NewDwarfAttEncoding($0) >>
+;
+
+// ref: ParseMDField(DwarfCCField &Result)
+
+DwarfCC
+	: IntLit
+	<< metadata.DwarfCC($0.(int64)), nil >>
+	// DW_CC_foo
+	| dwarf_cc
+	<< astx.NewDwarfCC($0) >>
+;
+
+// ref: ParseMDField(DwarfLangField &)
+
+DwarfLang
+	: IntLit
+	<< metadata.DwarfLang($0.(int64)), nil >>
+	// DW_LANG_foo
+	| dwarf_lang
+	<< astx.NewDwarfLang($0) >>
+;
+
+// ref: ParseMDField(DwarfMacinfoTypeField &)
+
+DwarfMacinfo
+	: IntLit
+	<< metadata.DwarfMacinfo($0.(int64)), nil >>
+	// DW_MACINFO_foo
+	| dwarf_macinfo
+	<< astx.NewDwarfMacinfo($0) >>
+;
+
+DwarfOp
+	// DW_OP_foo
+	: dwarf_op
+	<< astx.NewDwarfOp($0) >>
+;
+
+// ref: ParseMDField(DwarfTagField &)
+
+DwarfTag
+	: IntLit
+	<< metadata.DwarfTag($0.(int64)), nil >>
+	// DW_TAG_foo
+	| dwarf_tag
+	<< astx.NewDwarfTag($0) >>
+;
+
+// ref: ParseMDField(DwarfVirtualityField &)
+
+DwarfVirtuality
+	: IntLit
+	<< metadata.DwarfVirtuality($0.(int64)), nil >>
+	// DW_VIRTUALITY_foo
+	| dwarf_virtuality
+	<< astx.NewDwarfVirtuality($0) >>
+;
+
+EmissionKind
+	: IntLit             << metadata.EmissionKind($0.(int64)), nil >>
+	| "FullDebug"        << metadata.EmissionKindFullDebug, nil >>
+	| "LineTablesOnly"   << metadata.EmissionKindLineTablesOnly, nil >>
+	| "NoDebug"          << metadata.EmissionKindNoDebug, nil >>
+;
+

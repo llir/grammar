@@ -1,0 +1,56 @@
+// === [ Constant expressions ] ================================================
+
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ref: ParseValID
+
+ConstantExpr
+	// Binary expressions
+	: AddExpr
+	| FAddExpr
+	| SubExpr
+	| FSubExpr
+	| MulExpr
+	| FMulExpr
+	| UDivExpr
+	| SDivExpr
+	| FDivExpr
+	| URemExpr
+	| SRemExpr
+	| FRemExpr
+	// Bitwise expressions
+	| ShlExpr
+	| LShrExpr
+	| AShrExpr
+	| AndExpr
+	| OrExpr
+	| XorExpr
+	// Vector expressions
+	| ExtractElementExpr
+	| InsertElementExpr
+	| ShuffleVectorExpr
+	// Aggregate expressions
+	| ExtractValueExpr
+	| InsertValueExpr
+	// Memory expressions
+	| GetElementPtrExpr
+	// Conversion expressions
+	| TruncExpr
+	| ZExtExpr
+	| SExtExpr
+	| FPTruncExpr
+	| FPExtExpr
+	| FPToUIExpr
+	| FPToSIExpr
+	| UIToFPExpr
+	| SIToFPExpr
+	| PtrToIntExpr
+	| IntToPtrExpr
+	| BitCastExpr
+	| AddrSpaceCastExpr
+	// Other expressions
+	| ICmpExpr
+	| FCmpExpr
+	| SelectExpr
+;
+

@@ -1,0 +1,28 @@
+// --- [ Aggregate instructions ] ----------------------------------------------
+
+// ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#extractvalue-instruction
+
+// ref: ParseExtractValue
+//
+//   ::= 'extractvalue' TypeAndValue (',' uint32)+
+
+ExtractValueInst
+	: "extractvalue" Type Value "," IndexList OptCommaSepMetadataAttachmentList
+	<< &ir.InstExtractValue{X: astx.TypeValue($1, $2), Indices: $4.([]int64), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#insertvalue-instruction
+
+// ref: ParseInsertValue
+//
+//   ::= 'insertvalue' TypeAndValue ',' TypeAndValue (',' uint32)+
+
+InsertValueInst
+	: "insertvalue" Type Value "," Type Value "," IndexList OptCommaSepMetadataAttachmentList
+	<< &ir.InstInsertValue{X: astx.TypeValue($1, $2), Elem: astx.TypeValue($4, $5), Indices: $7.([]int64), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
+;
+

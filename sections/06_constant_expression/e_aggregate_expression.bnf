@@ -1,0 +1,22 @@
+// --- [ Aggregate expressions ] -----------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+ExtractValueExpr
+	: "extractvalue" "(" Type Constant Indices ")"
+	<< &constant.ExprExtractValue{X: astx.TypeConst($2, $3), Indices: $4.([]int64)}, nil >>
+;
+
+// ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+InsertValueExpr
+	: "insertvalue" "(" Type Constant "," Type Constant Indices ")"
+	<< &constant.ExprInsertValue{X: astx.TypeConst($2, $3), Elem: astx.TypeConst($5, $6), Indices: $7.([]int64)}, nil >>
+;
+

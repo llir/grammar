@@ -1,0 +1,19 @@
+// ~~~ [ Comdat Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#langref-comdats
+
+// ref: parseComdat
+
+ComdatDef
+	: ComdatName "=" "comdat" SelectionKind
+	<< &ir.ComdatDef{Name: astx.ComdatName($0), Kind: $3.(ir.SelectionKind)}, nil >>
+;
+
+SelectionKind
+	: "any"            << ir.SelectionKindAny, nil >>
+	| "exactmatch"     << ir.SelectionKindExactMatch, nil >>
+	| "largest"        << ir.SelectionKindLargest, nil >>
+	| "noduplicates"   << ir.SelectionKindNoDuplicates, nil >>
+	| "samesize"       << ir.SelectionKindSameSize, nil >>
+;
+

@@ -1,0 +1,171 @@
+// --- [ Conversion instructions ] ---------------------------------------------
+
+// ~~~ [ trunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#trunc-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+TruncInst
+	: "trunc" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstTrunc{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#zext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+ZExtInst
+	: "zext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstZExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#sext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+SExtInst
+	: "sext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstSExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fptrunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fptrunc-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+FPTruncInst
+	: "fptrunc" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPTrunc{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fpext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fpext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+FPExtInst
+	: "fpext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fptoui ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fptoui-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+FPToUIInst
+	: "fptoui" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPToUI{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fptosi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fptosi-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+FPToSIInst
+	: "fptosi" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPToSI{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ uitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#uitofp-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+UIToFPInst
+	: "uitofp" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstUIToFP{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ sitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#sitofp-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+SIToFPInst
+	: "sitofp" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstSIToFP{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ ptrtoint ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ptrtoint-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+PtrToIntInst
+	: "ptrtoint" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstPtrToInt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#inttoptr-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+IntToPtrInst
+	: "inttoptr" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstIntToPtr{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#bitcast-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+BitCastInst
+	: "bitcast" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstBitCast{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#addrspacecast-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
+AddrSpaceCastInst
+	: "addrspacecast" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstAddrSpaceCast{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+

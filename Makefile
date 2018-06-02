@@ -3,19 +3,24 @@ all: ll.bnf
 ll.bnf: sections/lex.bnf sections/syntax.bnf
 	cat $^ > $@
 
-sections/syntax.bnf: sections/01_modules.bnf sections/02_identifiers.bnf sections/03_types.bnf sections/04_values.bnf sections/05_constants.bnf sections/06_constant_expressions.bnf sections/07_basic_blocks.bnf sections/08_instructions.bnf sections/09_terminators.bnf sections/10_helpers.bnf
+sections/syntax.bnf: sections/01_module.bnf sections/02_identifier.bnf sections/03_type.bnf sections/04_value.bnf sections/05_constant.bnf sections/06_constant_expression.bnf sections/07_basic_block.bnf sections/08_instruction.bnf sections/09_terminator.bnf sections/10_metadata.bnf sections/11_helper.bnf
 	cat $^ > $@
 
-sections/01_modules.bnf: sections/01_modules/a_summary.bnf sections/01_modules/b_source_filename.bnf sections/01_modules/c_target_specifiers.bnf sections/01_modules/d_module_asm.bnf sections/01_modules/e_type_definitions.bnf sections/01_modules/f_comdat_definitions.bnf sections/01_modules/g_global_variables.bnf sections/01_modules/h_functions.bnf sections/01_modules/i_attribute_group_definitions.bnf sections/01_modules/j_metadata_definitions.bnf
+sections/01_module.bnf: sections/01_module/a_summary.bnf sections/01_module/b_source_filename.bnf sections/01_module/c_target_definition.bnf sections/01_module/d_module_asm.bnf sections/01_module/e_type_definition.bnf sections/01_module/f_comdat_definition.bnf sections/01_module/g_global_variable.bnf sections/01_module/h_indirect_symbol.bnf sections/01_module/i_function.bnf sections/01_module/j_attribute_group_definition.bnf sections/01_module/k_metadata_definition.bnf sections/01_module/l_use_list.bnf
 	cat $^ > $@
 
-sections/06_constant_expressions.bnf: sections/06_constant_expressions/a_summary.bnf sections/06_constant_expressions/b_binary_expressions.bnf sections/06_constant_expressions/c_bitwise_expressions.bnf sections/06_constant_expressions/d_vector_expressions.bnf sections/06_constant_expressions/e_aggregate_expressions.bnf sections/06_constant_expressions/f_memory_expressions.bnf sections/06_constant_expressions/g_conversion_expressions.bnf sections/06_constant_expressions/h_other_expressions.bnf
+sections/06_constant_expression.bnf: sections/06_constant_expression/a_summary.bnf sections/06_constant_expression/b_binary_expression.bnf sections/06_constant_expression/c_bitwise_expression.bnf sections/06_constant_expression/d_vector_expression.bnf sections/06_constant_expression/e_aggregate_expression.bnf sections/06_constant_expression/f_memory_expression.bnf sections/06_constant_expression/g_conversion_expression.bnf sections/06_constant_expression/h_other_expression.bnf
 	cat $^ > $@
 
-sections/08_instructions.bnf: sections/08_instructions/a_summary.bnf sections/08_instructions/b_binary_instructions.bnf sections/08_instructions/c_bitwise_instructions.bnf sections/08_instructions/d_vector_instructions.bnf sections/08_instructions/e_aggregate_instructions.bnf sections/08_instructions/f_memory_instructions.bnf sections/08_instructions/g_conversion_instructions.bnf sections/08_instructions/h_other_instructions.bnf
+sections/08_instruction.bnf: sections/08_instruction/a_summary.bnf sections/08_instruction/b_binary_instruction.bnf sections/08_instruction/c_bitwise_instruction.bnf sections/08_instruction/d_vector_instruction.bnf sections/08_instruction/e_aggregate_instruction.bnf sections/08_instruction/f_memory_instruction.bnf sections/08_instruction/g_conversion_instruction.bnf sections/08_instruction/h_other_instruction.bnf
+	cat $^ > $@
+
+sections/10_metadata.bnf: sections/10_metadata/a_summary.bnf sections/10_metadata/b_specialized_metadata_node.bnf sections/10_metadata/c_debug_info.bnf
 	cat $^ > $@
 
 clean:
-	rm -f ll.bnf sections/syntax.bnf sections/01_modules.bnf sections/06_constant_expressions.bnf sections/08_instructions.bnf
+	rm -f ll.bnf sections/syntax.bnf sections/01_module.bnf sections/06_constant_expression.bnf sections/08_instruction.bnf sections/10_metadata.bnf
+	rm -rf errors lexer parser token util
+	rm -f LR1_conflicts.txt LR1_sets.txt first.txt lexer_sets.txt terminals.txt
 
-.PHONY: all clean
+.PHONY: all gen clean

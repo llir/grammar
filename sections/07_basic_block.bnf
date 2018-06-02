@@ -1,0 +1,23 @@
+// === [ Basic Blocks ] ========================================================
+
+// ref: ParseBasicBlock
+//
+//   ::= LabelStr? Instruction*
+
+BasicBlockList
+	: BasicBlock
+	<< []*ir.BasicBlock{$0.(*ir.BasicBlock)}, nil >>
+	| BasicBlockList BasicBlock
+	<< append($0.([]*ir.BasicBlock), $1.(*ir.BasicBlock)), nil >>
+;
+
+BasicBlock
+	: OptLabelIdent Instructions Terminator
+	<< &ir.BasicBlock{Name: astx.LabelIdent($0), Insts: $1.([]ir.Instruction), Term: $2.(ir.Terminator)}, nil >>
+;
+
+OptLabelIdent
+	: empty
+	| LabelIdent
+;
+

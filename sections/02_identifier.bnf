@@ -1,0 +1,49 @@
+// === [ Identifiers ] =========================================================
+
+// --- [ Global Identifiers ] --------------------------------------------------
+
+GlobalIdent
+	: global_ident
+	<< astx.NewGlobalIdent($0) >>
+;
+
+// --- [ Local Identifiers ] ---------------------------------------------------
+
+LocalIdent
+	: local_ident
+	<< astx.NewLocalIdent($0) >>
+;
+
+// --- [ Label Identifiers ] ---------------------------------------------------
+
+LabelIdent
+	: label_ident
+	<< astx.NewLabelIdent($0) >>
+;
+
+// --- [ Attribute Group Identifiers ] -----------------------------------------
+
+AttrGroupID
+	: attr_group_id
+	<< astx.NewAttrGroupID($0) >>
+;
+
+// --- [ Comdat Identifiers ] --------------------------------------------------
+
+ComdatName
+	: comdat_name
+	<< astx.NewComdatName($0) >>
+;
+
+// --- [ Metadata Identifiers ] ------------------------------------------------
+
+MetadataName
+	: metadata_name
+	<< astx.NewMetadataName($0) >>
+;
+
+MetadataID
+	: metadata_id
+	<< astx.NewMetadataID($0) >>
+;
+

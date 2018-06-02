@@ -1,0 +1,158 @@
+// --- [ Binary instructions ] -------------------------------------------------
+
+// ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#add-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+AddInst
+	: "add" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAdd{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fadd-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+FAddInst
+	: "fadd" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFAdd{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#sub-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+SubInst
+	: "sub" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSub{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fsub-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+FSubInst
+	: "fsub" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFSub{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#mul-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+MulInst
+	: "mul" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstMul{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fmul-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+FMulInst
+	: "fmul" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFMul{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#udiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+UDivInst
+	: "udiv" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstUDiv{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#sdiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+SDivInst
+	: "sdiv" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSDiv{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#fdiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+FDivInst
+	: "fdiv" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFDiv{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#urem-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+URemInst
+	: "urem" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstURem{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#srem-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+SRemInst
+	: "srem" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSRem{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#frem-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+FRemInst
+	: "frem" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFRem{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+

@@ -1,0 +1,13 @@
+// ~~~ [ Attribute Group Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#attribute-groups
+
+// ref: ParseUnnamedAttrGrp
+//
+//   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'
+
+AttrGroupDef
+	: "attributes" AttrGroupID "=" "{" FuncAttrs "}"
+	<< &ir.AttrGroupDef{ID: astx.AttrGroupID($1), FuncAttrs: $4.([]ir.FuncAttribute)}, nil >>
+;
+

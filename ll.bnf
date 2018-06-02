@@ -1,8 +1,16 @@
 // ### [ Lexical part ] ########################################################
 
-_ascii_letter
+_ascii_letter_upper
 	: 'A' - 'Z'
-	| 'a' - 'z'
+;
+
+_ascii_letter_lower
+	: 'a' - 'z'
+;
+
+_ascii_letter
+	: _ascii_letter_upper
+	| _ascii_letter_lower
 ;
 
 _letter
@@ -111,6 +119,51 @@ metadata_id
 	: '!' _id
 ;
 
+// DW_TAG_foo
+dwarf_tag
+	: 'D' 'W' '_' 'T' 'A' 'G' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_ATE_foo
+dwarf_att_encoding
+	: 'D' 'W' '_' 'A' 'T' 'E' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DIFlagFoo
+di_flag
+	: 'D' 'I' 'F' 'l' 'a' 'g' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_LANG_foo
+dwarf_lang
+	: 'D' 'W' '_' 'L' 'A' 'N' 'G' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_CC_foo
+dwarf_cc
+	: 'D' 'W' '_' 'C' 'C' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// CSK_foo
+checksum_kind
+	: 'C' 'S' 'K' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_VIRTUALITY_foo
+dwarf_virtuality
+	: 'D' 'W' '_' 'V' 'I' 'R' 'T' 'U' 'A' 'L' 'I' 'T' 'Y' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_MACINFO_foo
+dwarf_macinfo
+	: 'D' 'W' '_' 'M' 'A' 'C' 'I' 'N' 'F' 'O' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_OP_foo
+dwarf_op
+	: 'D' 'W' '_' 'O' 'P' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
 // === [ Integer literals ] ====================================================
 
 //   Integer           [-]?[0-9]+
@@ -180,288 +233,511 @@ int_type
 	: 'i' _decimals
 ;
 
-// ### [ Syntactic part ] ######################################################
+// ### [ Syntax part ] #########################################################
 
-<< import (
-	"github.com/llir/llvm/asm/internal/ast"
-	"github.com/llir/llvm/asm/internal/astx"
-) >>
+// The LLVM IR grammar has been based on the source code of the official LLVM
+// project, as of 2018-02-19 (rev db070bbdacd303ae7da129f59beaf35024d94c53).
+//
+//    * lib/AsmParser/LLParser.cpp
 
-// === [ Modules ] =============================================================
+// === [ Module ] ==============================================================
+
+// https://llvm.org/docs/LangRef.html#module-structure
+
+// ref: Run
+//
+//   module ::= toplevelentity*
+
+<<
+import (
+	"github.com/mewmew/l/asm/ast"
+	"github.com/mewmew/l/asm/internal/astx"
+	"github.com/mewmew/l/asm/internal/irx"
+	"github.com/mewmew/l/ir"
+	"github.com/mewmew/l/ir/constant"
+	"github.com/mewmew/l/ir/metadata"
+	"github.com/mewmew/l/ir/types"
+	"github.com/mewmew/l/ir/value"
+)
+>>
 
 Module
-	: TopLevelDecls   << astx.NewModule($0) >>
+	: TopLevelEntities
+	<< &ast.Module{Entities: $0.([]ast.TopLevelEntity)}, nil >>
 ;
 
-TopLevelDecls
+TopLevelEntities
 	: empty
-	| TopLevelDeclList
+	<< ([]ast.TopLevelEntity)(nil), nil >>
+	| TopLevelEntityList
 ;
 
-TopLevelDeclList
-	: TopLevelDecl                    << astx.NewTopLevelDeclList($0) >>
-	| TopLevelDeclList TopLevelDecl   << astx.AppendTopLevelDecl($0, $1) >>
+TopLevelEntityList
+	: TopLevelEntity
+	<< []ast.TopLevelEntity{$0.(ast.TopLevelEntity)}, nil >>
+	| TopLevelEntityList TopLevelEntity
+	<< append($0.([]ast.TopLevelEntity), $1.(ast.TopLevelEntity)), nil >>
 ;
 
-TopLevelDecl
+// --- [ Top-level Entities ] --------------------------------------------------
+
+// ref: ParseTopLevelEntities
+
+TopLevelEntity
 	: SourceFilename
-	| TargetSpec
+	| TargetDefinition
 	| ModuleAsm
 	| TypeDef
 	| ComdatDef
 	| GlobalDecl
 	| GlobalDef
-	| FuncDecl
-	| FuncDef
+	| IndirectSymbolDef
+	| FunctionDecl
+	| FunctionDef
 	| AttrGroupDef
 	| NamedMetadataDef
 	| MetadataDef
+	| UseListOrder
+	| UseListOrderBB
 ;
 
-// --- [ Source filename ] -----------------------------------------------------
+// ~~~ [ Source Filename ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#source-filename
+
+// ref: ParseSourceFileName
+//
+//   ::= 'source_filename' '=' STRINGCONSTANT
 
 SourceFilename
-	: "source_filename" "=" string_lit   << nil, nil >>
+	: "source_filename" "=" StringLit
+	<< &ir.SourceFilename{Name: $2.(string)}, nil >>
 ;
 
-// --- [ Target specifiers ] ---------------------------------------------------
+// ~~~ [ Target Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TargetSpec
-	: "target" DataLayout     << $1, nil >>
-	| "target" TargetTriple   << $1, nil >>
+// https://llvm.org/docs/LangRef.html#target-triple
+// https://llvm.org/docs/LangRef.html#data-layout
+
+// ref: ParseTargetDefinition
+//
+//   ::= 'target' 'triple' '=' STRINGCONSTANT
+//   ::= 'target' 'datalayout' '=' STRINGCONSTANT
+
+TargetDefinition
+	: "target" "datalayout" "=" StringLit
+	<< &ir.DataLayout{DataLayout: $3.(string)}, nil >>
+	| "target" "triple" "=" StringLit
+	<< &ir.TargetTriple{TargetTriple: $3.(string)}, nil >>
 ;
 
-DataLayout
-	: "datalayout" "=" string_lit   << astx.NewDataLayout($2) >>
-;
+// ~~~ [ Module-level Inline Assembly ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TargetTriple
-	: "triple" "=" string_lit   << astx.NewTargetTriple($2) >>
-;
+// https://llvm.org/docs/LangRef.html#module-level-inline-assembly
 
-// --- [ Module-level inline assembly ] ----------------------------------------
+// ref: ParseModuleAsm
+//
+//   ::= 'module' 'asm' STRINGCONSTANT
 
-// ref: http://llvm.org/docs/LangRef.html#module-level-inline-assembly
 ModuleAsm
-	: "module" "asm" string_lit   << nil, nil >>
+	: "module" "asm" StringLit
+	<< &ir.ModuleAsm{Asm: $2.(string)}, nil >>
 ;
 
-// --- [ Type definitions ] ----------------------------------------------------
+// ~~~ [ Type Defintion ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#structure-type
+
+// ref: ParseUnnamedType
+//
+//   ::= LocalVarID '=' 'type' type
+
+// ref: ParseNamedType
+//
+//   ::= LocalVar '=' 'type' type
 
 TypeDef
-	: LocalIdent "=" "type" Type       << astx.NewTypeDef($0, $3) >>
-	| LocalIdent "=" "type" "opaque"   << astx.NewTypeDefOpaque($0) >>
+	: LocalIdent "=" "type" OpaqueType
+	<< &ast.NamedType{Name: astx.LocalIdent($0), Type: $3.(types.Type)}, nil >>
+	| LocalIdent "=" "type" Type
+	<< &ast.NamedType{Name: astx.LocalIdent($0), Type: $3.(types.Type)}, nil >>
 ;
 
-// --- [ Comdat definitions ] --------------------------------------------------
+// ~~~ [ Comdat Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#langref-comdats
+
+// ref: parseComdat
 
 ComdatDef
-	: ComdatName "=" "comdat" SelectionKind   << nil, nil >>
+	: ComdatName "=" "comdat" SelectionKind
+	<< &ir.ComdatDef{Name: astx.ComdatName($0), Kind: $3.(ir.SelectionKind)}, nil >>
 ;
 
-// From spec and src of v4.0.
-//
-// ref: http://llvm.org/docs/LangRef.html#comdats
 SelectionKind
-	: "any"
-	| "exactmatch"
-	| "largest"
-	| "noduplicates"
-	| "samesize"
+	: "any"            << ir.SelectionKindAny, nil >>
+	| "exactmatch"     << ir.SelectionKindExactMatch, nil >>
+	| "largest"        << ir.SelectionKindLargest, nil >>
+	| "noduplicates"   << ir.SelectionKindNoDuplicates, nil >>
+	| "samesize"       << ir.SelectionKindSameSize, nil >>
 ;
 
-// --- [ Global variables ] ----------------------------------------------------
+// ~~~ [ Global Variable Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// https://llvm.org/docs/LangRef.html#global-variables
+
+// ref: ParseUnnamedGlobal
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
+//   OptionalVisibility (ALIAS | IFUNC) ...
+//   OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
+//   OptionalDLLStorageClass
+//                                                     ...   -> global variable
+//   GlobalID '=' OptionalVisibility (ALIAS | IFUNC) ...
+//   GlobalID '=' OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
+//                OptionalDLLStorageClass
+//                                                     ...   -> global variable
+
+// ref: ParseNamedGlobal
 //
-// Original production rule.
+//   GlobalVar '=' OptionalVisibility (ALIAS | IFUNC) ...
+//   GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
+//                 OptionalVisibility OptionalDLLStorageClass
+//                                                     ...   -> global variable
+
+// ref: ParseGlobal
 //
-//    GlobalDecl
-//       : GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType OptCommaSection OptCommaComdat OptCommaAlign OptCommaAttachedMDList   << astx.NewGlobalDecl($0, $3, $4, $5, $9) >>
-//    ;
+//   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
+//       OptionalVisibility OptionalDLLStorageClass
+//       OptionalThreadLocal OptionalUnnamedAddr OptionalAddrSpace
+//       OptionalExternallyInitialized GlobalType Type Const OptionalAttrs
+//   ::= OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
+//       OptionalDLLStorageClass OptionalThreadLocal OptionalUnnamedAddr
+//       OptionalAddrSpace OptionalExternallyInitialized GlobalType Type
+//       Const OptionalAttrs
+
 GlobalDecl
-	: GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType OptCommaAttachedMDList                                    << astx.NewGlobalDecl($0, $3, $4, $5, $6) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Align OptCommaAttachedMDList                          << astx.NewGlobalDecl($0, $3, $4, $5, $8) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Comdat OptCommaAttachedMDList                         << astx.NewGlobalDecl($0, $3, $4, $5, $8) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Comdat "," Align OptCommaAttachedMDList               << astx.NewGlobalDecl($0, $3, $4, $5, $10) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Section OptCommaAttachedMDList                        << astx.NewGlobalDecl($0, $3, $4, $5, $8) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Section "," Align OptCommaAttachedMDList              << astx.NewGlobalDecl($0, $3, $4, $5, $10) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Section "," Comdat OptCommaAttachedMDList             << astx.NewGlobalDecl($0, $3, $4, $5, $10) >>
-	| GlobalIdent "=" ExternLinkage GlobalOptions Immutable ConcreteType "," Section "," Comdat "," Align OptCommaAttachedMDList   << astx.NewGlobalDecl($0, $3, $4, $5, $12) >>
+	: GlobalIdent "=" ExternLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr OptAddrSpace OptExternallyInitialized Immutable Type GlobalAttrs FuncAttrs
+	<< &ir.Global{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), AddrSpace: $8.(types.AddrSpace), ExternallyInitialized: $9.(bool), Immutable: $10.(bool), ContentType: $11.(types.Type), Section: astx.OptSectionFromGlobalAttrs($12.([]astx.GlobalAttribute)), Comdat: astx.OptComdatFromGlobalAttrs($12.([]astx.GlobalAttribute)), Align: astx.OptAlignFromGlobalAttrs($12.([]astx.GlobalAttribute)), Metadata: astx.MetadataFromGlobalAttrs($12.([]astx.GlobalAttribute)), FuncAttrs: $13.([]ir.FuncAttribute)}, nil >>
 ;
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
-//
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
-//
-//    GlobalDef
-//       : GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant OptCommaSection OptCommaComdat OptCommaAlign OptCommaAttachedMDList   << astx.NewGlobalDef($0, $3, $4, $5, $6, $10) >>
-//    ;
+// ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 GlobalDef
-	: GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant OptCommaAttachedMDList                                    << astx.NewGlobalDef($0, $3, $4, $5, $6, $7) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Align OptCommaAttachedMDList                          << astx.NewGlobalDef($0, $3, $4, $5, $6, $9) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Comdat OptCommaAttachedMDList                         << astx.NewGlobalDef($0, $3, $4, $5, $6, $9) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Comdat "," Align OptCommaAttachedMDList               << astx.NewGlobalDef($0, $3, $4, $5, $6, $11) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Section OptCommaAttachedMDList                        << astx.NewGlobalDef($0, $3, $4, $5, $6, $9) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Section "," Align OptCommaAttachedMDList              << astx.NewGlobalDef($0, $3, $4, $5, $6, $11) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Section "," Comdat OptCommaAttachedMDList             << astx.NewGlobalDef($0, $3, $4, $5, $6, $11) >>
-	| GlobalIdent "=" OptLinkage GlobalOptions Immutable ConcreteType Constant "," Section "," Comdat "," Align OptCommaAttachedMDList   << astx.NewGlobalDef($0, $3, $4, $5, $6, $13) >>
-;
-
-GlobalOptions
-	: OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr OptAddrSpace OptExternallyInitialized   << $4, nil >>
+	: GlobalIdent "=" OptLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr OptAddrSpace OptExternallyInitialized Immutable Type Constant GlobalAttrs FuncAttrs
+	<< &ir.Global{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), AddrSpace: $8.(types.AddrSpace), ExternallyInitialized: $9.(bool), Immutable: $10.(bool), ContentType: $11.(types.Type), Init: astx.TypeConst($11, $12), Section: astx.OptSectionFromGlobalAttrs($13.([]astx.GlobalAttribute)), Comdat: astx.OptComdatFromGlobalAttrs($13.([]astx.GlobalAttribute)), Align: astx.OptAlignFromGlobalAttrs($13.([]astx.GlobalAttribute)), Metadata: astx.MetadataFromGlobalAttrs($13.([]astx.GlobalAttribute)), FuncAttrs: $14.([]ir.FuncAttribute)}, nil >>
 ;
 
 OptExternallyInitialized
-	: empty
-	| ExternallyInitialized
+	: empty                      << false, nil >>
+	| "externally_initialized"   << true, nil >>
 ;
 
-ExternallyInitialized
-	: "externally_initialized"
-;
+// ref: ParseGlobalType
+//
+//   ::= 'constant'
+//   ::= 'global'
 
 Immutable
 	: "constant"   << true, nil >>
 	| "global"     << false, nil >>
 ;
 
-// --- [ Functions ] -----------------------------------------------------------
-
-FuncDecl
-	: "declare" AttachedMDs OptExternLinkage FuncHeader   << astx.NewFuncDecl($1, $3) >>
-;
-
-FuncDef
-	: "define" OptLinkage FuncHeader AttachedMDs FuncBody   << astx.NewFuncDef($2, $3, $4) >>
-;
-
-FuncHeader
-	: OptVisibility OptDLLStorageClass OptCallConv ParamAttrs Type GlobalIdent
-		"(" Params ")" OptUnnamedAddr FuncAttrs OptSection OptComdat OptAlign
-		OptGC OptPrefix OptPrologue OptPersonality   << astx.NewFuncHeader($2, $4, $5, $7) >>
-;
-
-Params
+GlobalAttrs
 	: empty
-	| "..."                 << astx.NewParams(nil, true) >>
-	| ParamList             << astx.NewParams($0, false) >>
-	| ParamList "," "..."   << astx.NewParams($0, true) >>
+	<< ([]astx.GlobalAttribute)(nil), nil >>
+	| "," GlobalAttrList
+	<< $1, nil >>
 ;
 
-ParamList
-	: Param                 << astx.NewParamList($0) >>
-	| ParamList "," Param   << astx.AppendParam($0, $2) >>
+GlobalAttrList
+	: GlobalAttr
+	<< []astx.GlobalAttribute{$0.(astx.GlobalAttribute)}, nil >>
+	| GlobalAttrList "," GlobalAttr
+	<< append($0.([]astx.GlobalAttribute), $2.(astx.GlobalAttribute)), nil >>
 ;
 
-Param
-	: FirstClassType ParamAttrs              << astx.NewParam($0, nil) >>
-	| FirstClassType ParamAttrs LocalIdent   << astx.NewParam($0, $2) >>
+GlobalAttr
+	: Section
+	| Comdat
+	| Alignment
+	//   ::= !dbg !57
+	| MetadataAttachment
 ;
 
-FuncBody
-	: "{" BasicBlockList "}"   << $1, nil >>
+// ~~~ [ Indirect Symbol Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#aliases
+// https://llvm.org/docs/LangRef.html#ifuncs
+
+// ref: parseIndirectSymbol
+//
+//   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
+//                     OptionalVisibility OptionalDLLStorageClass
+//                     OptionalThreadLocal OptionalUnnamedAddr
+//                     'alias|ifunc' IndirectSymbol
+//
+//  IndirectSymbol
+//   ::= TypeAndValue
+
+IndirectSymbolDef
+	: GlobalIdent "=" ExternLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr Alias Type "," Type Constant
+	<< &ir.IndirectSymbol{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), Alias: $8.(bool), Typ: $9.(types.Type), Const: astx.TypeConst($10, $11)}, nil >>
+	| GlobalIdent "=" OptLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr Alias Type "," Type Constant
+	<< &ir.IndirectSymbol{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), Alias: $8.(bool), Typ: $9.(types.Type), Const: astx.TypeConst($10, $11)}, nil >>
 ;
 
-// --- [ Attribute group definitions ] -----------------------------------------
+Alias
+	: "alias"   << true, nil >>
+	| "ifunc"   << false, nil >>
+;
+
+// ~~~ [ Function Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#functions
+
+// ref: ParseDeclare
+//
+//   ::= 'declare' FunctionHeader
+
+FunctionDecl
+	: "declare" MetadataAttachments OptExternLinkage FunctionHeader
+	<< irx.NewFunctionDecl($1, $2, $3) >>
+;
+
+// ~~~ [ Function Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#functions
+
+// ref: ParseDefine
+//
+//   ::= 'define' FunctionHeader (!dbg !56)* '{' ...
+
+FunctionDef
+	: "define" OptLinkage FunctionHeader MetadataAttachments FunctionBody
+	<< irx.NewFunctionDef($1, $2, $3, $4) >>
+;
+
+// ref: ParseFunctionHeader
+//
+//   ::= OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
+//       OptionalCallingConv OptRetAttrs OptUnnamedAddr Type GlobalName
+//       '(' ArgList ')' OptFuncAttrs OptSection OptionalAlign OptGC
+//       OptionalPrefix OptionalPrologue OptPersonalityFn
+
+// TODO: Add OptAlignment before OptGC once the LR-1 conflict has been resolved,
+// as FuncAttrs also contains "align".
+
+FunctionHeader
+	: OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptCallingConv ReturnAttrs Type GlobalIdent "(" Params ")" OptUnnamedAddr FuncAttrs OptSection OptComdat OptGC OptPrefix OptPrologue OptPersonality
+	<< &irx.FunctionHeader{Preemption: $0.(ir.Preemption), Visibility: $1.(ir.Visibility), DLLStorageClass: $2.(ir.DLLStorageClass), CallingConv: $3.(ir.CallingConv), ReturnAttrs: $4.([]ir.ReturnAttribute), RetType: $5.(types.Type), Name: astx.GlobalIdent($6), Params: $8.(*astx.Params).Params, Variadic: $8.(*astx.Params).Variadic, UnnamedAddr: $10.(ir.UnnamedAddr), FuncAttrs: $11.([]ir.FuncAttribute), Section: $12.(*ir.Section), Comdat: $13.(*ir.Comdat), GC: $14.(string), Prefix: astx.OptConstant($15), Prologue: astx.OptConstant($16), Personality: astx.OptConstant($17)}, nil >>
+;
+
+OptGC
+	: empty
+	<< "", nil >>
+	| "gc" StringLit
+	<< $1.(string), nil >>
+;
+
+OptPrefix
+	: empty
+	| "prefix" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+OptPrologue
+	: empty
+	| "prologue" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+OptPersonality
+	: empty
+	| "personality" Type Constant
+	<< astx.TypeConst($1, $2), nil >>
+;
+
+// ref: ParseFunctionBody
+//
+//   ::= '{' BasicBlock+ UseListOrderDirective* '}'
+
+FunctionBody
+	: "{" BasicBlockList UseListOrders "}"
+	<< &irx.FunctionBody{Blocks: $1.([]*ir.BasicBlock), UseListOrders: $2.([]*ir.UseListOrder)}, nil >>
+;
+
+// ~~~ [ Attribute Group Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#attribute-groups
+
+// ref: ParseUnnamedAttrGrp
+//
+//   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'
 
 AttrGroupDef
-	: "attributes" AttrGroupID "=" "{" FuncAttrList "}"   << nil, nil >>
+	: "attributes" AttrGroupID "=" "{" FuncAttrs "}"
+	<< &ir.AttrGroupDef{ID: astx.AttrGroupID($1), FuncAttrs: $4.([]ir.FuncAttribute)}, nil >>
 ;
 
-// --- [ Metadata definitions ] ------------------------------------------------
+// ~~~ [ Named Metadata Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#named-metadata
+
+// ref: ParseNamedMetadata
+//
+//   !foo = !{ !1, !2 }
 
 NamedMetadataDef
-	: MetadataName "=" "!" "{" MetadataIDs "}"   << astx.NewNamedMetadataDef($0, $4) >>
-;
-
-MetadataIDs
-	: empty
-	| MetadataIDList
-;
-
-MetadataIDList
-	: MetadataID                      << astx.NewMetadataIDList($0) >>
-	| MetadataIDList "," MetadataID   << astx.AppendMetadataID($0, $2) >>
-;
-
-MetadataDef
-	: MetadataID "=" OptDistinct Metadata   << astx.NewMetadataDef($0, $3) >>
-;
-
-OptDistinct
-	: empty
-	| "distinct"
-;
-
-Metadata
-	: "!" "{" MetadataNodes "}"   << astx.NewMetadata($2) >>
+	: MetadataName "=" "!" "{" MetadataNodes "}"
+	<< &metadata.NamedMetadataDef{Name: astx.MetadataName($0), Nodes: $4.([]metadata.MetadataNode)}, nil >>
 ;
 
 MetadataNodes
 	: empty
+	<< ([]metadata.MetadataNode)(nil), nil >>
 	| MetadataNodeList
 ;
 
 MetadataNodeList
-	: MetadataNode                        << astx.NewMetadataNodeList($0) >>
-	| MetadataNodeList "," MetadataNode   << astx.AppendMetadataNode($0, $2) >>
+	: MetadataNode
+	<< []metadata.MetadataNode{$0.(metadata.MetadataNode)}, nil >>
+	| MetadataNodeList "," MetadataNode
+	<< append($0.([]metadata.MetadataNode), $2.(metadata.MetadataNode)), nil >>
 ;
 
 MetadataNode
-	: Metadata
-	| MetadataID
-	| "!" string_lit   << astx.NewMetadataString($1) >>
-	| Type Constant    << astx.NewConstant($0, $1) >>
+	: MetadataID
+	// Parse DIExpressions inline as a special case. They are still MDNodes, so
+	// they can still appear in named metadata. Remove this logic if they become
+	// plain Metadata.
+	| DIExpression
 ;
 
-MetadataValue
-	: MetadataNode
-	| ConcreteType LocalIdent   << astx.NewValue($0, $1) >>
+// ~~~ [ Metadata Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#metadata-nodes-and-metadata-strings
+
+// ref: ParseStandaloneMetadata
+//
+//   !42 = !{...}
+
+MetadataDef
+	: MetadataID "=" OptDistinct MDTuple
+	<< &metadata.MetadataDef{ID: astx.MetadataID($0), Distinct: $2.(bool), Node: $3.(metadata.MDNode)}, nil >>
+	| MetadataID "=" OptDistinct SpecializedMDNode
+	<< &metadata.MetadataDef{ID: astx.MetadataID($0), Distinct: $2.(bool), Node: $3.(metadata.MDNode)}, nil >>
+;
+
+OptDistinct
+	: empty        << false, nil >>
+	| "distinct"   << true, nil >>
+;
+
+// ~~~ [ Use-list Order Directives ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#use-list-order-directives
+
+// ref: ParseUseListOrder
+//
+//   ::= 'uselistorder' Type Value ',' UseListOrderIndexes
+//  UseListOrderIndexes
+//   ::= '{' uint32 (',' uint32)+ '}'
+
+UseListOrders
+	: empty
+	<< ([]*ir.UseListOrder)(nil), nil >>
+	| UseListOrderList
+;
+
+UseListOrderList
+	: UseListOrder
+	<< []*ir.UseListOrder{$0.(*ir.UseListOrder)}, nil >>
+	| UseListOrderList UseListOrder
+	<< append($0.([]*ir.UseListOrder), $1.(*ir.UseListOrder)), nil >>
+;
+
+UseListOrder
+	: "uselistorder" Type Value "," "{" IndexList "}"
+	<< &ir.UseListOrder{Value: astx.TypeValue($1, $2), Indices: $5.([]int64)}, nil >>
+;
+
+// ref: ParseUseListOrderBB
+//
+//   ::= 'uselistorder_bb' @foo ',' %bar ',' UseListOrderIndexes
+
+UseListOrderBB
+	: "uselistorder_bb" GlobalIdent "," LocalIdent "," "{" IndexList "}"
+	<< &ir.UseListOrderBB{Func: &ir.Function{Name: astx.GlobalIdent($1)}, Block: &ir.BasicBlock{Name: astx.LocalIdent($3)}, Indices: $6.([]int64)}, nil >>
 ;
 
 // === [ Identifiers ] =========================================================
 
+// --- [ Global Identifiers ] --------------------------------------------------
+
 GlobalIdent
-	: global_ident   << astx.NewGlobalIdent($0) >>
+	: global_ident
+	<< astx.NewGlobalIdent($0) >>
 ;
+
+// --- [ Local Identifiers ] ---------------------------------------------------
 
 LocalIdent
-	: local_ident   << astx.NewLocalIdent($0) >>
+	: local_ident
+	<< astx.NewLocalIdent($0) >>
 ;
 
+// --- [ Label Identifiers ] ---------------------------------------------------
+
 LabelIdent
-	: label_ident   << astx.NewLabelIdent($0) >>
+	: label_ident
+	<< astx.NewLabelIdent($0) >>
 ;
+
+// --- [ Attribute Group Identifiers ] -----------------------------------------
 
 AttrGroupID
 	: attr_group_id
+	<< astx.NewAttrGroupID($0) >>
 ;
+
+// --- [ Comdat Identifiers ] --------------------------------------------------
 
 ComdatName
 	: comdat_name
+	<< astx.NewComdatName($0) >>
 ;
 
+// --- [ Metadata Identifiers ] ------------------------------------------------
+
 MetadataName
-	: metadata_name   << astx.NewMetadataName($0) >>
+	: metadata_name
+	<< astx.NewMetadataName($0) >>
 ;
 
 MetadataID
-	: metadata_id   << astx.NewMetadataID($0) >>
+	: metadata_id
+	<< astx.NewMetadataID($0) >>
 ;
 
 // === [ Types ] ===============================================================
 
+// ref: ParseType
+//
+//  TYPEKEYWORD("void",      Type::getVoidTy(Context));
+//  TYPEKEYWORD("half",      Type::getHalfTy(Context));
+//  TYPEKEYWORD("float",     Type::getFloatTy(Context));
+//  TYPEKEYWORD("double",    Type::getDoubleTy(Context));
+//  TYPEKEYWORD("x86_fp80",  Type::getX86_FP80Ty(Context));
+//  TYPEKEYWORD("fp128",     Type::getFP128Ty(Context));
+//  TYPEKEYWORD("ppc_fp128", Type::getPPC_FP128Ty(Context));
+//  TYPEKEYWORD("label",     Type::getLabelTy(Context));
+//  TYPEKEYWORD("metadata",  Type::getMetadataTy(Context));
+//  TYPEKEYWORD("x86_mmx",   Type::getX86_MMXTy(Context));
+//  TYPEKEYWORD("token",     Type::getTokenTy(Context));
+
 Type
 	: VoidType
+	// Types '(' ArgTypeListI ')' OptFuncAttrs
 	| FuncType
 	| FirstClassType
 ;
@@ -473,235 +749,422 @@ FirstClassType
 
 ConcreteType
 	: IntType
+	// Type ::= 'float' | 'void' (etc)
 	| FloatType
+	// Type ::= Type '*'
+	// Type ::= Type 'addrspace' '(' uint32 ')' '*'
 	| PointerType
+	// Type ::= '<' ... '>'
 	| VectorType
 	| LabelType
+	// Type ::= '[' ... ']'
 	| ArrayType
+	// Type ::= StructType
 	| StructType
+	// Type ::= %foo
+	// Type ::= %4
 	| NamedType
+	| MMXType
+	| TokenType
 ;
 
-// --- [ Void type ] -----------------------------------------------------------
+// --- [ Void Types ] ----------------------------------------------------------
 
 VoidType
-	: "void"   << &ast.VoidType{}, nil >>
+	: "void"
+	<< &types.VoidType{}, nil >>
 ;
 
-// --- [ Function type ] -------------------------------------------------------
+// --- [ Function Types ] ------------------------------------------------------
+
+// ref: ParseFunctionType
+//
+//  ::= Type ArgumentList OptionalAttrs
 
 FuncType
-	: Type "(" ParamTypes ")"   << astx.NewFuncType($0, $2) >>
+	: Type "(" Params ")"
+	<< &types.FuncType{RetType: $0.(types.Type), Params: astx.ParamTypes($2), Variadic: $2.(*astx.Params).Variadic}, nil >>
 ;
 
-ParamTypes
-	: empty
-	| "..."                     << astx.NewParams(nil, true) >>
-	| ParamTypeList             << astx.NewParams($0, false) >>
-	| ParamTypeList "," "..."   << astx.NewParams($0, true) >>
-;
-
-ParamTypeList
-	: ParamType                     << astx.NewParamList($0) >>
-	| ParamTypeList "," ParamType   << astx.AppendParam($0, $2) >>
-;
-
-ParamType
-	: FirstClassType   << astx.NewParam($0, nil) >>
-;
-
-// --- [ Integer type ] --------------------------------------------------------
+// --- [ Integer Types ] -------------------------------------------------------
 
 IntType
-	: int_type   << astx.NewIntType($0) >>
+	: int_type
+	<< astx.NewIntType($0) >>
 ;
 
-// --- [ Floating-point type ] -------------------------------------------------
+// --- [ Floating-point Types ] ------------------------------------------------
 
 FloatType
-	: "half"        << &ast.FloatType{Kind: ast.FloatKindIEEE_16}, nil >>
-	| "float"       << &ast.FloatType{Kind: ast.FloatKindIEEE_32}, nil >>
-	| "double"      << &ast.FloatType{Kind: ast.FloatKindIEEE_64}, nil >>
-	| "fp128"       << &ast.FloatType{Kind: ast.FloatKindIEEE_128}, nil >>
-	| "x86_fp80"    << &ast.FloatType{Kind: ast.FloatKindDoubleExtended_80}, nil >>
-	| "ppc_fp128"   << &ast.FloatType{Kind: ast.FloatKindDoubleDouble_128}, nil >>
+	: FloatKind
+	<< &types.FloatType{Kind: $0.(types.FloatKind)}, nil >>
 ;
 
-// --- [ Pointer type ] --------------------------------------------------------
+FloatKind
+	: "half"        << types.FloatKindHalf, nil >>
+	| "float"       << types.FloatKindFloat, nil >>
+	| "double"      << types.FloatKindDouble, nil >>
+	| "x86_fp80"    << types.FloatKindX86FP80, nil >>
+	| "fp128"       << types.FloatKindFP128, nil >>
+	| "ppc_fp128"   << types.FloatKindPPCFP128, nil >>
+;
+
+// --- [ MMX Types ] -----------------------------------------------------------
+
+MMXType
+	: "x86_mmx"
+	<< &types.MMXType{}, nil >>
+;
+
+// --- [ Pointer Types ] -------------------------------------------------------
 
 PointerType
-	: Type OptAddrSpace "*"   << astx.NewPointerType($0, $1) >>
+	: Type OptAddrSpace "*"
+	<< &types.PointerType{ElemType: $0.(types.Type), AddrSpace: $1.(types.AddrSpace)}, nil >>
 ;
+
+// ref: ParseOptionalAddrSpace
+//
+//   := empty
+//   := 'addrspace' '(' uint32 ')'
 
 OptAddrSpace
 	: empty
-	| "addrspace" "(" IntLit ")"   << $2, nil >>
+	<< types.AddrSpace(0), nil >>
+	| AddrSpace
 ;
 
-// --- [ Vector type ] ---------------------------------------------------------
+AddrSpace
+	: "addrspace" "(" int_lit ")"
+	<< types.AddrSpace(astx.Int($2)), nil >>
+;
+
+// --- [ Vector Types ] --------------------------------------------------------
+
+// ref: ParseArrayVectorType
+//
+//     ::= '<' APSINTVAL 'x' Types '>'
 
 VectorType
-	: "<" IntLit "x" ConcreteType ">"   << astx.NewVectorType($1, $3) >>
+	: "<" int_lit "x" Type ">"
+	<< &types.VectorType{Len: astx.Int($1), ElemType: $3.(types.Type)}, nil >>
 ;
 
-// --- [ Label type ] ----------------------------------------------------------
+// --- [ Label Types ] ---------------------------------------------------------
 
 LabelType
-	: "label"   << &ast.LabelType{}, nil >>
+	: "label"
+	<< &types.LabelType{}, nil >>
 ;
 
-// --- [ Metadata type ] -------------------------------------------------------
+// --- [ Token Types ] ---------------------------------------------------------
+
+TokenType
+	: "token"
+	<< &types.TokenType{}, nil >>
+;
+
+// --- [ Metadata Types ] ------------------------------------------------------
 
 MetadataType
-	: "metadata"   << &ast.MetadataType{}, nil >>
+	: "metadata"
+	<< &types.MetadataType{}, nil >>
 ;
 
-// --- [ Array type ] ----------------------------------------------------------
+// --- [ Array Types ] ---------------------------------------------------------
+
+// ref: ParseArrayVectorType
+//
+//     ::= '[' APSINTVAL 'x' Types ']'
 
 ArrayType
-	: "[" IntLit "x" ConcreteType "]"   << astx.NewArrayType($1, $3) >>
+	: "[" int_lit "x" Type "]"
+	<< &types.ArrayType{Len: astx.Int($1), ElemType: $3.(types.Type)}, nil >>
 ;
 
-// --- [ struct type ] ---------------------------------------------------------
+// --- [ Structure Types ] -----------------------------------------------------
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// ref: ParseStructBody
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
+//   StructType
+//     ::= '{' '}'
+//     ::= '{' Type (',' Type)* '}'
+//     ::= '<' '{' '}' '>'
+//     ::= '<' '{' Type (',' Type)* '}' '>'
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
 //    StructType
-//       : "{" Fields "}"
-//       | "<" "{" Fields "}" ">"
+//       : "{" Types "}"
+//       | "<" "{" Types "}" ">"
 //    ;
-//
-//    Fields
-//       : empty
-//       | FieldList
-//    ;
+
 StructType
-	: "{" "}"                     << astx.NewStructType(nil) >>
-	| "{" FieldList "}"           << astx.NewStructType($1) >>
-	| "<" "{" "}" ">"             << astx.NewStructType(nil) >>
-	| "<" "{" FieldList "}" ">"   << astx.NewStructType($2) >>
+	: "{" "}"
+	<< &types.StructType{}, nil >>
+	| "{" TypeList "}"
+	<< &types.StructType{Fields: $1.([]types.Type)}, nil >>
+	| "<" "{" "}" ">"
+	<< &types.StructType{Packed: true}, nil >>
+	| "<" "{" TypeList "}" ">"
+	<< &types.StructType{Packed: true, Fields: $2.([]types.Type)}, nil >>
 ;
 
-FieldList
-	: ConcreteType                 << astx.NewTypeList($0) >>
-	| FieldList "," ConcreteType   << astx.AppendType($0, $2) >>
+TypeList
+	: Type
+	<< []types.Type{$0.(types.Type)}, nil >>
+	| TypeList "," Type
+	<< append($0.([]types.Type), $2.(types.Type)), nil >>
 ;
 
-// --- [ Named type ] ----------------------------------------------------------
+OpaqueType
+	: "opaque"
+	<< &types.StructType{Opaque: true}, nil >>
+;
+
+// --- [ Named Types ] ---------------------------------------------------------
 
 NamedType
-	: LocalIdent   << astx.NewTypeIdent($0) >>
+	: LocalIdent
+	<< &ast.NamedType{Name: astx.LocalIdent($0)}, nil >>
 ;
 
 // === [ Values ] ==============================================================
 
+// ref: ParseValue
+
 Value
-	: LocalIdent
-	| Constant
+	: Constant
+	// %42
+	// %foo
+	| LocalIdent
+	| InlineAsm
+;
+
+// --- [ Inline Assembler Expressions ] ----------------------------------------
+
+// https://llvm.org/docs/LangRef.html#inline-assembler-expressions
+
+// ref: ParseValID
+//
+//  ::= 'asm' SideEffect? AlignStack? IntelDialect? STRINGCONSTANT ','
+//             STRINGCONSTANT
+
+InlineAsm
+	: "asm" OptSideEffect OptAlignStack OptIntelDialect StringLit "," StringLit
+	<< &ir.InlineAsm{SideEffect: $1.(bool), AlignStack: $2.(bool), IntelDialect: $3.(bool), Asm: $4.(string), Constraint: $6.(string)}, nil >>
+;
+
+OptSideEffect
+	: empty          << false, nil >>
+	| "sideeffect"   << true, nil >>
+;
+
+OptAlignStack
+	: empty          << false, nil >>
+	| "alignstack"   << true, nil >>
+;
+
+OptIntelDialect
+	: empty            << false, nil >>
+	| "inteldialect"   << true, nil >>
 ;
 
 // === [ Constants ] ===========================================================
 
+// https://llvm.org/docs/LangRef.html#constants
+
+// ref: ParseValID
+
 Constant
-	: IntConst
+	: BoolConst
+	| IntConst
 	| FloatConst
 	| NullConst
-	| VectorConst
+	| NoneConst
+	| StructConst
 	| ArrayConst
 	| CharArrayConst
-	| StructConst
+	| VectorConst
 	| ZeroInitializerConst
+	// @42
+	// @foo
 	| GlobalIdent
 	| UndefConst
-	| ConstExpr
+	| BlockAddressConst
+	| ConstantExpr
 ;
 
-// --- [ Integer constant ] ----------------------------------------------------
+// --- [ Boolean Constants ] ---------------------------------------------------
 
-IntConst
-	: IntLit
-	| BoolLit
-;
+// https://llvm.org/docs/LangRef.html#simple-constants
 
-IntLit
-	: int_lit   << astx.NewIntLit($0) >>
+// ref: ParseValID
+
+BoolConst
+	: BoolLit
+	<< &constant.Bool{X: $0.(bool)}, nil >>
 ;
 
 BoolLit
-	: "true"    << astx.NewBoolLit($0) >>
-	| "false"   << astx.NewBoolLit($0) >>
+	: "true"    << true, nil >>
+	| "false"   << false, nil >>
 ;
 
-// --- [ Floating-point constant ] ---------------------------------------------
+// --- [ Integer Constants ] ---------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#simple-constants
+
+// ref: ParseValID
+
+IntConst
+	: int_lit
+	<< astx.NewIntConst($0) >>
+;
+
+IntLit
+	: int_lit
+	<< astx.Int($0), nil >>
+;
+
+// --- [ Floating-point Constants ] --------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#simple-constants
+
+// ref: ParseValID
 
 FloatConst
-	: float_lit   << astx.NewFloatLit($0) >>
+	: float_lit
+	<< astx.NewFloatConst($0) >>
 ;
 
-// --- [ Pointer constant ] ----------------------------------------------------
+// --- [ Null Pointer Constants ] ----------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#simple-constants
+
+// ref: ParseValID
 
 NullConst
-	: "null"   << &astx.NullLit{}, nil >>
+	: "null"
+	<< &constant.Null{}, nil >>
 ;
 
-// --- [ Vector constant ] -----------------------------------------------------
+// --- [ Token Constants ] -----------------------------------------------------
 
-VectorConst
-	: "<" ElemList ">"   << astx.NewVectorConst($1) >>
+// https://llvm.org/docs/LangRef.html#simple-constants
+
+// ref: ParseValID
+
+NoneConst
+	: "none"
+	<< &constant.None{}, nil >>
 ;
 
-// --- [ Array constant ] ------------------------------------------------------
+// --- [ Structure Constants ] -------------------------------------------------
 
-ArrayConst
-	: "[" Elems "]"   << astx.NewArrayConst($1) >>
-;
+// https://llvm.org/docs/LangRef.html#complex-constants
 
-CharArrayConst
-	: "c" string_lit   << astx.NewCharArrayConst($1) >>
-;
-
-// --- [ Struct constant ] -----------------------------------------------------
-
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// ref: ParseValID
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
+//  ::= '{' ConstVector '}'
+//  ::= '<' '{' ConstVector '}' '>' --> Packed Struct.
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
 //    StructConst
 //       : "{" Elems "}"
 //       | "<" "{" Elems "}" ">"
 //    ;
+
 StructConst
-	: "{" "}"                   << astx.NewStructConst(nil) >>
-	| "{" ElemList "}"          << astx.NewStructConst($1) >>
-	| "<" "{" "}" ">"           << astx.NewStructConst(nil) >>
-	| "<" "{" ElemList "}" ">"  << astx.NewStructConst($2) >>
+	: "{" "}"
+	<< &constant.Struct{}, nil >>
+	| "{" TypeConstList "}"
+	<< &constant.Struct{Fields: $1.([]ir.Constant)}, nil >>
+	| "<" "{" "}" ">"
+	<< &constant.Struct{Packed: true}, nil >>
+	| "<" "{" TypeConstList "}" ">"
+	<< &constant.Struct{Packed: true, Fields: $2.([]ir.Constant)}, nil >>
 ;
 
-// --- [ Zero initializer constant ] -------------------------------------------
+// --- [ Array Constants ] -----------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#complex-constants
+
+// ref: ParseValID
+//
+//  c "foo"
+
+ArrayConst
+	: "[" TypeConsts "]"
+	<< &constant.Array{Elems: $1.([]ir.Constant)}, nil >>
+;
+
+CharArrayConst
+	: "c" StringLit
+	<< &constant.CharArray{Value: $1.(string)}, nil >>
+;
+
+StringLit
+	: string_lit
+	<< astx.UnquoteString($0), nil >>
+;
+
+// --- [ Vector Constants ] ----------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#complex-constants
+
+// ref: ParseValID
+//
+//  ::= '<' ConstVector '>'         --> Vector.
+
+VectorConst
+	: "<" TypeConsts ">"
+	<< &constant.Vector{Elems: $1.([]ir.Constant)}, nil >>
+;
+
+// --- [ Zero Initialization Constants ] ---------------------------------------
+
+// https://llvm.org/docs/LangRef.html#complex-constants
+
+// ref: ParseValID
 
 ZeroInitializerConst
-	: "zeroinitializer"   << &astx.ZeroInitializerLit{}, nil >>
+	: "zeroinitializer"
+	<< &constant.ZeroInitializer{}, nil >>
 ;
 
-// --- [ Undefined value constant ] --------------------------------------------
+// --- [ Undefined Values ] ----------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#undefined-values
+
+// ref: ParseValID
 
 UndefConst
-	: "undef"   << &astx.UndefLit{}, nil >>
+	: "undef"
+	<< &constant.Undef{}, nil >>
+;
+
+// --- [ Addresses of Basic Blocks ] -------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#addresses-of-basic-blocks
+
+// ref: ParseValID
+//
+//  ::= 'blockaddress' '(' @foo ',' %bar ')'
+
+BlockAddressConst
+	: "blockaddress" "(" GlobalIdent "," LocalIdent ")"
+	<< &constant.BlockAddress{Func: &ir.Function{Name: $2.(*ast.GlobalIdent).Name}, Block: &ir.BasicBlock{Name: astx.LocalIdent($4)}}, nil >>
 ;
 
 // === [ Constant expressions ] ================================================
 
-ConstExpr
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ref: ParseValID
+
+ConstantExpr
 	// Binary expressions
 	: AddExpr
 	| FAddExpr
@@ -753,201 +1216,436 @@ ConstExpr
 
 // --- [ Binary expressions ] --------------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 AddExpr
-	: "add" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewAddExpr($2, $3, $5, $6) >>
+	: "add" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAdd{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FAddExpr
-	: "fadd" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFAddExpr($2, $3, $5, $6) >>
+	: "fadd" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFAdd{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SubExpr
-	: "sub" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewSubExpr($2, $3, $5, $6) >>
+	: "sub" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSub{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FSubExpr
-	: "fsub" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFSubExpr($2, $3, $5, $6) >>
+	: "fsub" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFSub{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 MulExpr
-	: "mul" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewMulExpr($2, $3, $5, $6) >>
+	: "mul" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprMul{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FMulExpr
-	: "fmul" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFMulExpr($2, $3, $5, $6) >>
+	: "fmul" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFMul{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 UDivExpr
-	: "udiv" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewUDivExpr($2, $3, $5, $6) >>
+	: "udiv" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprUDiv{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SDivExpr
-	: "sdiv" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewSDivExpr($2, $3, $5, $6) >>
+	: "sdiv" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSDiv{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FDivExpr
-	: "fdiv" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFDivExpr($2, $3, $5, $6) >>
+	: "fdiv" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFDiv{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 URemExpr
-	: "urem" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewURemExpr($2, $3, $5, $6) >>
+	: "urem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprURem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SRemExpr
-	: "srem" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewSRemExpr($2, $3, $5, $6) >>
+	: "srem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSRem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
 
+// ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 FRemExpr
-	: "frem" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFRemExpr($2, $3, $5, $6) >>
+	: "frem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFRem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
 
 // --- [ Bitwise expressions ] -------------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 ShlExpr
-	: "shl" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewShlExpr($2, $3, $5, $6) >>
+	: "shl" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprShl{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 LShrExpr
-	: "lshr" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewLShrExpr($2, $3, $5, $6) >>
+	: "lshr" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprLShr{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 AShrExpr
-	: "ashr" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewAShrExpr($2, $3, $5, $6) >>
+	: "ashr" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAShr{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 AndExpr
-	: "and" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewAndExpr($2, $3, $5, $6) >>
+	: "and" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAnd{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 OrExpr
-	: "or" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewOrExpr($2, $3, $5, $6) >>
+	: "or" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprOr{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
 
+// ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 XorExpr
-	: "xor" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewXorExpr($2, $3, $5, $6) >>
+	: "xor" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprXor{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
 ;
 
 // --- [ Vector expressions ] --------------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ extractelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 ExtractElementExpr
-	: "extractelement" "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewExtractElementExpr($2, $3, $5, $6) >>
+	: "extractelement" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprExtractElement{X: astx.TypeConst($2, $3), Index: astx.TypeConst($5, $6)}, nil >>
 ;
+
+// ~~~ [ insertelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 InsertElementExpr
-	: "insertelement" "(" ConcreteType Constant "," ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewInsertElementExpr($2, $3, $5, $6, $8, $9) >>
+	: "insertelement" "(" Type Constant "," Type Constant "," Type Constant ")"
+	<< &constant.ExprInsertElement{X: astx.TypeConst($2, $3), Elem: astx.TypeConst($5, $6), Index: astx.TypeConst($8, $9)}, nil >>
 ;
 
+// ~~~ [ shufflevector ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 ShuffleVectorExpr
-	: "shufflevector" "(" ConcreteType Constant "," ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewShuffleVectorExpr($2, $3, $5, $6, $8, $9) >>
+	: "shufflevector" "(" Type Constant "," Type Constant "," Type Constant ")"
+	<< &constant.ExprShuffleVector{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6), Mask: astx.TypeConst($8, $9)}, nil >>
 ;
 
 // --- [ Aggregate expressions ] -----------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 ExtractValueExpr
-	: "extractvalue" "(" ConcreteType Constant "," IntLitList ")"   << astx.NewExtractValueExpr($2, $3, $5) >>
+	: "extractvalue" "(" Type Constant Indices ")"
+	<< &constant.ExprExtractValue{X: astx.TypeConst($2, $3), Indices: $4.([]int64)}, nil >>
 ;
 
+// ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 InsertValueExpr
-	: "insertvalue" "(" ConcreteType Constant "," ConcreteType Constant "," IntLitList ")"   << astx.NewInsertValueExpr($2, $3, $5, $6, $8) >>
+	: "insertvalue" "(" Type Constant "," Type Constant Indices ")"
+	<< &constant.ExprInsertValue{X: astx.TypeConst($2, $3), Elem: astx.TypeConst($5, $6), Indices: $7.([]int64)}, nil >>
 ;
 
 // --- [ Memory expressions ] --------------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ getelementptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 GetElementPtrExpr
-	: "getelementptr" OptInbounds "(" ConcreteType "," ConcreteType Constant ConstIndices ")"   << astx.NewGetElementPtrExpr($3, $5, $6, $7) >>
+	: "getelementptr" OptInBounds "(" Type "," Type Constant "," GEPConstIndices ")"
+	<< &constant.ExprGetElementPtr{InBounds: $1.(bool), ElemType: $3.(types.Type), Src: astx.TypeConst($5, $6), Indices: $8.([]*constant.Index)}, nil >>
 ;
 
-ConstIndices
+// ref: ParseGlobalValueVector
+//
+//   ::= empty
+//   ::= [inrange] TypeAndValue (',' [inrange] TypeAndValue)*
+
+GEPConstIndices
 	: empty
-	| "," ConstIndexList   << $1, nil >>
+	<< ([]*constant.Index)(nil), nil >>
+	| GEPConstIndexList
 ;
 
-ConstIndexList
-	: ConstIndex                      << astx.NewConstantList($0) >>
-	| ConstIndexList "," ConstIndex   << astx.AppendConstant($0, $2) >>
+GEPConstIndexList
+	: GEPConstIndex
+	<< []*constant.Index{$0.(*constant.Index)}, nil >>
+	| GEPConstIndexList "," GEPConstIndex
+	<< append($0.([]*constant.Index), $2.(*constant.Index)), nil >>
 ;
 
-ConstIndex
-	: IntType Constant   << astx.NewConstant($0, $1) >>
+GEPConstIndex
+	: OptInrange Type Constant
+	<< &constant.Index{InRange: $0.(bool), Index: astx.TypeConst($1, $2)}, nil >>
+;
+
+OptInrange
+	: empty       << false, nil >>
+	| "inrange"   << true, nil >>
 ;
 
 // --- [ Conversion expressions ] ----------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ trunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 TruncExpr
-	: "trunc" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewTruncExpr($2, $3, $5) >>
+	: "trunc" "(" Type Constant "to" Type ")"
+	<< &constant.ExprTrunc{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 ZExtExpr
-	: "zext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewZExtExpr($2, $3, $5) >>
+	: "zext" "(" Type Constant "to" Type ")"
+	<< &constant.ExprZExt{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SExtExpr
-	: "sext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewSExtExpr($2, $3, $5) >>
+	: "sext" "(" Type Constant "to" Type ")"
+	<< &constant.ExprSExt{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ fptrunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FPTruncExpr
-	: "fptrunc" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPTruncExpr($2, $3, $5) >>
+	: "fptrunc" "(" Type Constant "to" Type ")"
+	<< &constant.ExprFPTrunc{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ fpext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FPExtExpr
-	: "fpext" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPExtExpr($2, $3, $5) >>
+	: "fpext" "(" Type Constant "to" Type ")"
+	<< &constant.ExprFPExt{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ fptoui ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FPToUIExpr
-	: "fptoui" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPToUIExpr($2, $3, $5) >>
+	: "fptoui" "(" Type Constant "to" Type ")"
+	<< &constant.ExprFPToUI{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ fptosi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FPToSIExpr
-	: "fptosi" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewFPToSIExpr($2, $3, $5) >>
+	: "fptosi" "(" Type Constant "to" Type ")"
+	<< &constant.ExprFPToSI{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ uitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 UIToFPExpr
-	: "uitofp" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewUIToFPExpr($2, $3, $5) >>
+	: "uitofp" "(" Type Constant "to" Type ")"
+	<< &constant.ExprUIToFP{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ sitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SIToFPExpr
-	: "sitofp" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewSIToFPExpr($2, $3, $5) >>
+	: "sitofp" "(" Type Constant "to" Type ")"
+	<< &constant.ExprSIToFP{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ ptrtoint ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 PtrToIntExpr
-	: "ptrtoint" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewPtrToIntExpr($2, $3, $5) >>
+	: "ptrtoint" "(" Type Constant "to" Type ")"
+	<< &constant.ExprPtrToInt{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 IntToPtrExpr
-	: "inttoptr" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewIntToPtrExpr($2, $3, $5) >>
+	: "inttoptr" "(" Type Constant "to" Type ")"
+	<< &constant.ExprIntToPtr{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
+
+// ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 BitCastExpr
-	: "bitcast" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewBitCastExpr($2, $3, $5) >>
+	: "bitcast" "(" Type Constant "to" Type ")"
+	<< &constant.ExprBitCast{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
 
+// ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 AddrSpaceCastExpr
-	: "addrspacecast" "(" ConcreteType Constant "to" ConcreteType ")"   << astx.NewAddrSpaceCastExpr($2, $3, $5) >>
+	: "addrspacecast" "(" Type Constant "to" Type ")"
+	<< &constant.ExprAddrSpaceCast{From: astx.TypeConst($2, $3), To: $5.(types.Type)}, nil >>
 ;
 
 // --- [ Other expressions ] ---------------------------------------------------
 
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
 ICmpExpr
-	: "icmp" IntPred "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewICmpExpr($1, $3, $4, $6, $7) >>
+	: "icmp" IPred "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprICmp{Pred: $1.(ir.IPred), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 FCmpExpr
-	: "fcmp" FloatPred "(" ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewFCmpExpr($1, $3, $4, $6, $7) >>
+	: "fcmp" FPred "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFCmp{Pred: $1.(ir.FPred), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
 ;
+
+// ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
 
 SelectExpr
-	: "select" "(" ConcreteType Constant "," ConcreteType Constant "," ConcreteType Constant ")"   << astx.NewSelectExpr($2, $3, $5, $6, $8, $9) >>
+	: "select" "(" Type Constant "," Type Constant "," Type Constant ")"
+	<< &constant.ExprSelect{Cond: astx.TypeConst($2, $3), X: astx.TypeConst($5, $6), Y: astx.TypeConst($8, $9)}, nil >>
 ;
 
-// === [ Basic blocks ] ========================================================
+// === [ Basic Blocks ] ========================================================
+
+// ref: ParseBasicBlock
+//
+//   ::= LabelStr? Instruction*
 
 BasicBlockList
-	: BasicBlock                  << astx.NewBasicBlockList($0) >>
-	| BasicBlockList BasicBlock   << astx.AppendBasicBlock($0, $1) >>
+	: BasicBlock
+	<< []*ir.BasicBlock{$0.(*ir.BasicBlock)}, nil >>
+	| BasicBlockList BasicBlock
+	<< append($0.([]*ir.BasicBlock), $1.(*ir.BasicBlock)), nil >>
 ;
 
 BasicBlock
-	: OptLabelIdent Instructions Terminator   << astx.NewBasicBlock($0, $1, $2) >>
+	: OptLabelIdent Instructions Terminator
+	<< &ir.BasicBlock{Name: astx.LabelIdent($0), Insts: $1.([]ir.Instruction), Term: $2.(ir.Terminator)}, nil >>
 ;
 
 OptLabelIdent
@@ -957,23 +1655,34 @@ OptLabelIdent
 
 // === [ Instructions ] ========================================================
 
+// https://llvm.org/docs/LangRef.html#instruction-reference
+
+// ref: ParseInstruction
+
 Instructions
 	: empty
+	<< ([]ir.Instruction)(nil), nil >>
 	| InstructionList
 ;
 
 InstructionList
-	: Instruction                   << astx.NewInstructionList($0) >>
-	| InstructionList Instruction   << astx.AppendInstruction($0, $1) >>
+	: Instruction
+	<< []ir.Instruction{$0.(ir.Instruction)}, nil >>
+	| InstructionList Instruction
+	<< append($0.([]ir.Instruction), $1.(ir.Instruction)), nil >>
 ;
 
 Instruction
+	// Instructions not producing values.
 	: StoreInst
 	| FenceInst
 	| CmpXchgInst
 	| AtomicRMWInst
-	| LocalIdent "=" ValueInstruction   << astx.NewNamedInstruction($0, $2) >>
+	// Instructions producing values.
+	| LocalIdent "=" ValueInstruction
+	<< &ir.LocalDef{Name: astx.LocalIdent($0), Inst: $2.(ir.ValueInstruction)}, nil >>
 	| ValueInstruction
+	<< &ir.LocalDef{Inst: $0.(ir.ValueInstruction)}, nil >>
 ;
 
 ValueInstruction
@@ -1038,584 +1747,840 @@ ValueInstruction
 
 // ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#add-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 AddInst
-	: "add" OverflowFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewAddInst($2, $3, $5, $6) >>
+	: "add" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAdd{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fadd-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 FAddInst
-	: "fadd" FastMathFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFAddInst($2, $3, $5, $6) >>
+	: "fadd" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFAdd{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#sub-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 SubInst
-	: "sub" OverflowFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewSubInst($2, $3, $5, $6) >>
+	: "sub" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSub{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fsub-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 FSubInst
-	: "fsub" FastMathFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFSubInst($2, $3, $5, $6) >>
+	: "fsub" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFSub{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#mul-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 MulInst
-	: "mul" OverflowFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewMulInst($2, $3, $5, $6) >>
+	: "mul" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstMul{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fmul-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 FMulInst
-	: "fmul" FastMathFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFMulInst($2, $3, $5, $6) >>
+	: "fmul" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFMul{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#udiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 UDivInst
-	: "udiv" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewUDivInst($2, $3, $5, $6) >>
+	: "udiv" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstUDiv{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#sdiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 SDivInst
-	: "sdiv" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewSDivInst($2, $3, $5, $6) >>
+	: "sdiv" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSDiv{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fdiv-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 FDivInst
-	: "fdiv" FastMathFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFDivInst($2, $3, $5, $6) >>
+	: "fdiv" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFDiv{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#urem-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 URemInst
-	: "urem" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewURemInst($1, $2, $4, $5) >>
+	: "urem" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstURem{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#srem-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 SRemInst
-	: "srem" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewSRemInst($1, $2, $4, $5) >>
+	: "srem" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSRem{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FRemInst
-	: "frem" FastMathFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFRemInst($2, $3, $5, $6) >>
-;
+// https://llvm.org/docs/LangRef.html#frem-instruction
 
-OverflowFlags
-	: empty
-	| OverflowFlagList
-;
-
-OverflowFlagList
-	: OverflowFlag
-	| OverflowFlagList OverflowFlag
-;
-
-OverflowFlag
-	: "nuw"
-	| "nsw"
-;
-
-FastMathFlags
-	: empty
-	| FastMathFlagList
-;
-
-FastMathFlagList
-	: FastMathFlag
-	| FastMathFlagList FastMathFlag
-;
-
-// From spec and src of v4.0.
+// ref: ParseArithmetic
 //
-// ref: http://llvm.org/docs/LangRef.html#fast-math-flags
-FastMathFlag
-	: "arcp"
-	| "fast"
-	| "ninf"
-	| "nnan"
-	| "nsz"
-;
+//  ::= ArithmeticOps TypeAndValue ',' Value
 
-OptExact
-	: empty
-	| "exact"
+FRemInst
+	: "frem" FastMathFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFRem{FastMathFlags: $1.([]ir.FastMathFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // --- [ Bitwise instructions ] ------------------------------------------------
 
 // ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#shl-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 ShlInst
-	: "shl" OverflowFlags ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewShlInst($2, $3, $5, $6) >>
+	: "shl" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstShl{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#lshr-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 LShrInst
-	: "lshr" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewLShrInst($2, $3, $5, $6) >>
+	: "lshr" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstLShr{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#ashr-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
 AShrInst
-	: "ashr" OptExact ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewAShrInst($2, $3, $5, $6) >>
+	: "ashr" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAShr{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#and-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
 AndInst
-	: "and" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewAndInst($1, $2, $4, $5) >>
+	: "and" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAnd{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#or-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
 OrInst
-	: "or" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewOrInst($1, $2, $4, $5) >>
+	: "or" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstOr{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#xor-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
 XorInst
-	: "xor" ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewXorInst($1, $2, $4, $5) >>
+	: "xor" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstXor{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // --- [ Vector instructions ] -------------------------------------------------
 
 // ~~~ [ extractelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#extractelement-instruction
+
+// ref: ParseExtractElement
+//
+//   ::= 'extractelement' TypeAndValue ',' TypeAndValue
+
 ExtractElementInst
-	: "extractelement" ConcreteType Value "," ConcreteType Value OptCommaAttachedMDList   << astx.NewExtractElementInst($1, $2, $4, $5, $6) >>
+	: "extractelement" Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstExtractElement{X: astx.TypeValue($1, $2), Index: astx.TypeValue($4, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ insertelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#insertelement-instruction
+
+// ref: ParseInsertElement
+//
+//   ::= 'insertelement' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
 InsertElementInst
-	: "insertelement" ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptCommaAttachedMDList   << astx.NewInsertElementInst($1, $2, $4, $5, $7, $8, $9) >>
+	: "insertelement" Type Value "," Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstInsertElement{X: astx.TypeValue($1, $2), Elem: astx.TypeValue($4, $5), Index: astx.TypeValue($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ shufflevector ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#shufflevector-instruction
+
+// ref: ParseShuffleVector
+//
+//   ::= 'shufflevector' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
 ShuffleVectorInst
-	: "shufflevector" ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptCommaAttachedMDList   << astx.NewShuffleVectorInst($1, $2, $4, $5, $7, $8, $9) >>
+	: "shufflevector" Type Value "," Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstShuffleVector{X: astx.TypeValue($1, $2), Y: astx.TypeValue($4, $5), Mask: astx.TypeValue($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// --- [ Aggregate  instructions ] ---------------------------------------------
+// --- [ Aggregate instructions ] ----------------------------------------------
 
 // ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ExtractValueInst
-	: "extractvalue" ConcreteType Value "," IntLitList OptCommaAttachedMDList   << astx.NewExtractValueInst($1, $2, $4, $5) >>
-;
+// https://llvm.org/docs/LangRef.html#extractvalue-instruction
 
-IntLitList
-	: IntLit                  << astx.NewIntLitList($0) >>
-	| IntLitList "," IntLit   << astx.AppendIntLit($0, $2) >>
+// ref: ParseExtractValue
+//
+//   ::= 'extractvalue' TypeAndValue (',' uint32)+
+
+ExtractValueInst
+	: "extractvalue" Type Value "," IndexList OptCommaSepMetadataAttachmentList
+	<< &ir.InstExtractValue{X: astx.TypeValue($1, $2), Indices: $4.([]int64), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#insertvalue-instruction
+
+// ref: ParseInsertValue
+//
+//   ::= 'insertvalue' TypeAndValue ',' TypeAndValue (',' uint32)+
+
 InsertValueInst
-	: "insertvalue" ConcreteType Value "," ConcreteType Value "," IntLitList OptCommaAttachedMDList   << astx.NewInsertValueInst($1, $2, $4, $5, $7, $8) >>
+	: "insertvalue" Type Value "," Type Value "," IndexList OptCommaSepMetadataAttachmentList
+	<< &ir.InstInsertValue{X: astx.TypeValue($1, $2), Elem: astx.TypeValue($4, $5), Indices: $7.([]int64), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // --- [ Memory instructions ] -------------------------------------------------
 
 // ~~~ [ alloca ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// https://llvm.org/docs/LangRef.html#alloca-instruction
+
+// ref: ParseAlloc
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
+//   ::= 'alloca' 'inalloca'? 'swifterror'? Type (',' TypeAndValue)?
+//       (',' 'align' i32)? (',', 'addrspace(n))?
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
 //    AllocaInst
-//       : "alloca" ConcreteType OptCommaNElems OptCommaAlign OptCommaAttachedMDList   << astx.NewAllocaInst($1, $2, $4) >>
+//       : "alloca" OptInAlloca OptSwiftError Type OptCommaTypeValue OptCommaAlignment OptCommaAddrSpace OptCommaSepMetadataAttachmentList
 //    ;
-//
-//    OptCommaNElems
-//       : empty
-//       | "," NElems   << $1 >>
-//    ;
+
 AllocaInst
-	: "alloca" ConcreteType OptCommaAttachedMDList                        << astx.NewAllocaInst($1, nil, $2) >>
-	| "alloca" ConcreteType "," Align OptCommaAttachedMDList              << astx.NewAllocaInst($1, nil, $4) >>
-	| "alloca" ConcreteType "," NElems OptCommaAttachedMDList             << astx.NewAllocaInst($1, $3, $4) >>
-	| "alloca" ConcreteType "," NElems "," Align OptCommaAttachedMDList   << astx.NewAllocaInst($1, $3, $6) >>
+	: "alloca" OptInAlloca OptSwiftError Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), Metadata: $4.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), Alignment: $5.(*ir.Alignment), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), NElems: astx.TypeValue($5, $6), Metadata: $7.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Type Value "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), NElems: astx.TypeValue($5, $6), Alignment: $8.(*ir.Alignment), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," AddrSpace OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), AddrSpace: $5.(types.AddrSpace), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Alignment "," AddrSpace OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), Alignment: $5.(*ir.Alignment), AddrSpace: $7.(types.AddrSpace), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Type Value "," AddrSpace OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), NElems: astx.TypeValue($5, $6), AddrSpace: $8.(types.AddrSpace), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+	| "alloca" OptInAlloca OptSwiftError Type "," Type Value "," Alignment "," AddrSpace OptCommaSepMetadataAttachmentList
+	<< &ir.InstAlloca{InAlloca: $1.(bool), SwiftError: $2.(bool), ElemType: $3.(types.Type), NElems: astx.TypeValue($5, $6), Alignment: $8.(*ir.Alignment), AddrSpace: $10.(types.AddrSpace), Metadata: $11.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-NElems
-	: ConcreteType Value   << astx.NewValue($0, $1) >>
+OptInAlloca
+	: empty        << false, nil >>
+	| "inalloca"   << true, nil >>
+;
+
+OptSwiftError
+	: empty          << false, nil >>
+	| "swifterror"   << true, nil >>
 ;
 
 // ~~~ [ load ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// https://llvm.org/docs/LangRef.html#load-instruction
+
+// ref: ParseLoad
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
+//   ::= 'load' 'volatile'? TypeAndValue (',' 'align' i32)?
+//   ::= 'load' 'atomic' 'volatile'? TypeAndValue
+//       'singlethread'? AtomicOrdering (',' 'align' i32)?
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
 //    LoadInst
-//       : "load" OptVolatile ConcreteType "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $7) >>
+//       : "load" OptVolatile Type "," Type Value OptCommaAlignment OptCommaSepMetadataAttachmentList
+//       | "load" "atomic" OptVolatile Type "," Type Value OptSyncScope AtomicOrdering OptCommaAlignment OptCommaSepMetadataAttachmentList
 //    ;
-LoadInst
-	: "load" OptVolatile ConcreteType "," PointerType Value OptCommaAttachedMDList             << astx.NewLoadInst($2, $4, $5, $6) >>
-	| "load" OptVolatile ConcreteType "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewLoadInst($2, $4, $5, $8) >>
-;
 
-OptVolatile
-	: empty
-	| "volatile"
+LoadInst
+	// Load.
+	: "load" OptVolatile Type "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstLoad{Volatile: $1.(bool), ElemType: $2.(types.Type), Src: astx.TypeValue($4, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+	| "load" OptVolatile Type "," Type Value "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstLoad{Volatile: $1.(bool), ElemType: $2.(types.Type), Src: astx.TypeValue($4, $5), Alignment: $7.(*ir.Alignment), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
+	// Atomic load.
+	| "load" "atomic" OptVolatile Type "," Type Value OptSyncScope AtomicOrdering OptCommaSepMetadataAttachmentList
+	<< &ir.InstLoad{Atomic: true, Volatile: $2.(bool), ElemType: $3.(types.Type), Src: astx.TypeValue($5, $6), SyncScope: $7.(*ir.SyncScope), AtomicOrdering: $8.(ir.AtomicOrdering), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+	| "load" "atomic" OptVolatile Type "," Type Value OptSyncScope AtomicOrdering "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstLoad{Atomic: true, Volatile: $2.(bool), ElemType: $3.(types.Type), Src: astx.TypeValue($5, $6), SyncScope: $7.(*ir.SyncScope), AtomicOrdering: $8.(ir.AtomicOrdering), Alignment: $10.(*ir.Alignment), Metadata: $11.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ store ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// https://llvm.org/docs/LangRef.html#store-instruction
+
+// ref: ParseStore
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
-//
-// Original production rule.
+//   ::= 'store' 'volatile'? TypeAndValue ',' TypeAndValue (',' 'align' i32)?
+//   ::= 'store' 'atomic' 'volatile'? TypeAndValue ',' TypeAndValue
+//       'singlethread'? AtomicOrdering (',' 'align' i32)?
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
 //    StoreInst
-//       : "store" OptVolatile ConcreteType Value "," PointerType Value OptCommaAlign OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $8) >>
+//       : "store" OptVolatile Type Value "," Type Value OptCommaAlignment OptCommaSepMetadataAttachmentList
+//       | "store" "atomic" OptVolatile Type Value "," Type Value OptSyncScope AtomicOrdering OptCommaAlignment OptCommaSepMetadataAttachmentList
 //    ;
+
 StoreInst
-	: "store" OptVolatile ConcreteType Value "," PointerType Value OptCommaAttachedMDList             << astx.NewStoreInst($2, $3, $5, $6, $7) >>
-	| "store" OptVolatile ConcreteType Value "," PointerType Value "," Align OptCommaAttachedMDList   << astx.NewStoreInst($2, $3, $5, $6, $9) >>
+	: "store" OptVolatile Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstStore{Volatile: $1.(bool), Src: astx.TypeValue($2, $3), Dst: astx.TypeValue($5, $6), Metadata: $7.([]*metadata.MetadataAttachment)}, nil >>
+	| "store" OptVolatile Type Value "," Type Value "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstStore{Volatile: $1.(bool), Src: astx.TypeValue($2, $3), Dst: astx.TypeValue($5, $6), Alignment: $8.(*ir.Alignment), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+	| "store" "atomic" OptVolatile Type Value "," Type Value OptSyncScope AtomicOrdering OptCommaSepMetadataAttachmentList
+	<< &ir.InstStore{Atomic: true, Volatile: $2.(bool), Src: astx.TypeValue($3, $4), Dst: astx.TypeValue($6, $7), SyncScope: $8.(*ir.SyncScope), AtomicOrdering: $9.(ir.AtomicOrdering), Metadata: $10.([]*metadata.MetadataAttachment)}, nil >>
+	| "store" "atomic" OptVolatile Type Value "," Type Value OptSyncScope AtomicOrdering "," Alignment OptCommaSepMetadataAttachmentList
+	<< &ir.InstStore{Atomic: true, Volatile: $2.(bool), Src: astx.TypeValue($3, $4), Dst: astx.TypeValue($6, $7), SyncScope: $8.(*ir.SyncScope), AtomicOrdering: $9.(ir.AtomicOrdering), Alignment: $11.(*ir.Alignment), Metadata: $12.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FenceInst
-	: "fence" OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
-;
+// https://llvm.org/docs/LangRef.html#fence-instruction
 
-OptSinglethread
-	: empty
-	| "singlethread"
-;
-
-// From spec and src of v4.0.
+// ref: ParseFence
 //
-// ref: http://llvm.org/docs/LangRef.html#ordering
-Ordering
-	: "acq_rel"
-	| "acquire"
-	| "monotonic"
-	| "release"
-	| "seq_cst"
-	| "unordered"
+//   ::= 'fence' 'singlethread'? AtomicOrdering
+
+FenceInst
+	: "fence" OptSyncScope AtomicOrdering OptCommaSepMetadataAttachmentList
+	<< &ir.InstFence{SyncScope: $1.(*ir.SyncScope), AtomicOrdering: $2.(ir.AtomicOrdering), Metadata: $3.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ cmpxchg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#cmpxchg-instruction
+
+// ref: ParseCmpXchg
+//
+//   ::= 'cmpxchg' 'weak'? 'volatile'? TypeAndValue ',' TypeAndValue ','
+//       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering
+
 CmpXchgInst
-	: "cmpxchg" OptWeak OptVolatile ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptSinglethread Ordering Ordering OptCommaAttachedMDList   << nil, nil >>
+	: "cmpxchg" OptWeak OptVolatile Type Value "," Type Value "," Type Value OptSyncScope AtomicOrdering AtomicOrdering OptCommaSepMetadataAttachmentList
+	<< &ir.InstCmpXchg{Weak: $1.(bool), Volatile: $2.(bool), Ptr: astx.TypeValue($3, $4), Cmp: astx.TypeValue($6, $7), New: astx.TypeValue($9, $10), SyncScope: $11.(*ir.SyncScope), Success: $12.(ir.AtomicOrdering), Failure: $13.(ir.AtomicOrdering), Metadata: $14.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 OptWeak
-	: empty
-	| "weak"
+	: empty    << false, nil >>
+	| "weak"   << true, nil >>
 ;
 
 // ~~~ [ atomicrmw ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#atomicrmw-instruction
+
+// ref: ParseAtomicRMW
+//
+//   ::= 'atomicrmw' 'volatile'? BinOp TypeAndValue ',' TypeAndValue
+//       'singlethread'? AtomicOrdering
+
 AtomicRMWInst
-	: "atomicrmw" OptVolatile AtomicOperation ConcreteType Value "," ConcreteType Value OptSinglethread Ordering OptCommaAttachedMDList   << nil, nil >>
+	: "atomicrmw" OptVolatile BinOp Type Value "," Type Value OptSyncScope AtomicOrdering OptCommaSepMetadataAttachmentList
+	<< &ir.InstAtomicRMW{Volatile: $1.(bool), Op: $2.(ir.BinOp), Ptr: astx.TypeValue($3, $4), X: astx.TypeValue($6, $7), SyncScope: $8.(*ir.SyncScope), AtomicOrdering: $9.(ir.AtomicOrdering), Metadata: $10.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// From spec and src of v4.0.
-//
-// ref: http://llvm.org/docs/LangRef.html#atomicrmw-instruction
-AtomicOperation
-	: "add"
-	| "and"
-	| "max"
-	| "min"
-	| "nand"
-	| "or"
-	| "sub"
-	| "umax"
-	| "umin"
-	| "xchg"
-	| "xor"
+BinOp
+	: "add"    << ir.BinOpAdd, nil >>
+	| "and"    << ir.BinOpAnd, nil >>
+	| "max"    << ir.BinOpMax, nil >>
+	| "min"    << ir.BinOpMin, nil >>
+	| "nand"   << ir.BinOpNAnd, nil >>
+	| "or"     << ir.BinOpOr, nil >>
+	| "sub"    << ir.BinOpSub, nil >>
+	| "umax"   << ir.BinOpUMax, nil >>
+	| "umin"   << ir.BinOpUMin, nil >>
+	| "xchg"   << ir.BinOpXChg, nil >>
+	| "xor"    << ir.BinOpXor, nil >>
 ;
 
 // ~~~ [ getelementptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// TODO: Clean up when the parser generator no longer introduces ambiguities
-// through the limitation of 1 token lookahead.
+// https://llvm.org/docs/LangRef.html#getelementptr-instruction
+
+// ref: ParseGetElementPtr
 //
-// Structured in this way to allow for naiive 1 token lookahead parser
-// generators.
+//   ::= 'getelementptr' 'inbounds'? TypeAndValue (',' TypeAndValue)*
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
 //
-// Original production rule.
 //    GetElementPtrInst
-//       : "getelementptr" OptInbounds ConcreteType "," ConcreteType Value Indices OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $6, $7) >>
+//       : "getelementptr" OptInBounds Type "," Type Value GEPIndices OptCommaSepMetadataAttachmentList
 //    ;
-//
-//    Indices
-//       : empty
-//       | "," IndexList   << $1, nil >>
-//    ;
+
 GetElementPtrInst
-	: "getelementptr" OptInbounds ConcreteType "," ConcreteType Value OptCommaAttachedMDList                 << astx.NewGetElementPtrInst($2, $4, $5, nil, $6) >>
-	| "getelementptr" OptInbounds ConcreteType "," ConcreteType Value "," IndexList OptCommaAttachedMDList   << astx.NewGetElementPtrInst($2, $4, $5, $7, $8) >>
-;
-
-IndexList
-	: Index                 << astx.NewValueList($0) >>
-	| IndexList "," Index   << astx.AppendValue($0, $2) >>
-;
-
-Index
-	: IntType Value   << astx.NewValue($0, $1) >>
+	: "getelementptr" OptInBounds Type "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstGetElementPtr{InBounds: $1.(bool), ElemType: $2.(types.Type), Src: astx.TypeValue($4, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+	| "getelementptr" OptInBounds Type "," Type Value "," CommaSepTypeValueList OptCommaSepMetadataAttachmentList
+	<< &ir.InstGetElementPtr{InBounds: $1.(bool), ElemType: $2.(types.Type), Src: astx.TypeValue($4, $5), Indices: $7.([]value.Value), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // --- [ Conversion instructions ] ---------------------------------------------
 
 // ~~~ [ trunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#trunc-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 TruncInst
-	: "trunc" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewTruncInst($1, $2, $4, $5) >>
+	: "trunc" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstTrunc{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ zext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#zext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 ZExtInst
-	: "zext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewZExtInst($1, $2, $4, $5) >>
+	: "zext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstZExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ sext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#sext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 SExtInst
-	: "sext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewSExtInst($1, $2, $4, $5) >>
+	: "sext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstSExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fptrunc ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fptrunc-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 FPTruncInst
-	: "fptrunc" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPTruncInst($1, $2, $4, $5) >>
+	: "fptrunc" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPTrunc{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fpext ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fpext-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 FPExtInst
-	: "fpext" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPExtInst($1, $2, $4, $5) >>
+	: "fpext" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPExt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fptoui ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fptoui-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 FPToUIInst
-	: "fptoui" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPToUIInst($1, $2, $4, $5) >>
+	: "fptoui" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPToUI{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fptosi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#fptosi-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 FPToSIInst
-	: "fptosi" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewFPToSIInst($1, $2, $4, $5) >>
+	: "fptosi" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstFPToSI{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ uitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#uitofp-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 UIToFPInst
-	: "uitofp" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewUIToFPInst($1, $2, $4, $5) >>
+	: "uitofp" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstUIToFP{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ sitofp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#sitofp-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 SIToFPInst
-	: "sitofp" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewSIToFPInst($1, $2, $4, $5) >>
+	: "sitofp" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstSIToFP{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ ptrtoint ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#ptrtoint-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 PtrToIntInst
-	: "ptrtoint" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewPtrToIntInst($1, $2, $4, $5) >>
+	: "ptrtoint" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstPtrToInt{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ inttoptr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#inttoptr-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 IntToPtrInst
-	: "inttoptr" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewIntToPtrInst($1, $2, $4, $5) >>
+	: "inttoptr" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstIntToPtr{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ bitcast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#bitcast-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 BitCastInst
-	: "bitcast" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewBitCastInst($1, $2, $4, $5) >>
+	: "bitcast" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstBitCast{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ addrspacecast ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#addrspacecast-instruction
+
+// ref: ParseCast
+//
+//   ::= CastOpc TypeAndValue 'to' Type
+
 AddrSpaceCastInst
-	: "addrspacecast" ConcreteType Value "to" ConcreteType OptCommaAttachedMDList   << astx.NewAddrSpaceCastInst($1, $2, $4, $5) >>
+	: "addrspacecast" Type Value "to" Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstAddrSpaceCast{From: astx.TypeValue($1, $2), To: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // --- [ Other instructions ] --------------------------------------------------
 
 // ~~~ [ icmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ICmpInst
-	: "icmp" IntPred ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewICmpInst($1, $2, $3, $5, $6) >>
-;
+// https://llvm.org/docs/LangRef.html#icmp-instruction
 
-IntPred
-	: "eq"    << ast.IntEQ, nil >>
-	| "ne"    << ast.IntNE, nil >>
-	| "ugt"   << ast.IntUGT, nil >>
-	| "uge"   << ast.IntUGE, nil >>
-	| "ult"   << ast.IntULT, nil >>
-	| "ule"   << ast.IntULE, nil >>
-	| "sgt"   << ast.IntSGT, nil >>
-	| "sge"   << ast.IntSGE, nil >>
-	| "slt"   << ast.IntSLT, nil >>
-	| "sle"   << ast.IntSLE, nil >>
+// ref: ParseCompare
+//
+//  ::= 'icmp' IPredicates TypeAndValue ',' Value
+
+ICmpInst
+	: "icmp" IPred Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstICmp{Pred: $1.(ir.IPred), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ fcmp ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-FCmpInst
-	: "fcmp" FastMathFlags FloatPred ConcreteType Value "," Value OptCommaAttachedMDList   << astx.NewFCmpInst($2, $3, $4, $6, $7) >>
-;
+// https://llvm.org/docs/LangRef.html#fcmp-instruction
 
-FloatPred
-	: "false"   << ast.FloatFalse, nil >>
-	| "oeq"     << ast.FloatOEQ, nil >>
-	| "ogt"     << ast.FloatOGT, nil >>
-	| "oge"     << ast.FloatOGE, nil >>
-	| "olt"     << ast.FloatOLT, nil >>
-	| "ole"     << ast.FloatOLE, nil >>
-	| "one"     << ast.FloatONE, nil >>
-	| "ord"     << ast.FloatORD, nil >>
-	| "ueq"     << ast.FloatUEQ, nil >>
-	| "ugt"     << ast.FloatUGT, nil >>
-	| "uge"     << ast.FloatUGE, nil >>
-	| "ult"     << ast.FloatULT, nil >>
-	| "ule"     << ast.FloatULE, nil >>
-	| "une"     << ast.FloatUNE, nil >>
-	| "uno"     << ast.FloatUNO, nil >>
-	| "true"    << ast.FloatTrue, nil >>
+// ref: ParseCompare
+//
+//  ::= 'fcmp' FPredicates TypeAndValue ',' Value
+
+FCmpInst
+	: "fcmp" FastMathFlags FPred Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstFCmp{FastMathFlags: X[1].([]ir.FastMathFlag), Pred: $2.(ir.FPred), X: astx.TypeValue($3, $4), Y: astx.TypeValue($3, $6), Metadata: $7.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ phi ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#phi-instruction
+
+// ref: ParsePHI
+//
+//   ::= 'phi' Type '[' Value ',' Value ']' (',' '[' Value ',' Value ']')*
+
 PhiInst
-	: "phi" ConcreteType IncomingList OptCommaAttachedMDList   << astx.NewPhiInst($1, $2, $3) >>
+	: "phi" Type IncList OptCommaSepMetadataAttachmentList
+	<< &ir.InstPhi{Typ: $1.(types.Type), Incs: $2.([]*ir.Incoming), Metadata: $3.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-IncomingList
-	: Incoming                    << astx.NewIncomingList($0) >>
-	| IncomingList "," Incoming   << astx.AppendIncoming($0, $2) >>
+IncList
+	: Inc
+	<< []*ir.Incoming{$0.(*ir.Incoming)}, nil >>
+	| IncList "," Inc
+	<< append($0.([]*ir.Incoming), $2.(*ir.Incoming)), nil >>
 ;
 
-Incoming
-	: "[" Value "," LocalIdent "]"   << astx.NewIncoming($1, $3) >>
+Inc
+	: "[" Value "," LocalIdent "]"
+	<< &ir.Incoming{X: $1.(value.Value), Pred: &ir.BasicBlock{Name: astx.LocalIdent($3)}}, nil >>
 ;
 
 // ~~~ [ select ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#select-instruction
+
+// ref: ParseSelect
+//
+//   ::= 'select' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
 SelectInst
-	: "select" ConcreteType Value "," ConcreteType Value "," ConcreteType Value OptCommaAttachedMDList   << astx.NewSelectInst($1, $2, $4, $5, $7, $8, $9) >>
+	: "select" Type Value "," Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstSelect{Cond: astx.TypeValue($1, $2), X: astx.TypeValue($4, $5), Y: astx.TypeValue($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#call-instruction
+
+// ref: ParseCall
+//
+//   ::= 'call' OptionalFastMathFlags OptionalCallingConv
+//           OptionalAttrs Type Value ParameterList OptionalAttrs
+//   ::= 'tail' 'call' OptionalFastMathFlags OptionalCallingConv
+//           OptionalAttrs Type Value ParameterList OptionalAttrs
+//   ::= 'musttail' 'call' OptionalFastMathFlags OptionalCallingConv
+//           OptionalAttrs Type Value ParameterList OptionalAttrs
+//   ::= 'notail' 'call'  OptionalFastMathFlags OptionalCallingConv
+//           OptionalAttrs Type Value ParameterList OptionalAttrs
+
 CallInst
-	: OptTail "call" FastMathFlags OptCallConv ParamAttrs Type Callee "(" Args ")" FuncAttrs OptCommaAttachedMDList   << astx.NewCallInst($3, $5, $6, $8, $11) >>
+	: OptTail "call" FastMathFlags OptCallingConv ReturnAttrs Type Value "(" Args ")" FuncAttrs OperandBundles OptCommaSepMetadataAttachmentList
+	<< &ir.InstCall{Tail: $0.(ir.Tail), FastMathFlags: $2.([]ir.FastMathFlag), CallingConv: $3.(ir.CallingConv), ReturnAttrs: $4.([]ir.ReturnAttribute), RetType: $5.(types.Type), Callee: $6.(value.Value), Args: $8.([]ir.Argument), FuncAttrs: $10.([]ir.FuncAttribute), OperandBundles: $11.([]*ir.OperandBundle), Metadata: $12.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 OptTail
-	: empty
-	| Tail
-;
-
-Tail
-	: "tail"
-	| "musttail"
-	| "notail"
-;
-
-Callee
-	: Value
-	| InlineAsm
-;
-
-Args
-	: empty
-	| ArgList
-;
-
-ArgList
-	: Arg               << astx.NewValueList($0) >>
-	| ArgList "," Arg   << astx.AppendValue($0, $2) >>
-;
-
-Arg
-	: ConcreteType ParamAttrs Value   << astx.NewValue($0, $2) >>
-	| MetadataType MetadataValue      << astx.NewMetadataValue($1) >>
+	: empty        << ir.TailNone, nil >>
+	| "musttail"   << ir.TailMustTail, nil >>
+	| "notail"     << ir.TailNoTail, nil >>
+	| "tail"       << ir.TailTail, nil >>
 ;
 
 // ~~~ [ va_arg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#va_arg-instruction
+
+// ref: ParseVA_Arg
+//
+//   ::= 'va_arg' TypeAndValue ',' Type
+
 VAArgInst
-	: "va_arg" ConcreteType Value "," ConcreteType OptCommaAttachedMDList   << nil, nil >>
+	: "va_arg" Type Value "," Type OptCommaSepMetadataAttachmentList
+	<< &ir.InstVAArg{ArgList: astx.TypeValue($1, $2), ArgType: $4.(types.Type), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // ~~~ [ landingpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// https://llvm.org/docs/LangRef.html#landingpad-instruction
+
+// ref: ParseLandingPad
+//
+//   ::= 'landingpad' Type 'personality' TypeAndValue 'cleanup'? Clause+
+//  Clause
+//   ::= 'catch' TypeAndValue
+//   ::= 'filter'
+//   ::= 'filter' TypeAndValue ( ',' TypeAndValue )*
+
 LandingPadInst
-	: "landingpad" ConcreteType ClauseList OptCommaAttachedMDList          << nil, nil >>
-	| "landingpad" ConcreteType "cleanup" Clauses OptCommaAttachedMDList   << nil, nil >>
+	: "landingpad" Type OptCleanup Clauses OptCommaSepMetadataAttachmentList
+	<< &ir.InstLandingPad{Typ: $1.(types.Type), Cleanup: $2.(bool), Clauses: $3.([]*ir.Clause), Metadata: $4.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+OptCleanup
+	: empty       << false, nil >>
+	| "cleanup"   << true, nil >>
 ;
 
 Clauses
 	: empty
+	<< ([]*ir.Clause)(nil), nil >>
 	| ClauseList
 ;
 
 ClauseList
 	: Clause
+	<< []*ir.Clause{$0.(*ir.Clause)}, nil >>
 	| ClauseList Clause
+	<< append($0.([]*ir.Clause), $1.(*ir.Clause)), nil >>
 ;
 
 Clause
-	: "catch" ConcreteType Value
-	| "filter" ConcreteType ArrayConst
+	: "catch" Type Value
+	<< &ir.Clause{Catch: true, X: astx.TypeValue($1, $2)}, nil >>
+	| "filter" Type ArrayConst
+	<< &ir.Clause{X: astx.TypeValue($1, $2)}, nil >>
 ;
 
-// ~~~ [ catchpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ catchpad ] ------------------------------------------------------------
+
+// ref: ParseCatchPad
+//
+//   ::= 'catchpad' ParamList 'to' TypeAndValue 'unwind' TypeAndValue
 
 CatchPadInst
-	: "catchpad" "within" LocalIdent ArrayConst OptCommaAttachedMDList   << nil, nil >>
+	: "catchpad" "within" LocalIdent "[" ExceptionArgs "]" OptCommaSepMetadataAttachmentList
+	<< &ir.InstCatchPad{Scope: $2.(*ast.LocalIdent), Args: $4.([]ir.Argument), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ cleanuppad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ cleanuppad ] ----------------------------------------------------------
+
+// ref: ParseCleanupPad
+//
+//   ::= 'cleanuppad' within Parent ParamList
 
 CleanupPadInst
-	: "cleanuppad" "within" ExceptionParent ArrayConst OptCommaAttachedMDList   << nil, nil >>
-;
-
-ExceptionParent
-	: "none"
-	| LocalIdent
+	: "cleanuppad" "within" ExceptionScope "[" ExceptionArgs "]" OptCommaSepMetadataAttachmentList
+	<< &ir.InstCleanupPad{Scope: $2.(ir.ExceptionScope), Args: $4.([]ir.Argument), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 // === [ Terminators ] =========================================================
+
+// https://llvm.org/docs/LangRef.html#terminator-instructions
+
+// ref: ParseInstruction
 
 Terminator
 	: RetTerm
@@ -1631,499 +2596,2448 @@ Terminator
 	| UnreachableTerm
 ;
 
-// ~~~ [ ret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ ret ] -----------------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#ret-instruction
+
+// ref: ParseRet
+//
+//   ::= 'ret' void (',' !dbg, !1)*
+//   ::= 'ret' TypeAndValue (',' !dbg, !1)*
 
 RetTerm
-	: "ret" VoidType OptCommaAttachedMDList             << astx.NewRetTerm(nil, nil, $2) >>
-	| "ret" ConcreteType Value OptCommaAttachedMDList   << astx.NewRetTerm($1, $2, $3) >>
+	// Void return.
+	: "ret" VoidType OptCommaSepMetadataAttachmentList
+	<< &ir.TermRet{Metadata: $2.([]*metadata.MetadataAttachment)}, nil >>
+	// Value return.
+	| "ret" ConcreteType Value OptCommaSepMetadataAttachmentList
+	<< &ir.TermRet{X: astx.TypeValue($1, $2), Metadata: $3.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ br ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ br ] ------------------------------------------------------------------
 
-// Unconditional branch terminator.
+// https://llvm.org/docs/LangRef.html#br-instruction
+
+// ref: ParseBr
+//
+//   ::= 'br' TypeAndValue
+//   ::= 'br' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
+// Unconditional branch.
 BrTerm
-	: "br" LabelType LocalIdent OptCommaAttachedMDList  << astx.NewBrTerm($1, $2, $3) >>
+	: "br" LabelType LocalIdent OptCommaSepMetadataAttachmentList
+	<< &ir.TermBr{Target: astx.Label($1, $2), Metadata: $3.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// Conditional branch terminator.
+// Conditional branch.
 CondBrTerm
-	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaAttachedMDList  << astx.NewCondBrTerm($1, $2, $4, $5, $7, $8, $9) >>
+	: "br" IntType Value "," LabelType LocalIdent "," LabelType LocalIdent OptCommaSepMetadataAttachmentList
+	<< &ir.TermCondBr{Cond: astx.TypeValue($1, $2), TargetTrue: astx.Label($4, $5), TargetFalse: astx.Label($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ switch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ switch ] --------------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#switch-instruction
+
+// ref: ParseSwitch
+//
+//    ::= 'switch' TypeAndValue ',' TypeAndValue '[' JumpTable ']'
+//  JumpTable
+//    ::= (TypeAndValue ',' TypeAndValue)*
 
 SwitchTerm
-	: "switch" IntType Value "," LabelType LocalIdent "[" Cases "]" OptCommaAttachedMDList   << astx.NewSwitchTerm($1, $2, $4, $5, $7, $9) >>
+	: "switch" Type Value "," LabelType LocalIdent "[" Cases "]" OptCommaSepMetadataAttachmentList
+	<< &ir.TermSwitch{X: astx.TypeValue($1, $2), Default: astx.Label($4, $5), Cases: $7.([]*ir.Case), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
 Cases
 	: empty
-	| CastList
+	<< ([]*ir.Case)(nil), nil >>
+	| CaseList
 ;
 
-CastList
-	: Case            << astx.NewCaseList($0) >>
-	| CastList Case   << astx.AppendCase($0, $1) >>
+CaseList
+	: Case
+	<< []*ir.Case{$0.(*ir.Case)}, nil >>
+	| CaseList Case
+	<< append($0.([]*ir.Case), $1.(*ir.Case)), nil >>
 ;
 
 Case
-	: IntType Value "," LabelType LocalIdent   << astx.NewCase($0, $1, $3, $4) >>
+	: Type IntConst "," LabelType LocalIdent
+	<< &ir.Case{X: astx.TypeConst($0, $1), Target: astx.Label($3, $4)}, nil >>
 ;
 
-// ~~~ [ indirectbr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ indirectbr ] ----------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#indirectbr-instruction
+
+// ref: ParseIndirectBr
+//
+//    ::= 'indirectbr' TypeAndValue ',' '[' LabelList ']'
 
 IndirectBrTerm
-	: "indirectbr" ConcreteType Value "," "[" Labels "]" OptCommaAttachedMDList   << nil, nil >>
+	: "indirectbr" Type Value "," "[" LabelList "]" OptCommaSepMetadataAttachmentList
+	<< &ir.TermIndirectBr{Addr: astx.TypeValue($1, $2), Targets: $5.([]*ir.BasicBlock), Metadata: $7.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ invoke ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LabelList
+	: Label
+	<< []*ir.BasicBlock{$0.(*ir.BasicBlock)}, nil >>
+	| LabelList "," Label
+	<< append($0.([]*ir.BasicBlock), $2.(*ir.BasicBlock)), nil >>
+;
+
+Label
+	: LabelType LocalIdent
+	<< astx.Label($0, $1), nil >>
+;
+
+// --- [ invoke ] --------------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#invoke-instruction
+
+// ref: ParseInvoke
+//
+//   ::= 'invoke' OptionalCallingConv OptionalAttrs Type Value ParamList
+//       OptionalAttrs 'to' TypeAndValue 'unwind' TypeAndValue
 
 InvokeTerm
-	: "invoke" OptCallConv ParamAttrs Type Callee "(" Args ")" FuncAttrs OptOperandBundle "to" LabelType LocalIdent "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
+	: "invoke" OptCallingConv ReturnAttrs Type Value "(" Args ")" FuncAttrs OperandBundles "to" LabelType LocalIdent "unwind" LabelType LocalIdent OptCommaSepMetadataAttachmentList
+	<< &ir.TermInvoke{CallingConv: $1.(ir.CallingConv), ReturnAttrs: $2.([]ir.ReturnAttribute), RetType: $3.(types.Type), Callee: $4.(value.Value), Args: $6.([]ir.Argument), FuncAttrs: $8.([]ir.FuncAttribute), OperandBundles: $9.([]*ir.OperandBundle), Normal: astx.Label($11, $12), Exception: astx.Label($14, $15), Metadata: $16.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-OptOperandBundle
-	: empty
-	| OperandBundle
-;
+// --- [ resume ] --------------------------------------------------------------
 
-OperandBundle
-	: "[" TagValues "]"
-;
+// https://llvm.org/docs/LangRef.html#resume-instruction
 
-TagValues
-	: empty
-	| TagValueList
-;
-
-TagValueList
-	: TagValue
-	| TagValueList "," TagValue
-;
-
-TagValue
-	: string_lit "(" Values ")"
-;
-
-Values
-	: empty
-	| ValueList
-;
-
-ValueList
-	: ConcreteType Value
-	| ValueList "," ConcreteType Value
-;
-
-// ~~~ [ resume ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ref: ParseResume
+//
+//   ::= 'resume' TypeAndValue
 
 ResumeTerm
-	: "resume" ConcreteType Value OptCommaAttachedMDList   << nil, nil >>
+	: "resume" Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.TermResume{X: astx.TypeValue($1, $2), Metadata: $3.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ catchswitch ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ catchswitch ] ---------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#catchswitch-instruction
+
+// ref: ParseCatchSwitch
+//
+//   ::= 'catchswitch' within Parent
 
 CatchSwitchTerm
-	: "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" "to" "caller" OptCommaAttachedMDList          << nil, nil >>
-	| "catchswitch" "within" ExceptionParent "[" Labels "]" "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
+	: "catchswitch" "within" ExceptionScope "[" LabelList "]" "unwind" UnwindTarget OptCommaSepMetadataAttachmentList
+	<< &ir.TermCatchSwitch{Scope: $2.(ir.ExceptionScope), Handlers: $4.([]*ir.BasicBlock), UnwindTarget: $7.(ir.UnwindTarget), Metadata: $8.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ catchret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ catchret ] ------------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#catchret-instruction
+
+// ref: ParseCatchRet
+//
+//   ::= 'catchret' from Parent Value 'to' TypeAndValue
 
 CatchRetTerm
-	: "catchret" "from" Value "to" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
+	: "catchret" "from" Value "to" LabelType LocalIdent OptCommaSepMetadataAttachmentList
+	<< &ir.TermCatchRet{From: $2.(value.Value), To: astx.Label($4, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ cleanupret ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ cleanupret ] ----------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#cleanupret-instruction
+
+// ref: ParseCleanupRet
+//
+//   ::= 'cleanupret' from Value unwind ('to' 'caller' | TypeAndValue)
 
 CleanupRetTerm
-	: "cleanupret" "from" Value "unwind" "to" "caller" OptCommaAttachedMDList          << nil, nil >>
-	| "cleanupret" "from" Value "unwind" LabelType LocalIdent OptCommaAttachedMDList   << nil, nil >>
+	: "cleanupret" "from" Value "unwind" UnwindTarget OptCommaSepMetadataAttachmentList
+	<< &ir.TermCleanupRet{From: $2.(value.Value), UnwindTarget: $4.(ir.UnwindTarget), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
 ;
 
-// ~~~ [ unreachable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// --- [ unreachable ] ---------------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#unreachable-instruction
+
+// ref: ParseInstruction
 
 UnreachableTerm
-	: "unreachable" OptCommaAttachedMDList   << astx.NewUnreachableTerm($1) >>
+	: "unreachable" OptCommaSepMetadataAttachmentList
+	<< &ir.TermUnreachable{Metadata: $1.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ___ [ Helpers ] _____________________________________________________________
+
+UnwindTarget
+	: "to" "caller"
+	<< &ir.UnwindToCaller{}, nil >>
+	| LabelType LocalIdent
+	<< astx.Label($0, $1), nil >>
+;
+// === [ Metadata Nodes and Metadata Strings ] =================================
+
+// https://llvm.org/docs/LangRef.html#metadata-nodes-and-metadata-strings
+
+// --- [ Metadata Tuple ] ------------------------------------------------------
+
+// ref: ParseMDTuple
+
+MDTuple
+	: "!" MDFields
+	<< &metadata.MDTuple{Fields: $1.([]metadata.MDField)}, nil >>
+;
+
+// ref: ParseMDNodeVector
+//
+//   ::= { Element (',' Element)* }
+//  Element
+//   ::= 'null' | TypeAndValue
+
+// ref: ParseMDField(MDFieldList &)
+
+MDFields
+	: "{" "}"
+	<< ([]metadata.MDField)(nil), nil >>
+	| "{" MDFieldList "}"
+	<< $1, nil >>
+;
+
+MDFieldList
+	: MDField
+	<< []metadata.MDField{$0.(metadata.MDField)}, nil >>
+	| MDFieldList "," MDField
+	<< append($0.([]metadata.MDField), $2.(metadata.MDField)), nil >>
+;
+
+// ref: ParseMDField(MDField &)
+
+MDField
+	// Null is a special case since it is typeless.
+	: "null"
+	<< &metadata.MDNull{}, nil >>
+	| Metadata
+;
+
+// --- [ Metadata ] ------------------------------------------------------------
+
+// ref: ParseMetadata
+//
+//  ::= i32 %local
+//  ::= i32 @global
+//  ::= i32 7
+//  ::= !42
+//  ::= !{...}
+//  ::= !"string"
+//  ::= !DILocation(...)
+
+Metadata
+	: Type Value
+	<< astx.TypeValue($0, $1), nil >>
+	| MDString
+	// !{ ... }
+	| MDTuple
+	// !7
+	| MetadataID
+	| SpecializedMDNode
+;
+
+// --- [ Metadata String ] -----------------------------------------------------
+
+// ref: ParseMDString
+//
+//   ::= '!' STRINGCONSTANT
+
+MDString
+	: "!" StringLit
+	<< &metadata.MDString{Value: $1.(string)}, nil >>
+;
+
+// --- [ Metadata Attachment ] -------------------------------------------------
+
+// ref: ParseMetadataAttachment
+//
+//   ::= !dbg !42
+
+MetadataAttachment
+	: MetadataName MDNode
+	<< &metadata.MetadataAttachment{Name: astx.MetadataName($0), Node: $1.(metadata.MDNode)}, nil >>
+;
+
+// --- [ Metadata Node ] -------------------------------------------------------
+
+// ref: ParseMDNode
+//
+//  ::= !{ ... }
+//  ::= !7
+//  ::= !DILocation(...)
+
+MDNode
+	// !{ ... }
+	: MDTuple
+	// !42
+	| MetadataID
+	| SpecializedMDNode
 ;
 
 // ### [ Helper productions ] ##################################################
 
-OptLinkage
-	: empty
-	| Linkage
-;
-
-// From spec and src of v4.0.
+// ref: ParseOptionalFunctionMetadata
 //
-// ref: http://llvm.org/docs/LangRef.html#linkage
-Linkage
-	: "appending"
-	| "available_externally"
-	| "common"
-	| "internal"
-	| "linkonce"
-	| "linkonce_odr"
-	| "private"
-	| "weak"
-	| "weak_odr"
-;
+//   ::= (!dbg !57)*
 
-OptExternLinkage
+MetadataAttachments
 	: empty
-	| ExternLinkage
+	<< ([]*metadata.MetadataAttachment)(nil), nil >>
+	| MetadataAttachmentList
 ;
 
-// From spec and src of v4.0.
+MetadataAttachmentList
+	: MetadataAttachment
+	<< []*metadata.MetadataAttachment{$0.(*metadata.MetadataAttachment)}, nil >>
+	| MetadataAttachmentList MetadataAttachment
+	<< append($0.([]*metadata.MetadataAttachment), $1.(*metadata.MetadataAttachment)), nil >>
+;
+
+// ref: ParseInstructionMetadata
 //
-// ref: http://llvm.org/docs/LangRef.html#linkage
-ExternLinkage
-	: "extern_weak"
-	| "external"
-;
+//   ::= !dbg !42 (',' !dbg !57)*
 
-OptVisibility
+OptCommaSepMetadataAttachmentList
 	: empty
-	| Visibility
+	<< ([]*metadata.MetadataAttachment)(nil), nil >>
+	| "," CommaSepMetadataAttachmentList
+	<< $1, nil >>
 ;
 
-// From spec of v4.0.
+CommaSepMetadataAttachmentList
+	: MetadataAttachment
+	<< []*metadata.MetadataAttachment{$0.(*metadata.MetadataAttachment)}, nil >>
+	| CommaSepMetadataAttachmentList "," MetadataAttachment
+	<< append($0.([]*metadata.MetadataAttachment), $2.(*metadata.MetadataAttachment)), nil >>
+;
+
+// --- [ Specialized Metadata Nodes ] ------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#specialized-metadata-nodes
+
+// ref: ParseSpecializedMDNode
+
+SpecializedMDNode
+	: DICompileUnit
+	| DIFile
+	| DIBasicType
+	| DISubroutineType
+	| DIDerivedType
+	| DICompositeType
+	| DISubrange
+	| DIEnumerator
+	| DITemplateTypeParameter
+	| DITemplateValueParameter
+	| DIModule // not in spec as of 2018-02-21
+	| DINamespace
+	| DIGlobalVariable
+	| DISubprogram
+	| DILexicalBlock
+	| DILexicalBlockFile
+	| DILocation
+	| DILocalVariable
+	| DIExpression
+	| DIGlobalVariableExpression // not in spec as of 2018-02-21
+	| DIObjCProperty
+	| DIImportedEntity
+	| DIMacro
+	| DIMacroFile
+	| GenericDINode // not in spec as of 2018-02-21
+;
+
+// ~~~ [ DICompileUnit ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dicompileunit
+
+// ref: ParseDICompileUnit
 //
-// ref: http://llvm.org/docs/LangRef.html#visibility-styles
-Visibility
-	: "default"
-	| "hidden"
-	| "protected"
-;
-
-OptDLLStorageClass
-	: empty
-	| DLLStorageClass
-;
-
-// From spec of v4.0.
+//   ::= !DICompileUnit(language: DW_LANG_C99, file: !0, producer: "clang",
+//                      isOptimized: true, flags: "-O2", runtimeVersion: 1,
+//                      splitDebugFilename: "abc.debug",
+//                      emissionKind: FullDebug, enums: !1, retainedTypes: !2,
+//                      globals: !4, imports: !5, macros: !6, dwoId: 0x0abcd)
 //
-// ref: http://llvm.org/docs/LangRef.html#dllstorageclass
-DLLStorageClass
-	: "dllimport"
-	| "dllexport"
+//  REQUIRED(language, DwarfLangField, );
+//  REQUIRED(file, MDField, (AllowNull false));
+//  OPTIONAL(producer, MDStringField, );
+//  OPTIONAL(isOptimized, MDBoolField, );
+//  OPTIONAL(flags, MDStringField, );
+//  OPTIONAL(runtimeVersion, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(splitDebugFilename, MDStringField, );
+//  OPTIONAL(emissionKind, EmissionKindField, );
+//  OPTIONAL(enums, MDField, );
+//  OPTIONAL(retainedTypes, MDField, );
+//  OPTIONAL(globals, MDField, );
+//  OPTIONAL(imports, MDField, );
+//  OPTIONAL(macros, MDField, );
+//  OPTIONAL(dwoId, MDUnsignedField, );
+//  OPTIONAL(splitDebugInlining, MDBoolField, = true);
+//  OPTIONAL(debugInfoForProfiling, MDBoolField, = false);
+//  OPTIONAL(gnuPubnames, MDBoolField, = false);
+
+DICompileUnit
+	: "!DICompileUnit" "(" DICompileUnitFields ")"
+	<< astx.NewDICompileUnit($2.([]*astx.SpecializedMDField)) >>
 ;
 
-OptThreadLocal
+DICompileUnitFields
 	: empty
-	| ThreadLocal
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DICompileUnitFieldList
 ;
 
-// From spec of v4.0.
+DICompileUnitFieldList
+	: DICompileUnitField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DICompileUnitFieldList "," DICompileUnitField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DICompileUnitField
+	: "language:" DwarfLang
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FileField
+	| "producer:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| IsOptimizedField
+	| "flags:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "runtimeVersion:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "splitDebugFilename:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "emissionKind:" EmissionKind
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "enums:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "retainedTypes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "globals:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "imports:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "macros:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "dwoId:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "splitDebugInlining:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "debugInfoForProfiling:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "gnuPubnames:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#difile
+
+// ref: ParseDIFileType
 //
-// ref: http://llvm.org/docs/LangRef.html#thread-local-storage-models
-ThreadLocal
-	: "thread_local"
-	| "thread_local" "(" TLSModel ")"
+//   ::= !DIFileType(filename: "path/to/file", directory: "/path/to/dir"
+//                   checksumkind: CSK_MD5,
+//                   checksum: "000102030405060708090a0b0c0d0e0f")
+//
+//  REQUIRED(filename, MDStringField, );
+//  REQUIRED(directory, MDStringField, );
+//  OPTIONAL(checksumkind, ChecksumKindField, (DIFile::CSK_MD5));
+//  OPTIONAL(checksum, MDStringField, );
+
+DIFile
+	: "!DIFile" "(" DIFileFields ")"
+	<< astx.NewDIFile($2.([]*astx.SpecializedMDField)) >>
 ;
 
-TLSModel
-	: "localdynamic"
-	| "initialexec"
-	| "localexec"
-;
-
-OptUnnamedAddr
+DIFileFields
 	: empty
-	| UnnamedAddr
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIFileFieldList
 ;
 
-UnnamedAddr
-	: "local_unnamed_addr"
-	| "unnamed_addr"
+DIFileFieldList
+	: DIFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIFileFieldList "," DIFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
 ;
 
-OptSection
+DIFileField
+	: "filename:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "directory:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "checksumkind:" ChecksumKind
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "checksum:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIBasicType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dibasictype
+
+// ref: ParseDIBasicType
+//
+//   ::= !DIBasicType(tag: DW_TAG_base_type, name: "int", size: 32, align: 32)
+//
+//  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_base_type));
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(encoding, DwarfAttEncodingField, );
+
+DIBasicType
+	: "!DIBasicType" "(" DIBasicTypeFields ")"
+	<< astx.NewDIBasicType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIBasicTypeFields
 	: empty
-	| Section
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIBasicTypeFieldList
 ;
 
-Section
-	: "section" string_lit
+DIBasicTypeFieldList
+	: DIBasicTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIBasicTypeFieldList "," DIBasicTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
 ;
+
+DIBasicTypeField
+	: TagField
+	| NameField
+	| SizeField
+	| AlignField
+	| "encoding:" DwarfAttEncoding
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DISubroutineType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubroutinetype
+
+// ref: ParseDISubroutineType
+//
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(cc, DwarfCCField, );
+//  REQUIRED(types, MDField, );
+
+DISubroutineType
+	: "!DISubroutineType" "(" DISubroutineTypeFields ")"
+	<< astx.NewDISubroutineType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubroutineTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubroutineTypeFieldList
+;
+
+DISubroutineTypeFieldList
+	: DISubroutineTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubroutineTypeFieldList "," DISubroutineTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubroutineTypeField
+	: FlagsField
+	| "cc:" DwarfCC
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "types:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diderivedtype
+
+// ref: ParseDIDerivedType
+//
+//   ::= !DIDerivedType(tag: DW_TAG_pointer_type, name: "int", file: !0,
+//                      line: 7, scope: !1, baseType: !2, size: 32,
+//                      align: 32, offset: 0, flags: 0, extraData: !3,
+//                      dwarfAddressSpace: 3)
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(baseType, MDField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(offset, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(extraData, MDField, );
+//  OPTIONAL(dwarfAddressSpace, MDUnsignedField, (UINT32_MAX, UINT32_MAX));
+
+DIDerivedType
+	: "!DIDerivedType" "(" DIDerivedTypeFields ")"
+	<< astx.NewDIDerivedType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIDerivedTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIDerivedTypeFieldList
+;
+
+DIDerivedTypeFieldList
+	: DIDerivedTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIDerivedTypeFieldList "," DIDerivedTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIDerivedTypeField
+	: TagField
+	| NameField
+	| ScopeField
+	| FileField
+	| LineField
+	| BaseTypeField
+	| SizeField
+	| AlignField
+	| OffsetField
+	| FlagsField
+	| "extraData:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "dwarfAddressSpace:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DICompositeType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dicompositetype
+
+// ref: ParseDICompositeType
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(baseType, MDField, );
+//  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(offset, MDUnsignedField, (0, UINT64_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(elements, MDField, );
+//  OPTIONAL(runtimeLang, DwarfLangField, );
+//  OPTIONAL(vtableHolder, MDField, );
+//  OPTIONAL(templateParams, MDField, );
+//  OPTIONAL(identifier, MDStringField, );
+//  OPTIONAL(discriminator, MDField, );
+
+DICompositeType
+	: "!DICompositeType" "(" DICompositeTypeFields ")"
+	<< astx.NewDICompositeType($2.([]*astx.SpecializedMDField)) >>
+;
+
+DICompositeTypeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DICompositeTypeFieldList
+;
+
+DICompositeTypeFieldList
+	: DICompositeTypeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DICompositeTypeFieldList "," DICompositeTypeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DICompositeTypeField
+	: TagField
+	| NameField
+	| ScopeField
+	| FileField
+	| LineField
+	| BaseTypeField
+	| SizeField
+	| AlignField
+	| OffsetField
+	| FlagsField
+	| "elements:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "runtimeLang:" DwarfLang
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "vtableHolder:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TemplateParamsField
+	| "identifier:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "discriminator:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DISubrange ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubrange
+
+// ref: ParseDISubrange
+//
+//   ::= !DISubrange(count: 30, lowerBound: 2)
+//   ::= !DISubrange(count: !node, lowerBound: 2)
+//
+//  REQUIRED(count, MDSignedOrMDField, (-1, -1, INT64_MAX, false));
+//  OPTIONAL(lowerBound, MDSignedField, );
+
+DISubrange
+	: "!DISubrange" "(" DISubrangeFields ")"
+	<< astx.NewDISubrange($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubrangeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubrangeFieldList
+;
+
+DISubrangeFieldList
+	: DISubrangeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubrangeFieldList "," DISubrangeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubrangeField
+	: "count:" IntOrMDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "lowerBound:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIEnumerator ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dienumerator
+
+// ref: ParseDIEnumerator
+//
+//   ::= !DIEnumerator(value: 30, isUnsigned: true, name: "SomeKind")
+//
+//  REQUIRED(name, MDStringField, );
+//  REQUIRED(value, MDSignedOrUnsignedField, );
+//  OPTIONAL(isUnsigned, MDBoolField, (false));
+
+DIEnumerator
+	: "!DIEnumerator" "(" DIEnumeratorFields ")"
+	<< astx.NewDIEnumerator($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIEnumeratorFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIEnumeratorFieldList
+;
+
+DIEnumeratorFieldList
+	: DIEnumeratorField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIEnumeratorFieldList "," DIEnumeratorField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIEnumeratorField
+	: NameField
+	| "value:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "isUnsigned:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DITemplateTypeParameter ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ditemplatetypeparameter
+
+// ref: ParseDITemplateTypeParameter
+//
+//   ::= !DITemplateTypeParameter(name: "Ty", type: !1)
+//
+//  OPTIONAL(name, MDStringField, );
+//  REQUIRED(type, MDField, );
+
+DITemplateTypeParameter
+	: "!DITemplateTypeParameter" "(" DITemplateTypeParameterFields ")"
+	<< astx.NewDITemplateTypeParameter($2.([]*astx.SpecializedMDField)) >>
+;
+
+DITemplateTypeParameterFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DITemplateTypeParameterFieldList
+;
+
+DITemplateTypeParameterFieldList
+	: DITemplateTypeParameterField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DITemplateTypeParameterFieldList "," DITemplateTypeParameterField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DITemplateTypeParameterField
+	: NameField
+	| TypeField
+;
+
+// ~~~ [ DITemplateValueParameter ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ditemplatevalueparameter
+
+// ref: ParseDITemplateValueParameter
+//
+//   ::= !DITemplateValueParameter(tag: DW_TAG_template_value_parameter,
+//                                 name: "V", type: !1, value: i32 7)
+//
+//  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_template_value_parameter));
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(type, MDField, );
+//  REQUIRED(value, MDField, );
+
+DITemplateValueParameter
+	: "!DITemplateValueParameter" "(" DITemplateValueParameterFields ")"
+	<< astx.NewDITemplateValueParameter($2.([]*astx.SpecializedMDField)) >>
+;
+
+DITemplateValueParameterFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DITemplateValueParameterFieldList
+;
+
+DITemplateValueParameterFieldList
+	: DITemplateValueParameterField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DITemplateValueParameterFieldList "," DITemplateValueParameterField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DITemplateValueParameterField
+	: TagField
+	| NameField
+	| TypeField
+	| "value:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIModule ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseDIModule
+//
+//   ::= !DIModule(scope: !0, name: "SomeModule", configMacros: "-DNDEBUG",
+//                 includePath: "/usr/include", isysroot: "/")
+//
+//  REQUIRED(scope, MDField, );
+//  REQUIRED(name, MDStringField, );
+//  OPTIONAL(configMacros, MDStringField, );
+//  OPTIONAL(includePath, MDStringField, );
+//  OPTIONAL(isysroot, MDStringField, );
+
+DIModule
+	: "!DIModule" "(" DIModuleFields ")"
+	<< astx.NewDIModule($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIModuleFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIModuleFieldList
+;
+
+DIModuleFieldList
+	: DIModuleField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIModuleFieldList "," DIModuleField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIModuleField
+	: ScopeField
+	| NameField
+	| "configMacros:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "includePath:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "isysroot:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dinamespace
+
+// ref: ParseDINamespace
+//
+//   ::= !DINamespace(scope: !0, file: !2, name: "SomeNamespace", line: 9)
+//
+//  REQUIRED(scope, MDField, );
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(exportSymbols, MDBoolField, );
+
+DINamespace
+	: "!DINamespace" "(" DINamespaceFields ")"
+	<< astx.NewDINamespace($2.([]*astx.SpecializedMDField)) >>
+;
+
+DINamespaceFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DINamespaceFieldList
+;
+
+DINamespaceFieldList
+	: DINamespaceField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DINamespaceFieldList "," DINamespaceField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DINamespaceField
+	: ScopeField
+	| NameField
+	| "exportSymbols:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIGlobalVariable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diglobalvariable
+
+// ref: ParseDIGlobalVariable
+//
+//   ::= !DIGlobalVariable(scope: !0, name: "foo", linkageName: "foo",
+//                         file: !1, line: 7, type: !2, isLocal: false,
+//                         isDefinition: true, declaration: !3, align: 8)
+//
+//  REQUIRED(name, MDStringField, (AllowEmpty false));
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(linkageName, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(isLocal, MDBoolField, );
+//  OPTIONAL(isDefinition, MDBoolField, (true));
+//  OPTIONAL(declaration, MDField, );
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+
+DIGlobalVariable
+	: "!DIGlobalVariable" "(" DIGlobalVariableFields ")"
+	<< astx.NewDIGlobalVariable($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIGlobalVariableFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIGlobalVariableFieldList
+;
+
+DIGlobalVariableFieldList
+	: DIGlobalVariableField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIGlobalVariableFieldList "," DIGlobalVariableField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIGlobalVariableField
+	: NameField
+	| ScopeField
+	| LinkageNameField
+	| FileField
+	| LineField
+	| TypeField
+	| IsLocalField
+	| IsDefinitionField
+	| DeclarationField
+	| AlignField
+;
+
+// ~~~ [ DISubprogram ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#disubprogram
+
+// ref: ParseDISubprogram
+//
+//   ::= !DISubprogram(scope: !0, name: "foo", linkageName: "_Zfoo",
+//                     file: !1, line: 7, type: !2, isLocal: false,
+//                     isDefinition: true, scopeLine: 8, containingType: !3,
+//                     virtuality: DW_VIRTUALTIY_pure_virtual,
+//                     virtualIndex: 10, thisAdjustment: 4, flags: 11,
+//                     isOptimized: false, templateParams: !4, declaration: !5,
+//                     variables: !6, thrownTypes: !7)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(scope, MDField, );
+//  OPTIONAL(linkageName, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(isLocal, MDBoolField, );
+//  OPTIONAL(isDefinition, MDBoolField, (true));
+//  OPTIONAL(scopeLine, LineField, );
+//  OPTIONAL(containingType, MDField, );
+//  OPTIONAL(virtuality, DwarfVirtualityField, );
+//  OPTIONAL(virtualIndex, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(thisAdjustment, MDSignedField, (0, INT32_MIN, INT32_MAX));
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(isOptimized, MDBoolField, );
+//  OPTIONAL(unit, MDField, );
+//  OPTIONAL(templateParams, MDField, );
+//  OPTIONAL(declaration, MDField, );
+//  OPTIONAL(variables, MDField, );
+//  OPTIONAL(thrownTypes, MDField, );
+
+DISubprogram
+	: "!DISubprogram" "(" DISubprogramFields ")"
+	<< astx.NewDISubprogram($2.([]*astx.SpecializedMDField)) >>
+;
+
+DISubprogramFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DISubprogramFieldList
+;
+
+DISubprogramFieldList
+	: DISubprogramField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DISubprogramFieldList "," DISubprogramField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DISubprogramField
+	: NameField
+	| ScopeField
+	| LinkageNameField
+	| FileField
+	| LineField
+	| TypeField
+	| IsLocalField
+	| IsDefinitionField
+	| "scopeLine:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "containingType:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "virtuality:" DwarfVirtuality
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "virtualIndex:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "thisAdjustment:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FlagsField
+	| IsOptimizedField
+	| "unit:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TemplateParamsField
+	| DeclarationField
+	| "variables:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "thrownTypes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILexicalBlock ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilexicalblock
+
+// ref: ParseDILexicalBlock
+//
+//   ::= !DILexicalBlock(scope: !0, file: !2, line: 7, column: 9)
+//
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(column, ColumnField, );
+
+DILexicalBlock
+	: "!DILexicalBlock" "(" DILexicalBlockFields ")"
+	<< astx.NewDILexicalBlock($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILexicalBlockFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILexicalBlockFieldList
+;
+
+DILexicalBlockFieldList
+	: DILexicalBlockField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILexicalBlockFieldList "," DILexicalBlockField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILexicalBlockField
+	: ScopeField
+	| FileField
+	| LineField
+	| ColumnField
+;
+
+// ~~~ [ DILexicalBlockFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilexicalblockfile
+
+// ref: ParseDILexicalBlockFile
+//
+//   ::= !DILexicalBlockFile(scope: !0, file: !2, discriminator: 9)
+//
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  REQUIRED(discriminator, MDUnsignedField, (0, UINT32_MAX));
+
+DILexicalBlockFile
+	: "!DILexicalBlockFile" "(" DILexicalBlockFileFields ")"
+	<< astx.NewDILexicalBlockFile($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILexicalBlockFileFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILexicalBlockFileFieldList
+;
+
+DILexicalBlockFileFieldList
+	: DILexicalBlockFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILexicalBlockFileFieldList "," DILexicalBlockFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILexicalBlockFileField
+	: ScopeField
+	| FileField
+	| "discriminator:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILocation ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilocation
+
+// ref: ParseDILocation
+//
+//   ::= !DILocation(line: 43, column: 8, scope: !5, inlinedAt: !6)
+//
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(column, ColumnField, );
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(inlinedAt, MDField, );
+
+DILocation
+	: "!DILocation" "(" DILocationFields ")"
+	<< astx.NewDILocation($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILocationFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILocationFieldList
+;
+
+DILocationFieldList
+	: DILocationField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILocationFieldList "," DILocationField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILocationField
+	: LineField
+	| ColumnField
+	| ScopeField
+	| "inlinedAt:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DILocalVariable ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dilocalvariable
+
+// ref: ParseDILocalVariable
+//
+//   ::= !DILocalVariable(arg: 7, scope: !0, name: "foo",
+//                        file: !1, line: 7, type: !2, arg: 2, flags: 7,
+//                        align: 8)
+//   ::= !DILocalVariable(scope: !0, name: "foo",
+//                        file: !1, line: 7, type: !2, arg: 2, flags: 7,
+//                        align: 8)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(arg, MDUnsignedField, (0, UINT16_MAX));
+//  REQUIRED(scope, MDField, (AllowNull false));
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(type, MDField, );
+//  OPTIONAL(flags, DIFlagField, );
+//  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+
+DILocalVariable
+	: "!DILocalVariable" "(" DILocalVariableFields ")"
+	<< astx.NewDILocalVariable($2.([]*astx.SpecializedMDField)) >>
+;
+
+DILocalVariableFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DILocalVariableFieldList
+;
+
+DILocalVariableFieldList
+	: DILocalVariableField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DILocalVariableFieldList "," DILocalVariableField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DILocalVariableField
+	: NameField
+	| "arg:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| ScopeField
+	| FileField
+	| LineField
+	| TypeField
+	| FlagsField
+	| AlignField
+;
+
+// ~~~ [ DIExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diexpression
+
+// ref: ParseDIExpression
+//
+//   ::= !DIExpression(0, 7, -1)
+
+DIExpression
+	: "!DIExpression" "(" DIExpressionFields ")"
+	<< &metadata.DIExpression{Fields: $2.([]metadata.DIExpressionField)}, nil >>
+;
+
+DIExpressionFields
+	: empty
+	<< ([]metadata.DIExpressionField)(nil), nil >>
+	| DIExpressionFieldList
+;
+
+DIExpressionFieldList
+	: DIExpressionField
+	<< []metadata.DIExpressionField{$0.(metadata.DIExpressionField)}, nil >>
+	| DIExpressionFieldList "," DIExpressionField
+	<< append($0.([]metadata.DIExpressionField), $2.(metadata.DIExpressionField)), nil >>
+;
+
+DIExpressionField
+	: int_lit
+	<< metadata.NewMDIntFromString(astx.String($0)), nil >>
+	| DwarfOp
+;
+
+// ~~~ [ DIGlobalVariableExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseDIGlobalVariableExpression
+//
+//   ::= !DIGlobalVariableExpression(var: !0, expr: !1)
+//
+//  REQUIRED(var, MDField, );
+//  REQUIRED(expr, MDField, );
+
+DIGlobalVariableExpression
+	: "!DIGlobalVariableExpression" "(" DIGlobalVariableExpressionFields ")"
+	<< astx.NewDIGlobalVariableExpression($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIGlobalVariableExpressionFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIGlobalVariableExpressionFieldList
+;
+
+DIGlobalVariableExpressionFieldList
+	: DIGlobalVariableExpressionField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIGlobalVariableExpressionFieldList "," DIGlobalVariableExpressionField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIGlobalVariableExpressionField
+	: "var:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "expr:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIObjCProperty ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diobjcproperty
+
+// ref: ParseDIObjCProperty
+//
+//   ::= !DIObjCProperty(name: "foo", file: !1, line: 7, setter: "setFoo",
+//                       getter: "getFoo", attributes: 7, type: !2)
+//
+//  OPTIONAL(name, MDStringField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(setter, MDStringField, );
+//  OPTIONAL(getter, MDStringField, );
+//  OPTIONAL(attributes, MDUnsignedField, (0, UINT32_MAX));
+//  OPTIONAL(type, MDField, );
+
+DIObjCProperty
+	: "!DIObjCProperty" "(" DIObjCPropertyFields ")"
+	<< astx.NewDIObjCProperty($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIObjCPropertyFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIObjCPropertyFieldList
+;
+
+DIObjCPropertyFieldList
+	: DIObjCPropertyField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIObjCPropertyFieldList "," DIObjCPropertyField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIObjCPropertyField
+	: NameField
+	| FileField
+	| LineField
+	| "setter:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "getter:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "attributes:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| TypeField
+;
+
+// ~~~ [ DIImportedEntity ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#diimportedentity
+
+// ref: ParseDIImportedEntity
+//
+//   ::= !DIImportedEntity(tag: DW_TAG_imported_module, scope: !0, entity: !1,
+//                         line: 7, name: "foo")
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  REQUIRED(scope, MDField, );
+//  OPTIONAL(entity, MDField, );
+//  OPTIONAL(file, MDField, );
+//  OPTIONAL(line, LineField, );
+//  OPTIONAL(name, MDStringField, );
+
+DIImportedEntity
+	: "!DIImportedEntity" "(" DIImportedEntityFields ")"
+	<< astx.NewDIImportedEntity($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIImportedEntityFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIImportedEntityFieldList
+;
+
+DIImportedEntityFieldList
+	: DIImportedEntityField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIImportedEntityFieldList "," DIImportedEntityField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIImportedEntityField
+	: TagField
+	| ScopeField
+	| "entity:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| FileField
+	| LineField
+	| NameField
+;
+
+// ~~~ [ DIMacro ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dimacro
+
+// ref: ParseDIMacro
+//
+//   ::= !DIMacro(macinfo: type, line: 9, name: "SomeMacro", value: "SomeValue")
+//
+//  REQUIRED(type, DwarfMacinfoTypeField, );
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(name, MDStringField, );
+//  OPTIONAL(value, MDStringField, );
+
+DIMacro
+	: "!DIMacro" "(" DIMacroFields ")"
+	<< astx.NewDIMacro($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIMacroFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIMacroFieldList
+;
+
+DIMacroFieldList
+	: DIMacroField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIMacroFieldList "," DIMacroField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIMacroField
+	: TypeMacinfoField
+	| LineField
+	| NameField
+	| "value:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ DIMacroFile ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#dimacrofile
+
+// ref: ParseDIMacroFile
+//
+//   ::= !DIMacroFile(line: 9, file: !2, nodes: !3)
+//
+//  OPTIONAL(type, DwarfMacinfoTypeField, (dwarf::DW_MACINFO_start_file));
+//  OPTIONAL(line, LineField, );
+//  REQUIRED(file, MDField, );
+//  OPTIONAL(nodes, MDField, );
+
+DIMacroFile
+	: "!DIMacroFile" "(" DIMacroFileFields ")"
+	<< astx.NewDIMacroFile($2.([]*astx.SpecializedMDField)) >>
+;
+
+DIMacroFileFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| DIMacroFileFieldList
+;
+
+DIMacroFileFieldList
+	: DIMacroFileField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| DIMacroFileFieldList "," DIMacroFileField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+DIMacroFileField
+	: TypeMacinfoField
+	| LineField
+	| FileField
+	| "nodes:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ~~~ [ GenericDINode ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseGenericDINode
+//
+//   ::= !GenericDINode(tag: 15, header: "...", operands: {...})
+//
+//  REQUIRED(tag, DwarfTagField, );
+//  OPTIONAL(header, MDStringField, );
+//  OPTIONAL(operands, MDFieldList, );
+
+GenericDINode
+	: "!GenericDINode" "(" GenericDINodeFields ")"
+	<< astx.NewGenericDINode($2.([]*astx.SpecializedMDField)) >>
+;
+
+GenericDINodeFields
+	: empty
+	<< ([]*astx.SpecializedMDField)(nil), nil >>
+	| GenericDINodeFieldList
+;
+
+GenericDINodeFieldList
+	: GenericDINodeField
+	<< []*astx.SpecializedMDField{$0.(*astx.SpecializedMDField)}, nil >>
+	| GenericDINodeFieldList "," GenericDINodeField
+	<< append($0.([]*astx.SpecializedMDField), $2.(*astx.SpecializedMDField)), nil >>
+;
+
+GenericDINodeField
+	: TagField
+	| "header:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+	| "operands:" MDFields
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ### [ Helper productions ] ##################################################
+
+FileField
+	: "file:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsOptimizedField
+	: "isOptimized:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TagField
+	: "tag:" DwarfTag
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+NameField
+	: "name:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+SizeField
+	: "size:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+AlignField
+	: "align:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+FlagsField
+	: "flags:" DIFlagList
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+LineField
+	: "line:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+ScopeField
+	: "scope:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+BaseTypeField
+	: "baseType:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+OffsetField
+	: "offset:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TemplateParamsField
+	: "templateParams:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+// ref: ParseMDField(MDSignedOrMDField &)
+
+IntOrMDField
+	: int_lit
+	<< metadata.NewMDIntFromString(astx.String($0)), nil >>
+	| MDField
+;
+
+TypeField
+	: "type:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+LinkageNameField
+	: "linkageName:" StringLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsLocalField
+	: "isLocal:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+IsDefinitionField
+	: "isDefinition:" BoolLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+DeclarationField
+	: "declaration:" MDField
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+ColumnField
+	: "column:" IntLit
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+TypeMacinfoField
+	: "type:" DwarfMacinfo
+	<< &astx.SpecializedMDField{Key: astx.String($0), Value: $1}, nil >>
+;
+
+ChecksumKind
+	// CSK_foo
+	: checksum_kind
+	<< astx.NewChecksumKind($0) >>
+;
+
+// ref: ParseMDField(DIFlagField &)
+//
+//  ::= uint32
+//  ::= DIFlagVector
+//  ::= DIFlagVector '|' DIFlagFwdDecl '|' uint32 '|' DIFlagPublic
+
+DIFlagList
+	: DIFlag
+	<< []metadata.DIFlag{$0.(metadata.DIFlag)}, nil >>
+	| DIFlagList "|" DIFlag
+	<< append($0.([]metadata.DIFlag), $2.(metadata.DIFlag)), nil >>
+;
+
+DIFlag
+	: IntLit
+	<< metadata.DIFlag($0.(int64)), nil >>
+	// DIFlagFoo
+	| di_flag
+	<< astx.NewDIFlag($0) >>
+;
+
+// ref: ParseMDField(DwarfAttEncodingField &)
+
+DwarfAttEncoding
+	: IntLit
+	<< metadata.DwarfAttEncoding($0.(int64)), nil >>
+	// DW_ATE_foo
+	| dwarf_att_encoding
+	<< astx.NewDwarfAttEncoding($0) >>
+;
+
+// ref: ParseMDField(DwarfCCField &Result)
+
+DwarfCC
+	: IntLit
+	<< metadata.DwarfCC($0.(int64)), nil >>
+	// DW_CC_foo
+	| dwarf_cc
+	<< astx.NewDwarfCC($0) >>
+;
+
+// ref: ParseMDField(DwarfLangField &)
+
+DwarfLang
+	: IntLit
+	<< metadata.DwarfLang($0.(int64)), nil >>
+	// DW_LANG_foo
+	| dwarf_lang
+	<< astx.NewDwarfLang($0) >>
+;
+
+// ref: ParseMDField(DwarfMacinfoTypeField &)
+
+DwarfMacinfo
+	: IntLit
+	<< metadata.DwarfMacinfo($0.(int64)), nil >>
+	// DW_MACINFO_foo
+	| dwarf_macinfo
+	<< astx.NewDwarfMacinfo($0) >>
+;
+
+DwarfOp
+	// DW_OP_foo
+	: dwarf_op
+	<< astx.NewDwarfOp($0) >>
+;
+
+// ref: ParseMDField(DwarfTagField &)
+
+DwarfTag
+	: IntLit
+	<< metadata.DwarfTag($0.(int64)), nil >>
+	// DW_TAG_foo
+	| dwarf_tag
+	<< astx.NewDwarfTag($0) >>
+;
+
+// ref: ParseMDField(DwarfVirtualityField &)
+
+DwarfVirtuality
+	: IntLit
+	<< metadata.DwarfVirtuality($0.(int64)), nil >>
+	// DW_VIRTUALITY_foo
+	| dwarf_virtuality
+	<< astx.NewDwarfVirtuality($0) >>
+;
+
+EmissionKind
+	: IntLit             << metadata.EmissionKind($0.(int64)), nil >>
+	| "FullDebug"        << metadata.EmissionKindFullDebug, nil >>
+	| "LineTablesOnly"   << metadata.EmissionKindLineTablesOnly, nil >>
+	| "NoDebug"          << metadata.EmissionKindNoDebug, nil >>
+;
+
+// ### [ Helper productions ] ##################################################
+
+TypeValues
+	: empty
+	<< ([]value.Value)(nil), nil >>
+	| TypeValueList
+;
+
+TypeValueList
+	: TypeValue
+	<< []value.Value{$0.(*ast.TypeValue)}, nil >>
+	| TypeValueList TypeValue
+	<< append($0.([]value.Value), $1.(*ast.TypeValue)), nil >>
+;
+
+CommaSepTypeValueList
+	: TypeValue
+	<< []value.Value{$0.(*ast.TypeValue)}, nil >>
+	| CommaSepTypeValueList "," TypeValue
+	<< append($0.([]value.Value), $2.(*ast.TypeValue)), nil >>
+;
+
+TypeValue
+	: Type Value
+	<< astx.TypeValue($0, $1), nil >>
+;
+
+TypeConsts
+	: empty
+	<< ([]ir.Constant)(nil), nil >>
+	| TypeConstList
+;
+
+TypeConstList
+	: TypeConst
+	<< []ir.Constant{$0.(*ast.TypeConst)}, nil >>
+	| TypeConstList "," TypeConst
+	<< append($0.([]ir.Constant), $2.(*ast.TypeConst)), nil >>
+;
+
+TypeConst
+	: Type Constant
+	<< &ast.TypeConst{Typ: $0.(types.Type), Const: $1.(ir.Constant)}, nil >>
+;
+
+// ref: ParseOptionalAlignment
+//
+//   ::= empty
+//   ::= 'align' 4
+
+Alignment
+	: "align" int_lit
+	<< &ir.Alignment{Align: astx.Int($1)}, nil >>
+;
+
+// ref: parseAllocSizeArguments
+
+AllocSize
+	: "allocsize" "(" int_lit ")"
+	<< &ir.AllocSize{BaseSize: astx.Int($2)}, nil >>
+	| "allocsize" "(" int_lit "," int_lit ")"
+	<< &ir.AllocSize{BaseSize: astx.Int($2), N: astx.Int($4)}, nil >>
+;
+
+// ref: ParseParameterList
+//
+//    ::= '(' ')'
+//    ::= '(' Arg (',' Arg)* ')'
+//  Arg
+//    ::= Type OptionalAttributes Value OptionalAttributes
+
+Args
+	: empty
+	<< ([]ir.Argument)(nil), nil >>
+	| "..."
+	<< ([]ir.Argument)(nil), nil >>
+	| ArgList
+	<< $0, nil >>
+	| ArgList "," "..."
+	<< $0, nil >>
+;
+
+ArgList
+	: Arg
+	<< []ir.Argument{$0.(ir.Argument)}, nil >>
+	| ArgList "," Arg
+	<< append($0.([]ir.Argument), $2.(ir.Argument)), nil >>
+;
+
+// ref: ParseMetadataAsValue
+//
+//  ::= metadata i32 %local
+//  ::= metadata i32 @global
+//  ::= metadata i32 7
+//  ::= metadata !0
+//  ::= metadata !{...}
+//  ::= metadata !"string"
+
+Arg
+	: ConcreteType ParamAttrs Value
+	<< &ir.Arg{X: astx.TypeValue($0, $2), ParamAttrs: $1.([]ir.ParamAttribute)}, nil >>
+	| MetadataType Metadata
+	<< &ast.MetadataValue{Metadata: $1.(metadata.Metadata)}, nil >>
+;
+
+// ref: ParseOrdering
+//
+//   ::= AtomicOrdering
+
+AtomicOrdering
+	: "acq_rel"     << ir.AtomicOrderingAcqRel, nil >>
+	| "acquire"     << ir.AtomicOrderingAcquire, nil >>
+	| "monotonic"   << ir.AtomicOrderingMonotonic, nil >>
+	| "release"     << ir.AtomicOrderingRelease, nil >>
+	| "seq_cst"     << ir.AtomicOrderingSeqCst, nil >>
+	| "unordered"   << ir.AtomicOrderingUnordered, nil >>
+;
+
+// ref: ParseOptionalCallingConv
+//
+//   ::= empty
+//   ::= 'ccc'
+//   ::= 'fastcc'
+//   ::= 'intel_ocl_bicc'
+//   ::= 'coldcc'
+//   ::= 'x86_stdcallcc'
+//   ::= 'x86_fastcallcc'
+//   ::= 'x86_thiscallcc'
+//   ::= 'x86_vectorcallcc'
+//   ::= 'arm_apcscc'
+//   ::= 'arm_aapcscc'
+//   ::= 'arm_aapcs_vfpcc'
+//   ::= 'msp430_intrcc'
+//   ::= 'avr_intrcc'
+//   ::= 'avr_signalcc'
+//   ::= 'ptx_kernel'
+//   ::= 'ptx_device'
+//   ::= 'spir_func'
+//   ::= 'spir_kernel'
+//   ::= 'x86_64_sysvcc'
+//   ::= 'win64cc'
+//   ::= 'webkit_jscc'
+//   ::= 'anyregcc'
+//   ::= 'preserve_mostcc'
+//   ::= 'preserve_allcc'
+//   ::= 'ghccc'
+//   ::= 'swiftcc'
+//   ::= 'x86_intrcc'
+//   ::= 'hhvmcc'
+//   ::= 'hhvm_ccc'
+//   ::= 'cxx_fast_tlscc'
+//   ::= 'amdgpu_vs'
+//   ::= 'amdgpu_ls'
+//   ::= 'amdgpu_hs'
+//   ::= 'amdgpu_es'
+//   ::= 'amdgpu_gs'
+//   ::= 'amdgpu_ps'
+//   ::= 'amdgpu_cs'
+//   ::= 'amdgpu_kernel'
+//   ::= 'cc' UINT
+
+OptCallingConv
+	: empty         << ir.CallingConvNone, nil >>
+	| CallingConv
+;
+
+CallingConv
+	: "amdgpu_cs"          << ir.CallingConvAmdGPUCS, nil >>
+	| "amdgpu_es"          << ir.CallingConvAmdGPUES, nil >>
+	| "amdgpu_gs"          << ir.CallingConvAmdGPUGS, nil >>
+	| "amdgpu_hs"          << ir.CallingConvAmdGPUHS, nil >>
+	| "amdgpu_kernel"      << ir.CallingConvAmdGPUKernel, nil >>
+	| "amdgpu_ls"          << ir.CallingConvAmdGPULS, nil >>
+	| "amdgpu_ps"          << ir.CallingConvAmdGPUPS, nil >>
+	| "amdgpu_vs"          << ir.CallingConvAmdGPUVS, nil >>
+	| "anyregcc"           << ir.CallingConvAnyReg, nil >>
+	| "arm_aapcs_vfpcc"    << ir.CallingConvARMAAPCSVFP, nil >>
+	| "arm_aapcscc"        << ir.CallingConvARMAAPCS, nil >>
+	| "arm_apcscc"         << ir.CallingConvARMAPCS, nil >>
+	| "avr_intrcc"         << ir.CallingConvAVRIntr, nil >>
+	| "avr_signalcc"       << ir.CallingConvAVRSignal, nil >>
+	| "ccc"                << ir.CallingConvC, nil >>
+	| "coldcc"             << ir.CallingConvCold, nil >>
+	| "cxx_fast_tlscc"     << ir.CallingConvCXXFastTLS, nil >>
+	| "fastcc"             << ir.CallingConvFast, nil >>
+	| "ghccc"              << ir.CallingConvGHC, nil >>
+	| "hhvm_ccc"           << ir.CallingConvHHVMC, nil >>
+	| "hhvmcc"             << ir.CallingConvHHVM, nil >>
+	| "intel_ocl_bicc"     << ir.CallingConvIntelOCLBI, nil >>
+	| "msp430_intrcc"      << ir.CallingConvMSP430Intr, nil >>
+	| "preserve_allcc"     << ir.CallingConvPreserveAll, nil >>
+	| "preserve_mostcc"    << ir.CallingConvPreserveMost, nil >>
+	| "ptx_device"         << ir.CallingConvPTXDevice, nil >>
+	| "ptx_kernel"         << ir.CallingConvPTXKernel, nil >>
+	| "spir_func"          << ir.CallingConvSPIRFunc, nil >>
+	| "spir_kernel"        << ir.CallingConvSPIRKernel, nil >>
+	| "swiftcc"            << ir.CallingConvSwift, nil >>
+	| "webkit_jscc"        << ir.CallingConvWebKitJS, nil >>
+	| "win64cc"            << ir.CallingConvWin64, nil >>
+	| "x86_64_sysvcc"      << ir.CallingConvX86_64SysV, nil >>
+	| "x86_fastcallcc"     << ir.CallingConvX86FastCall, nil >>
+	| "x86_intrcc"         << ir.CallingConvX86Intr, nil >>
+	| "x86_regcallcc"      << ir.CallingConvX86RegCall, nil >>
+	| "x86_stdcallcc"      << ir.CallingConvX86StdCall, nil >>
+	| "x86_thiscallcc"     << ir.CallingConvX86ThisCall, nil >>
+	| "x86_vectorcallcc"   << ir.CallingConvX86VectorCall, nil >>
+	| "cc" int_lit         << astx.NewCallingConv($1) >>
+;
+
+// ref: parseOptionalComdat
 
 OptComdat
 	: empty
+	<< (*ir.Comdat)(nil), nil >>
 	| Comdat
 ;
 
 Comdat
 	: "comdat"
+	<< &ir.Comdat{}, nil >>
 	| "comdat" "(" ComdatName ")"
+	<< &ir.Comdat{Name: astx.ComdatName($2)}, nil >>
 ;
 
-OptAlign
-	: empty
-	| Align
+Dereferenceable
+	: "dereferenceable" "(" int_lit ")"
+	<< &ir.Dereferenceable{N: astx.Int($2)}, nil >>
+	| "dereferenceable_or_null" "(" int_lit ")"
+	<< &ir.Dereferenceable{N: astx.Int($2), Null: true}, nil >>
 ;
 
-Align
-	: "align" IntLit
-;
+// https://llvm.org/docs/LangRef.html#dll-storage-classes
 
-OptGC
-	: empty
-	| GC
-;
-
-GC
-	: "gc" string_lit
-;
-
-OptPrefix
-	: empty
-	| Prefix
-;
-
-// ref: http://llvm.org/docs/LangRef.html#prefix-data
-Prefix
-	: "prefix" ConcreteType Constant
-;
-
-OptPrologue
-	: empty
-	| Prologue
-;
-
-// ref: http://llvm.org/docs/LangRef.html#prologue-data
-Prologue
-	: "prologue" ConcreteType Constant
-;
-
-OptPersonality
-	: empty
-	| Personality
-;
-
-// ref: http://llvm.org/docs/LangRef.html#personality-function
-Personality
-	: "personality" ConcreteType Constant
-;
-
-ParamAttrs
-	: empty
-	| ParamAttrList
-;
-
-ParamAttrList
-	: ParamAttr
-	| ParamAttrList ParamAttr
-;
-
-// From spec and src of v4.0.
+// ref: ParseOptionalDLLStorageClass
 //
-// ref: http://llvm.org/docs/LangRef.html#parameter-attributes
-ParamAttr
-	: string_lit
-	| string_lit "=" string_lit
-	| Align
-	| "byval"
-	| "dereferenceable" "(" IntLit ")"
-	| "dereferenceable_or_null" "(" IntLit ")"
-	| "inalloca"
-	| "inreg"
-	| "nest"
-	| "noalias"
-	| "nocapture"
-	| "nonnull"
-	| "readnone" // NOTE: accepted by lli but not part of spec in v4.0
-	| "readonly" // NOTE: accepted by lli but not part of spec in v4.0
-	| "returned"
-	| "signext"
-	| "sret"
-	| "swifterror"
-	| "swiftself"
-	| "writeonly" // NOTE: accepted by lli but not part of spec in v4.0
-	| "zeroext"
+//   ::= empty
+//   ::= 'dllimport'
+//   ::= 'dllexport'
+
+OptDLLStorageClass
+	: empty             << ir.DLLStorageClassNone, nil >>
+	| DLLStorageClass
 ;
+
+DLLStorageClass
+	: "dllexport"   << ir.DLLStorageClassDLLExport, nil >>
+	| "dllimport"   << ir.DLLStorageClassDLLImport, nil >>
+;
+
+OptExact
+	: empty     << false, nil >>
+	| "exact"   << true, nil >>
+;
+
+// ref: ParseExceptionArgs
+
+ExceptionArgs
+	: empty
+	<< ([]ir.Argument)(nil), nil >>
+	| ExceptionArgList
+;
+
+ExceptionArgList
+	: ExceptionArg
+	<< []ir.Argument{$0.(ir.Argument)}, nil >>
+	| ExceptionArgList "," ExceptionArg
+	<< append($0.([]ir.Argument), $2.(ir.Argument)), nil >>
+;
+
+ExceptionArg
+	: ConcreteType Value
+	<< astx.TypeValue($0, $1), nil >>
+	| MetadataType Metadata
+	<< &ast.MetadataValue{Metadata: $1.(metadata.Metadata)}, nil >>
+;
+
+ExceptionScope
+	: NoneConst
+	| LocalIdent
+;
+
+// ref: EatFastMathFlagsIfPresent
+
+FastMathFlags
+	: empty
+	<< ([]ir.FastMathFlag)(nil), nil >>
+	| FastMathFlagList
+;
+
+FastMathFlagList
+	: FastMathFlag
+	<< []ir.FastMathFlag{$0.(ir.FastMathFlag)}, nil >>
+	| FastMathFlagList FastMathFlag
+	<< append($0.([]ir.FastMathFlag), $1.(ir.FastMathFlag)), nil >>
+;
+
+FastMathFlag
+	: "afn"        << ir.FastMathFlagAFn, nil >>
+	| "arcp"       << ir.FastMathFlagARcp, nil >>
+	| "contract"   << ir.FastMathFlagContract, nil >>
+	| "fast"       << ir.FastMathFlagFast, nil >>
+	| "ninf"       << ir.FastMathFlagNInf, nil >>
+	| "nnan"       << ir.FastMathFlagNNaN, nil >>
+	| "nsz"        << ir.FastMathFlagNSZ, nil >>
+	| "reassoc"    << ir.FastMathFlagReassoc, nil >>
+;
+
+// ref: ParseCmpPredicate
+
+FPred
+	: "false"   << ir.FPredFalse, nil >>
+	| "oeq"     << ir.FPredOEQ, nil >>
+	| "oge"     << ir.FPredOGE, nil >>
+	| "ogt"     << ir.FPredOGT, nil >>
+	| "ole"     << ir.FPredOLE, nil >>
+	| "olt"     << ir.FPredOLT, nil >>
+	| "one"     << ir.FPredONE, nil >>
+	| "ord"     << ir.FPredORD, nil >>
+	| "true"    << ir.FPredTrue, nil >>
+	| "ueq"     << ir.FPredUEQ, nil >>
+	| "uge"     << ir.FPredUGE, nil >>
+	| "ugt"     << ir.FPredUGT, nil >>
+	| "ule"     << ir.FPredULE, nil >>
+	| "ult"     << ir.FPredULT, nil >>
+	| "une"     << ir.FPredUNE, nil >>
+	| "uno"     << ir.FPredUNO, nil >>
+;
+
+// ___ [ Function Attribute ] __________________________________________________
+
+// ref: ParseFnAttributeValuePairs
+//
+//   ::= <attr> | <attr> '=' <value>
 
 FuncAttrs
 	: empty
+	<< ([]ir.FuncAttribute)(nil), nil >>
 	| FuncAttrList
 ;
 
 FuncAttrList
 	: FuncAttr
+	<< []ir.FuncAttribute{$0.(ir.FuncAttribute)}, nil >>
 	| FuncAttrList FuncAttr
+	<< append($0.([]ir.FuncAttribute), $1.(ir.FuncAttribute)), nil >>
 ;
 
-// From spec and src of v4.0.
-//
-// ref: http://llvm.org/docs/LangRef.html#function-attributes
 FuncAttr
-	: string_lit
-	| string_lit "=" string_lit
-	| AttrGroupID
-	| "alignstack" "=" IntLit // NOTE: only valid in attribute group definitions.
-	| "alignstack" "(" IntLit ")"
-	| "allocsize" "(" IntLit ")"
-	| "allocsize" "(" IntLit "," IntLit ")"
-	| "alwaysinline"
-	| "argmemonly"
-	| "builtin"
-	| "cold"
-	| "convergent"
-	| "inaccessiblemem_or_argmemonly"
-	| "inaccessiblememonly"
-	| "inlinehint"
-	| "jumptable"
-	| "minsize"
-	| "naked"
-	| "nobuiltin"
-	| "noduplicate"
-	| "noimplicitfloat"
-	| "noinline"
-	| "nonlazybind"
-	| "norecurse"
-	| "noredzone"
-	| "noreturn"
-	| "nounwind"
-	| "optnone"
-	| "optsize"
-	| "readnone"
-	| "readonly"
-	| "returns_twice"
-	| "safestack"
-	| "sanitize_address"
-	| "sanitize_memory"
-	| "sanitize_thread"
-	| "ssp"
-	| "sspreq"
-	| "sspstrong"
-	| "uwtable"
-	| "writeonly"
+	// not used in attribute groups.
+	: AttrGroupID
+	// used in attribute groups.
+	| "align" "=" int_lit               << &ir.Alignment{Align: astx.Int($2)}, nil >>
+	| "alignstack" "=" int_lit          << &ir.StackAlignment{Align: astx.Int($2)}, nil >>
+	// used in functions.
+	| Alignment
+	| AllocSize
+	| StackAlignment
+	| StringLit                         << &ir.FuncAttrString{Value: $0.(string)}, nil >>
+	| StringLit "=" StringLit           << &ir.FuncAttrPair{Key: $0.(string), Value: $2.(string)}, nil >>
+	| "alwaysinline"                    << ir.FuncAttrAlwaysInline, nil >>
+	| "argmemonly"                      << ir.FuncAttrArgMemOnly, nil >>
+	| "builtin"                         << ir.FuncAttrBuiltin, nil >>
+	| "cold"                            << ir.FuncAttrCold, nil >>
+	| "convergent"                      << ir.FuncAttrConvergent, nil >>
+	| "inaccessiblemem_or_argmemonly"   << ir.FuncAttrInaccessibleMemOrArgMemOnly, nil >>
+	| "inaccessiblememonly"             << ir.FuncAttrInaccessibleMemOnly, nil >>
+	| "inlinehint"                      << ir.FuncAttrInlineHint, nil >>
+	| "jumptable"                       << ir.FuncAttrJumpTable, nil >>
+	| "minsize"                         << ir.FuncAttrMinSize, nil >>
+	| "naked"                           << ir.FuncAttrNaked, nil >>
+	| "nobuiltin"                       << ir.FuncAttrNoBuiltin, nil >>
+	| "noduplicate"                     << ir.FuncAttrNoDuplicate, nil >>
+	| "noimplicitfloat"                 << ir.FuncAttrNoImplicitFloat, nil >>
+	| "noinline"                        << ir.FuncAttrNoInline, nil >>
+	| "nonlazybind"                     << ir.FuncAttrNonLazyBind, nil >>
+	| "norecurse"                       << ir.FuncAttrNoRecurse, nil >>
+	| "noredzone"                       << ir.FuncAttrNoRedZone, nil >>
+	| "noreturn"                        << ir.FuncAttrNoReturn, nil >>
+	| "nounwind"                        << ir.FuncAttrNoUnwind, nil >>
+	| "optnone"                         << ir.FuncAttrOptNone, nil >>
+	| "optsize"                         << ir.FuncAttrOptSize, nil >>
+	| "readnone"                        << ir.FuncAttrReadNone, nil >>
+	| "readonly"                        << ir.FuncAttrReadOnly, nil >>
+	| "returns_twice"                   << ir.FuncAttrReturnsTwice, nil >>
+	| "safestack"                       << ir.FuncAttrSafeStack, nil >>
+	| "sanitize_address"                << ir.FuncAttrSanitizeAddress, nil >>
+	| "sanitize_hwaddress"              << ir.FuncAttrSanitizeHWAddress, nil >>
+	| "sanitize_memory"                 << ir.FuncAttrSanitizeMemory, nil >>
+	| "sanitize_thread"                 << ir.FuncAttrSanitizeThread, nil >>
+	| "speculatable"                    << ir.FuncAttrSpeculatable, nil >>
+	| "ssp"                             << ir.FuncAttrSSP, nil >>
+	| "sspreq"                          << ir.FuncAttrSSPReq, nil >>
+	| "sspstrong"                       << ir.FuncAttrSSPStrong, nil >>
+	| "strictfp"                        << ir.FuncAttrStrictFP, nil >>
+	| "uwtable"                         << ir.FuncAttrUwtable, nil >>
+	| "writeonly"                       << ir.FuncAttrWriteOnly, nil >>
 ;
 
-Elems
-	: empty
-	| ElemList
+OptInBounds
+	: empty        << false, nil >>
+	| "inbounds"   << true, nil >>
 ;
 
-ElemList
-	: Elem                << astx.NewConstantList($0) >>
-	| ElemList "," Elem   << astx.AppendConstant($0, $2) >>
-;
-
-Elem
-	: ConcreteType Value   << astx.NewConstant($0, $1) >>
-;
-
-OptCallConv
-	: empty      << ast.CallConvNone, nil >>
-	| CallConv
-;
-
-// From spec and src of v4.0.
+// ref: ParseIndexList
 //
-// ref: http://llvm.org/docs/LangRef.html#callingconv
-CallConv
-	: "amdgpu_cs"          << ast.CallConvAMDGPU_CS, nil >>
-	| "amdgpu_gs"          << ast.CallConvAMDGPU_GS, nil >>
-	| "amdgpu_kernel"      << ast.CallConvAMDGPU_Kernel, nil >>
-	| "amdgpu_ps"          << ast.CallConvAMDGPU_PS, nil >>
-	| "amdgpu_vs"          << ast.CallConvAMDGPU_VS, nil >>
-	| "anyregcc"           << ast.CallConvAnyReg, nil >>
-	| "arm_aapcs_vfpcc"    << ast.CallConvARM_AAPCS_VFP, nil >>
-	| "arm_aapcscc"        << ast.CallConvARM_AAPCS, nil >>
-	| "arm_apcscc"         << ast.CallConvARM_APCS, nil >>
-	| "avr_intrcc"         << ast.CallConvAVR_Intr, nil >>
-	| "avr_signalcc"       << ast.CallConvAVR_Signal, nil >>
-	| "cc" IntLit          << astx.NewCallConv($1) >>
-	| "ccc"                << ast.CallConvC, nil >>
-	| "coldcc"             << ast.CallConvCold, nil >>
-	| "cxx_fast_tlscc"     << ast.CallConvCXX_Fast_TLS, nil >>
-	| "fastcc"             << ast.CallConvFast, nil >>
-	| "ghccc"              << ast.CallConvGHC, nil >>
-	| "hhvm_ccc"           << ast.CallConvHHVM_C, nil >>
-	| "hhvmcc"             << ast.CallConvHHVM, nil >>
-	| "intel_ocl_bicc"     << ast.CallConvIntel_OCL_BI, nil >>
-	| "msp430_intrcc"      << ast.CallConvMSP430_Intr, nil >>
-	| "preserve_allcc"     << ast.CallConvPreserveAll, nil >>
-	| "preserve_mostcc"    << ast.CallConvPreserveMost, nil >>
-	| "ptx_device"         << ast.CallConvPTX_Device, nil >>
-	| "ptx_kernel"         << ast.CallConvPTX_Kernel, nil >>
-	| "spir_func"          << ast.CallConvSPIR_Func, nil >>
-	| "spir_kernel"        << ast.CallConvSPIR_Kernel, nil >>
-	| "swiftcc"            << ast.CallConvSwift, nil >>
-	| "webkit_jscc"        << ast.CallConvWebKit_JS, nil >>
-	| "x86_64_sysvcc"      << ast.CallConvX86_64_SysV, nil >>
-	| "x86_64_win64cc"     << ast.CallConvX86_64_Win64, nil >>
-	| "x86_fastcallcc"     << ast.CallConvX86_FastCall, nil >>
-	| "x86_intrcc"         << ast.CallConvX86_Intr, nil >>
-	| "x86_regcallcc"      << ast.CallConvX86_RegCall, nil >>
-	| "x86_stdcallcc"      << ast.CallConvX86_StdCall, nil >>
-	| "x86_thiscallcc"     << ast.CallConvX86_ThisCall, nil >>
-	| "x86_vectorcallcc"   << ast.CallConvX86_VectorCall, nil >>
-;
+//    ::=  (',' uint32)+
 
-InlineAsm
-	: "asm" OptSideEffect OptAlignStack OptIntelDialect string_lit "," string_lit   << astx.NewInlineAsm($4, $6) >>
-;
-
-OptSideEffect
+Indices
 	: empty
-	| "sideeffect"
+	<< ([]int64)(nil), nil >>
+	| "," IndexList
+	<< $1, nil >>
 ;
 
-OptAlignStack
+IndexList
+	: Index
+	<< []int64{$0.(int64)}, nil >>
+	| IndexList "," Index
+	<< append($0.([]int64), $2.(int64)), nil >>
+;
+
+Index
+	: int_lit
+	<< astx.Int($0), nil >>
+;
+
+// ref: ParseCmpPredicate
+
+IPred
+	: "eq"    << ir.IPredEQ, nil >>
+	| "ne"    << ir.IPredNE, nil >>
+	| "sge"   << ir.IPredSGE, nil >>
+	| "sgt"   << ir.IPredSGT, nil >>
+	| "sle"   << ir.IPredSLE, nil >>
+	| "slt"   << ir.IPredSLT, nil >>
+	| "uge"   << ir.IPredUGE, nil >>
+	| "ugt"   << ir.IPredUGT, nil >>
+	| "ule"   << ir.IPredULE, nil >>
+	| "ult"   << ir.IPredULT, nil >>
+;
+
+// https://llvm.org/docs/LangRef.html#linkage-types
+
+// ref: ParseOptionalLinkage
+//
+//   ::= empty
+//   ::= 'private'
+//   ::= 'internal'
+//   ::= 'weak'
+//   ::= 'weak_odr'
+//   ::= 'linkonce'
+//   ::= 'linkonce_odr'
+//   ::= 'available_externally'
+//   ::= 'appending'
+//   ::= 'common'
+//   ::= 'extern_weak'
+//   ::= 'external'
+
+OptLinkage
+	: empty     << ir.LinkageNone, nil >>
+	| Linkage
+;
+
+Linkage
+	: "appending"              << ir.LinkageAppending, nil >>
+	| "available_externally"   << ir.LinkageAvailableExternally, nil >>
+	| "common"                 << ir.LinkageCommon, nil >>
+	| "internal"               << ir.LinkageInternal, nil >>
+	| "linkonce"               << ir.LinkageLinkOnce, nil >>
+	| "linkonce_odr"           << ir.LinkageLinkOnceODR, nil >>
+	| "private"                << ir.LinkagePrivate, nil >>
+	| "weak"                   << ir.LinkageWeak, nil >>
+	| "weak_odr"               << ir.LinkageWeakODR, nil >>
+;
+
+OptExternLinkage
+	: empty           << ir.LinkageNone, nil >>
+	| ExternLinkage
+;
+
+ExternLinkage
+	: "extern_weak"   << ir.LinkageExternWeak, nil >>
+	| "external"      << ir.LinkageExternal, nil >>
+;
+
+// ref: ParseOptionalOperandBundles
+//
+//    ::= empty
+//    ::= '[' OperandBundle [, OperandBundle ]* ']'
+//
+//  OperandBundle
+//    ::= bundle-tag '(' ')'
+//    ::= bundle-tag '(' Type Value [, Type Value ]* ')'
+//
+//  bundle-tag ::= String Constant
+
+OperandBundles
 	: empty
-	| "alignstack"
+	<< ([]*ir.OperandBundle)(nil), nil >>
+	| "[" OperandBundleList "]"
+	<< $1, nil >>
 ;
 
-OptIntelDialect
+OperandBundleList
+	: OperandBundle
+	<< []*ir.OperandBundle{$0.(*ir.OperandBundle)}, nil >>
+	| OperandBundleList OperandBundle
+	<< append($0.([]*ir.OperandBundle), $1.(*ir.OperandBundle)), nil >>
+;
+
+OperandBundle
+	: StringLit "(" TypeValues ")"
+	<< &ir.OperandBundle{Tag: $0.(string), Inputs: $2.([]value.Value)}, nil >>
+;
+
+OverflowFlags
 	: empty
-	| "inteldialect"
+	<< ([]ir.OverflowFlag)(nil), nil >>
+	| OverflowFlagList
 ;
 
-Labels
+OverflowFlagList
+	: OverflowFlag
+	<< []ir.OverflowFlag{$0.(ir.OverflowFlag)}, nil >>
+	| OverflowFlagList OverflowFlag
+	<< append($0.([]ir.OverflowFlag), $1.(ir.OverflowFlag)), nil >>
+;
+
+OverflowFlag
+	: "nsw"   << ir.OverflowFlagNSW, nil >>
+	| "nuw"   << ir.OverflowFlagNUW, nil >>
+;
+
+// ___ [ Parameter Attribute ] _________________________________________________
+
+// ref: ParseOptionalParamAttrs
+
+ParamAttrs
 	: empty
-	| LabelList
+	<< ([]ir.ParamAttribute)(nil), nil >>
+	| ParamAttrList
 ;
 
-LabelList
-	: Label
-	| LabelList "," Label
+ParamAttrList
+	: ParamAttr
+	<< []ir.ParamAttribute{$0.(ir.ParamAttribute)}, nil >>
+	| ParamAttrList ParamAttr
+	<< append($0.([]ir.ParamAttribute), $1.(ir.ParamAttribute)), nil >>
 ;
 
-Label
-	: LabelType LocalIdent
+// ref: ParseOptionalDerefAttrBytes
+//
+//   ::= empty
+//   ::= AttrKind '(' 4 ')'
+
+ParamAttr
+	: Alignment
+	| Dereferenceable
+	| StringLit         << &ir.ParamAttrString{Value: $0.(string)}, nil >>
+	| "byval"           << ir.ParamAttrByval, nil >>
+	| "inalloca"        << ir.ParamAttrInAlloca, nil >>
+	| "inreg"           << ir.ParamAttrInReg, nil >>
+	| "nest"            << ir.ParamAttrNest, nil >>
+	| "noalias"         << ir.ParamAttrNoAlias, nil >>
+	| "nocapture"       << ir.ParamAttrNoCapture, nil >>
+	| "nonnull"         << ir.ParamAttrNonNull, nil >>
+	| "readnone"        << ir.ParamAttrReadNone, nil >>
+	| "readonly"        << ir.ParamAttrReadOnly, nil >>
+	| "returned"        << ir.ParamAttrReturned, nil >>
+	| "signext"         << ir.ParamAttrSignExt, nil >>
+	| "sret"            << ir.ParamAttrSRet, nil >>
+	| "swifterror"      << ir.ParamAttrSwiftError, nil >>
+	| "swiftself"       << ir.ParamAttrSwiftSelf, nil >>
+	| "writeonly"       << ir.ParamAttrWriteOnly, nil >>
+	| "zeroext"         << ir.ParamAttrZeroExt, nil >>
 ;
 
-OptInbounds
+// ref: ParseArgumentList
+//
+//   ::= '(' ArgTypeListI ')'
+//  ArgTypeListI
+//   ::= empty
+//   ::= '...'
+//   ::= ArgTypeList ',' '...'
+//   ::= ArgType (',' ArgType)*
+
+Params
 	: empty
-	| "inbounds"
+	<< &astx.Params{}, nil >>
+	| "..."
+	<< &astx.Params{Variadic: true}, nil >>
+	| ParamList
+	<< &astx.Params{Params: $0.([]*ir.Param)}, nil >>
+	| ParamList "," "..."
+	<< &astx.Params{Params: $0.([]*ir.Param), Variadic: true}, nil >>
 ;
 
-AttachedMDs
+ParamList
+	: Param
+	<< []*ir.Param{$0.(*ir.Param)}, nil >>
+	| ParamList "," Param
+	<< append($0.([]*ir.Param), $2.(*ir.Param)), nil >>
+;
+
+Param
+	: Type ParamAttrs
+	<< &ir.Param{Typ: $0.(types.Type), Attrs: $1.([]ir.ParamAttribute)}, nil >>
+	| Type ParamAttrs LocalIdent
+	<< &ir.Param{Typ: $0.(types.Type), Name: astx.LocalIdent($2), Attrs: $1.([]ir.ParamAttribute)}, nil >>
+;
+
+// https://llvm.org/docs/LangRef.html#runtime-preemption-model
+
+// ref: ParseOptionalDSOLocal
+
+OptPreemptionSpecifier
+	: empty                 << ir.PreemptionNone, nil >>
+	| PreemptionSpecifier
+;
+
+PreemptionSpecifier
+	: "dso_local"         << ir.PreemptionDSOLocal, nil >>
+	| "dso_preemptable"   << ir.PreemptionDSOPreemptable, nil >>
+;
+
+// ___ [ Return Attribute ] __________________________________________________
+
+// ref: ParseOptionalReturnAttrs
+
+ReturnAttrs
 	: empty
-	| AttachedMDList
+	<< ([]ir.ReturnAttribute)(nil), nil >>
+	| ReturnAttrList
 ;
 
-AttachedMDList
-	: AttachedMD                  << astx.NewAttachedMDList($0) >>
-	| AttachedMDList AttachedMD   << astx.AppendAttachedMD($0, $1) >>
+ReturnAttrList
+	: ReturnAttr
+	<< []ir.ReturnAttribute{$0.(ir.ReturnAttribute)}, nil >>
+	| ReturnAttrList ReturnAttr
+	<< append($0.([]ir.ReturnAttribute), $1.(ir.ReturnAttribute)), nil >>
 ;
 
-AttachedMD
-	: MetadataName MD   << astx.NewAttachedMD($0, $1) >>
+ReturnAttr
+	: Alignment
+	| Dereferenceable
+	| StringLit         << &ir.ReturnAttrString{Value: $0.(string)}, nil >>
+	| "inreg"           << ir.ReturnAttrInReg, nil >>
+	| "noalias"         << ir.ReturnAttrNoAlias, nil >>
+	| "nonnull"         << ir.ReturnAttrNonNull, nil >>
+	| "signext"         << ir.ReturnAttrSignExt, nil >>
+	| "zeroext"         << ir.ReturnAttrZeroExt, nil >>
 ;
 
-MD
-	: Metadata
-	| MetadataID
-;
-
-OptCommaAttachedMDList
+OptSection
 	: empty
-	| CommaAttachedMDList
+	<< (*ir.Section)(nil), nil >>
+	| Section
 ;
 
-CommaAttachedMDList
-	: "," AttachedMD                       << astx.NewAttachedMDList($1) >>
-	| CommaAttachedMDList "," AttachedMD   << astx.AppendAttachedMD($0, $2) >>
+Section
+	: "section" StringLit
+	<< &ir.Section{Name: $1.(string)}, nil >>
 ;
+
+// ref: ParseOptionalStackAlignment
+//
+//   ::= empty
+//   ::= 'alignstack' '(' 4 ')'
+StackAlignment
+	: "alignstack" "(" int_lit ")"
+	<< &ir.StackAlignment{Align: astx.Int($2)}, nil >>
+;
+
+// ref: ParseScope
+//
+//   ::= syncscope("singlethread" | "<target scope>")?
+
+OptSyncScope
+	: empty
+	<< (*ir.SyncScope)(nil), nil >>
+	| "syncscope" "(" StringLit ")"
+	<< &ir.SyncScope{Scope: $2.(string)}, nil >>
+;
+
+// ref: ParseOptionalThreadLocal
+//
+//   := empty
+//   := 'thread_local'
+//   := 'thread_local' '(' tlsmodel ')'
+
+OptThreadLocal
+	: empty
+	<< (*ir.ThreadLocal)(nil), nil >>
+	| ThreadLocal
+;
+
+ThreadLocal
+	: "thread_local"
+	<< &ir.ThreadLocal{}, nil >>
+	| "thread_local" "(" TLSModel ")"
+	<< &ir.ThreadLocal{Model: $2.(ir.TLSModel)}, nil >>
+;
+
+// ref: ParseTLSModel
+//
+//   := 'localdynamic'
+//   := 'initialexec'
+//   := 'localexec'
+
+TLSModel
+	: "initialexec"    << ir.TLSModelInitialExec, nil >>
+	| "localdynamic"   << ir.TLSModelLocalDynamic, nil >>
+	| "localexec"      << ir.TLSModelLocalExec, nil >>
+;
+
+// ref: ParseOptionalUnnamedAddr
+
+OptUnnamedAddr
+	: empty         << ir.UnnamedAddrNone, nil >>
+	| UnnamedAddr
+;
+
+UnnamedAddr
+	: "local_unnamed_addr"   << ir.UnnamedAddrLocalUnnamedAddr, nil >>
+	| "unnamed_addr"         << ir.UnnamedAddrUnnamedAddr, nil >>
+;
+
+// https://llvm.org/docs/LangRef.html#visibility-styles
+
+// ref: ParseOptionalVisibility
+//
+//   ::= empty
+//   ::= 'default'
+//   ::= 'hidden'
+//   ::= 'protected'
+
+OptVisibility
+	: empty        << ir.VisibilityNone, nil >>
+	| Visibility
+;
+
+Visibility
+	: "default"     << ir.VisibilityDefault, nil >>
+	| "hidden"      << ir.VisibilityHidden, nil >>
+	| "protected"   << ir.VisibilityProtected, nil >>
+;
+
+OptVolatile
+	: empty        << false, nil >>
+	| "volatile"   << true, nil >>
+;
+

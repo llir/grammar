@@ -1,6 +1,0 @@
-// --- [ Attribute group definitions ] -----------------------------------------
-
-AttrGroupDef
-	: "attributes" AttrGroupID "=" "{" FuncAttrList "}"   << nil, nil >>
-;
-

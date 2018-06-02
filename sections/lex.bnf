@@ -1,8 +1,16 @@
 // ### [ Lexical part ] ########################################################
 
-_ascii_letter
+_ascii_letter_upper
 	: 'A' - 'Z'
-	| 'a' - 'z'
+;
+
+_ascii_letter_lower
+	: 'a' - 'z'
+;
+
+_ascii_letter
+	: _ascii_letter_upper
+	| _ascii_letter_lower
 ;
 
 _letter
@@ -109,6 +117,51 @@ metadata_name
 
 metadata_id
 	: '!' _id
+;
+
+// DW_TAG_foo
+dwarf_tag
+	: 'D' 'W' '_' 'T' 'A' 'G' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_ATE_foo
+dwarf_att_encoding
+	: 'D' 'W' '_' 'A' 'T' 'E' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DIFlagFoo
+di_flag
+	: 'D' 'I' 'F' 'l' 'a' 'g' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_LANG_foo
+dwarf_lang
+	: 'D' 'W' '_' 'L' 'A' 'N' 'G' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_CC_foo
+dwarf_cc
+	: 'D' 'W' '_' 'C' 'C' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// CSK_foo
+checksum_kind
+	: 'C' 'S' 'K' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_VIRTUALITY_foo
+dwarf_virtuality
+	: 'D' 'W' '_' 'V' 'I' 'R' 'T' 'U' 'A' 'L' 'I' 'T' 'Y' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_MACINFO_foo
+dwarf_macinfo
+	: 'D' 'W' '_' 'M' 'A' 'C' 'I' 'N' 'F' 'O' '_' { _ascii_letter | _decimal_digit | '_' }
+;
+
+// DW_OP_foo
+dwarf_op
+	: 'D' 'W' '_' 'O' 'P' '_' { _ascii_letter | _decimal_digit | '_' }
 ;
 
 // === [ Integer literals ] ====================================================

@@ -1,0 +1,27 @@
+// ~~~ [ Indirect Symbol Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#aliases
+// https://llvm.org/docs/LangRef.html#ifuncs
+
+// ref: parseIndirectSymbol
+//
+//   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
+//                     OptionalVisibility OptionalDLLStorageClass
+//                     OptionalThreadLocal OptionalUnnamedAddr
+//                     'alias|ifunc' IndirectSymbol
+//
+//  IndirectSymbol
+//   ::= TypeAndValue
+
+IndirectSymbolDef
+	: GlobalIdent "=" ExternLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr Alias Type "," Type Constant
+	<< &ir.IndirectSymbol{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), Alias: $8.(bool), Typ: $9.(types.Type), Const: astx.TypeConst($10, $11)}, nil >>
+	| GlobalIdent "=" OptLinkage OptPreemptionSpecifier OptVisibility OptDLLStorageClass OptThreadLocal OptUnnamedAddr Alias Type "," Type Constant
+	<< &ir.IndirectSymbol{Name: astx.GlobalIdent($0), Linkage: $2.(ir.Linkage), Preemption: $3.(ir.Preemption), Visibility: $4.(ir.Visibility), DLLStorageClass: $5.(ir.DLLStorageClass), ThreadLocal: $6.(*ir.ThreadLocal), UnnamedAddr: $7.(ir.UnnamedAddr), Alias: $8.(bool), Typ: $9.(types.Type), Const: astx.TypeConst($10, $11)}, nil >>
+;
+
+Alias
+	: "alias"   << true, nil >>
+	| "ifunc"   << false, nil >>
+;
+

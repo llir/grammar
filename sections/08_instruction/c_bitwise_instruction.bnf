@@ -1,0 +1,80 @@
+// --- [ Bitwise instructions ] ------------------------------------------------
+
+// ~~~ [ shl ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#shl-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+ShlInst
+	: "shl" OverflowFlags Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstShl{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ lshr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#lshr-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+LShrInst
+	: "lshr" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstLShr{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ ashr ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#ashr-instruction
+
+// ref: ParseArithmetic
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value
+
+AShrInst
+	: "ashr" OptExact Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAShr{Exact: $1.(bool), X: astx.TypeValue($2, $3), Y: astx.TypeValue($2, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ and ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#and-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
+AndInst
+	: "and" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstAnd{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ or ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#or-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
+OrInst
+	: "or" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstOr{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ xor ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#xor-instruction
+
+// ref: ParseLogical
+//
+//  ::= ArithmeticOps TypeAndValue ',' Value {
+
+XorInst
+	: "xor" Type Value "," Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstXor{X: astx.TypeValue($1, $2), Y: astx.TypeValue($1, $4), Metadata: $5.([]*metadata.MetadataAttachment)}, nil >>
+;
+

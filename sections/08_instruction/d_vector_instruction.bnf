@@ -1,0 +1,41 @@
+// --- [ Vector instructions ] -------------------------------------------------
+
+// ~~~ [ extractelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#extractelement-instruction
+
+// ref: ParseExtractElement
+//
+//   ::= 'extractelement' TypeAndValue ',' TypeAndValue
+
+ExtractElementInst
+	: "extractelement" Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstExtractElement{X: astx.TypeValue($1, $2), Index: astx.TypeValue($4, $5), Metadata: $6.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ insertelement ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#insertelement-instruction
+
+// ref: ParseInsertElement
+//
+//   ::= 'insertelement' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
+InsertElementInst
+	: "insertelement" Type Value "," Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstInsertElement{X: astx.TypeValue($1, $2), Elem: astx.TypeValue($4, $5), Index: astx.TypeValue($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+;
+
+// ~~~ [ shufflevector ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// https://llvm.org/docs/LangRef.html#shufflevector-instruction
+
+// ref: ParseShuffleVector
+//
+//   ::= 'shufflevector' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+
+ShuffleVectorInst
+	: "shufflevector" Type Value "," Type Value "," Type Value OptCommaSepMetadataAttachmentList
+	<< &ir.InstShuffleVector{X: astx.TypeValue($1, $2), Y: astx.TypeValue($4, $5), Mask: astx.TypeValue($7, $8), Metadata: $9.([]*metadata.MetadataAttachment)}, nil >>
+;
+

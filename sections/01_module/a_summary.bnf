@@ -1,0 +1,68 @@
+// ### [ Syntax part ] #########################################################
+
+// The LLVM IR grammar has been based on the source code of the official LLVM
+// project, as of 2018-02-19 (rev db070bbdacd303ae7da129f59beaf35024d94c53).
+//
+//    * lib/AsmParser/LLParser.cpp
+
+// === [ Module ] ==============================================================
+
+// https://llvm.org/docs/LangRef.html#module-structure
+
+// ref: Run
+//
+//   module ::= toplevelentity*
+
+<<
+import (
+	"github.com/mewmew/l/asm/ast"
+	"github.com/mewmew/l/asm/internal/astx"
+	"github.com/mewmew/l/asm/internal/irx"
+	"github.com/mewmew/l/ir"
+	"github.com/mewmew/l/ir/constant"
+	"github.com/mewmew/l/ir/metadata"
+	"github.com/mewmew/l/ir/types"
+	"github.com/mewmew/l/ir/value"
+)
+>>
+
+Module
+	: TopLevelEntities
+	<< &ast.Module{Entities: $0.([]ast.TopLevelEntity)}, nil >>
+;
+
+TopLevelEntities
+	: empty
+	<< ([]ast.TopLevelEntity)(nil), nil >>
+	| TopLevelEntityList
+;
+
+TopLevelEntityList
+	: TopLevelEntity
+	<< []ast.TopLevelEntity{$0.(ast.TopLevelEntity)}, nil >>
+	| TopLevelEntityList TopLevelEntity
+	<< append($0.([]ast.TopLevelEntity), $1.(ast.TopLevelEntity)), nil >>
+;
+
+// --- [ Top-level Entities ] --------------------------------------------------
+
+// ref: ParseTopLevelEntities
+
+TopLevelEntity
+	: SourceFilename
+	| TargetDefinition
+	| ModuleAsm
+	| TypeDef
+	| ComdatDef
+	| GlobalDecl
+	| GlobalDef
+	| IndirectSymbolDef
+	| FunctionDecl
+	| FunctionDef
+	| AttrGroupDef
+	| NamedMetadataDef
+	| MetadataDef
+	| UseListOrder
+	| UseListOrderBB
+;
+

@@ -1,0 +1,210 @@
+// === [ Types ] ===============================================================
+
+// ref: ParseType
+//
+//  TYPEKEYWORD("void",      Type::getVoidTy(Context));
+//  TYPEKEYWORD("half",      Type::getHalfTy(Context));
+//  TYPEKEYWORD("float",     Type::getFloatTy(Context));
+//  TYPEKEYWORD("double",    Type::getDoubleTy(Context));
+//  TYPEKEYWORD("x86_fp80",  Type::getX86_FP80Ty(Context));
+//  TYPEKEYWORD("fp128",     Type::getFP128Ty(Context));
+//  TYPEKEYWORD("ppc_fp128", Type::getPPC_FP128Ty(Context));
+//  TYPEKEYWORD("label",     Type::getLabelTy(Context));
+//  TYPEKEYWORD("metadata",  Type::getMetadataTy(Context));
+//  TYPEKEYWORD("x86_mmx",   Type::getX86_MMXTy(Context));
+//  TYPEKEYWORD("token",     Type::getTokenTy(Context));
+
+Type
+	: VoidType
+	// Types '(' ArgTypeListI ')' OptFuncAttrs
+	| FuncType
+	| FirstClassType
+;
+
+FirstClassType
+	: ConcreteType
+	| MetadataType
+;
+
+ConcreteType
+	: IntType
+	// Type ::= 'float' | 'void' (etc)
+	| FloatType
+	// Type ::= Type '*'
+	// Type ::= Type 'addrspace' '(' uint32 ')' '*'
+	| PointerType
+	// Type ::= '<' ... '>'
+	| VectorType
+	| LabelType
+	// Type ::= '[' ... ']'
+	| ArrayType
+	// Type ::= StructType
+	| StructType
+	// Type ::= %foo
+	// Type ::= %4
+	| NamedType
+	| MMXType
+	| TokenType
+;
+
+// --- [ Void Types ] ----------------------------------------------------------
+
+VoidType
+	: "void"
+	<< &types.VoidType{}, nil >>
+;
+
+// --- [ Function Types ] ------------------------------------------------------
+
+// ref: ParseFunctionType
+//
+//  ::= Type ArgumentList OptionalAttrs
+
+FuncType
+	: Type "(" Params ")"
+	<< &types.FuncType{RetType: $0.(types.Type), Params: astx.ParamTypes($2), Variadic: $2.(*astx.Params).Variadic}, nil >>
+;
+
+// --- [ Integer Types ] -------------------------------------------------------
+
+IntType
+	: int_type
+	<< astx.NewIntType($0) >>
+;
+
+// --- [ Floating-point Types ] ------------------------------------------------
+
+FloatType
+	: FloatKind
+	<< &types.FloatType{Kind: $0.(types.FloatKind)}, nil >>
+;
+
+FloatKind
+	: "half"        << types.FloatKindHalf, nil >>
+	| "float"       << types.FloatKindFloat, nil >>
+	| "double"      << types.FloatKindDouble, nil >>
+	| "x86_fp80"    << types.FloatKindX86FP80, nil >>
+	| "fp128"       << types.FloatKindFP128, nil >>
+	| "ppc_fp128"   << types.FloatKindPPCFP128, nil >>
+;
+
+// --- [ MMX Types ] -----------------------------------------------------------
+
+MMXType
+	: "x86_mmx"
+	<< &types.MMXType{}, nil >>
+;
+
+// --- [ Pointer Types ] -------------------------------------------------------
+
+PointerType
+	: Type OptAddrSpace "*"
+	<< &types.PointerType{ElemType: $0.(types.Type), AddrSpace: $1.(types.AddrSpace)}, nil >>
+;
+
+// ref: ParseOptionalAddrSpace
+//
+//   := empty
+//   := 'addrspace' '(' uint32 ')'
+
+OptAddrSpace
+	: empty
+	<< types.AddrSpace(0), nil >>
+	| AddrSpace
+;
+
+AddrSpace
+	: "addrspace" "(" int_lit ")"
+	<< types.AddrSpace(astx.Int($2)), nil >>
+;
+
+// --- [ Vector Types ] --------------------------------------------------------
+
+// ref: ParseArrayVectorType
+//
+//     ::= '<' APSINTVAL 'x' Types '>'
+
+VectorType
+	: "<" int_lit "x" Type ">"
+	<< &types.VectorType{Len: astx.Int($1), ElemType: $3.(types.Type)}, nil >>
+;
+
+// --- [ Label Types ] ---------------------------------------------------------
+
+LabelType
+	: "label"
+	<< &types.LabelType{}, nil >>
+;
+
+// --- [ Token Types ] ---------------------------------------------------------
+
+TokenType
+	: "token"
+	<< &types.TokenType{}, nil >>
+;
+
+// --- [ Metadata Types ] ------------------------------------------------------
+
+MetadataType
+	: "metadata"
+	<< &types.MetadataType{}, nil >>
+;
+
+// --- [ Array Types ] ---------------------------------------------------------
+
+// ref: ParseArrayVectorType
+//
+//     ::= '[' APSINTVAL 'x' Types ']'
+
+ArrayType
+	: "[" int_lit "x" Type "]"
+	<< &types.ArrayType{Len: astx.Int($1), ElemType: $3.(types.Type)}, nil >>
+;
+
+// --- [ Structure Types ] -----------------------------------------------------
+
+// ref: ParseStructBody
+//
+//   StructType
+//     ::= '{' '}'
+//     ::= '{' Type (',' Type)* '}'
+//     ::= '<' '{' '}' '>'
+//     ::= '<' '{' Type (',' Type)* '}' '>'
+
+// TODO: Simplify when parser generator is not limited by 1 token lookahead.
+//
+//    StructType
+//       : "{" Types "}"
+//       | "<" "{" Types "}" ">"
+//    ;
+
+StructType
+	: "{" "}"
+	<< &types.StructType{}, nil >>
+	| "{" TypeList "}"
+	<< &types.StructType{Fields: $1.([]types.Type)}, nil >>
+	| "<" "{" "}" ">"
+	<< &types.StructType{Packed: true}, nil >>
+	| "<" "{" TypeList "}" ">"
+	<< &types.StructType{Packed: true, Fields: $2.([]types.Type)}, nil >>
+;
+
+TypeList
+	: Type
+	<< []types.Type{$0.(types.Type)}, nil >>
+	| TypeList "," Type
+	<< append($0.([]types.Type), $2.(types.Type)), nil >>
+;
+
+OpaqueType
+	: "opaque"
+	<< &types.StructType{Opaque: true}, nil >>
+;
+
+// --- [ Named Types ] ---------------------------------------------------------
+
+NamedType
+	: LocalIdent
+	<< &ast.NamedType{Name: astx.LocalIdent($0)}, nil >>
+;
+

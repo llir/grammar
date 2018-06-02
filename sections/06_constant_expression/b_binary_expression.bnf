@@ -1,0 +1,112 @@
+// --- [ Binary expressions ] --------------------------------------------------
+
+// https://llvm.org/docs/LangRef.html#constant-expressions
+
+// ~~~ [ add ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+AddExpr
+	: "add" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprAdd{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FAddExpr
+	: "fadd" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFAdd{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+SubExpr
+	: "sub" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSub{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FSubExpr
+	: "fsub" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFSub{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+MulExpr
+	: "mul" OverflowFlags "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprMul{OverflowFlags: $1.([]ir.OverflowFlag), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FMulExpr
+	: "fmul" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFMul{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+UDivExpr
+	: "udiv" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprUDiv{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+SDivExpr
+	: "sdiv" OptExact "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSDiv{Exact: $1.(bool), X: astx.TypeConst($3, $4), Y: astx.TypeConst($6, $7)}, nil >>
+;
+
+// ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FDivExpr
+	: "fdiv" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFDiv{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+URemExpr
+	: "urem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprURem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+SRemExpr
+	: "srem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprSRem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
+// ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ref: ParseValID
+
+FRemExpr
+	: "frem" "(" Type Constant "," Type Constant ")"
+	<< &constant.ExprFRem{X: astx.TypeConst($2, $3), Y: astx.TypeConst($5, $6)}, nil >>
+;
+
