@@ -355,8 +355,8 @@ FuncAttr
 	| Alignment
 	| AllocSize
 	| StackAlignment
-	| StringLit                         << &ir.FuncAttrString{Value: $0.(string)}, nil >>
-	| StringLit "=" StringLit           << &ir.FuncAttrPair{Key: $0.(string), Value: $2.(string)}, nil >>
+	| AttrString
+	| AttrPair
 	| "alwaysinline"                    << ir.FuncAttrAlwaysInline, nil >>
 	| "argmemonly"                      << ir.FuncAttrArgMemOnly, nil >>
 	| "builtin"                         << ir.FuncAttrBuiltin, nil >>
@@ -394,6 +394,14 @@ FuncAttr
 	| "strictfp"                        << ir.FuncAttrStrictFP, nil >>
 	| "uwtable"                         << ir.FuncAttrUwtable, nil >>
 	| "writeonly"                       << ir.FuncAttrWriteOnly, nil >>
+;
+
+AttrString
+	: StringLit   << &ir.AttrString{Value: $0.(string)}, nil >>
+;
+
+AttrPair
+	: StringLit "=" StringLit   << &ir.AttrPair{Key: $0.(string), Value: $2.(string)}, nil >>
 ;
 
 OptInBounds
@@ -556,7 +564,8 @@ ParamAttrList
 ParamAttr
 	: Alignment
 	| Dereferenceable
-	| StringLit         << &ir.ParamAttrString{Value: $0.(string)}, nil >>
+	| AttrString
+	| AttrPair
 	| "byval"           << ir.ParamAttrByval, nil >>
 	| "inalloca"        << ir.ParamAttrInAlloca, nil >>
 	| "inreg"           << ir.ParamAttrInReg, nil >>
@@ -643,7 +652,8 @@ ReturnAttrList
 ReturnAttr
 	: Alignment
 	| Dereferenceable
-	| StringLit         << &ir.ReturnAttrString{Value: $0.(string)}, nil >>
+	| AttrString
+	| AttrPair
 	| "inreg"           << ir.ReturnAttrInReg, nil >>
 	| "noalias"         << ir.ReturnAttrNoAlias, nil >>
 	| "nonnull"         << ir.ReturnAttrNonNull, nil >>
