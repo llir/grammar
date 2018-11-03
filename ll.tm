@@ -2204,7 +2204,7 @@ LoadInst -> LoadInst
 	# Load.
 	: 'load' Volatileopt ElemType=Type ',' Src=TypeValue (',' Alignment)? Metadata=(',' MetadataAttachment)+?
 	# Atomic load.
-	| 'load' Atomic Volatileopt ElemType=Type ',' Src=TypeValue SyncScopeopt AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	| 'load' Atomic Volatileopt ElemType=Type ',' Src=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ store ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2219,7 +2219,7 @@ LoadInst -> LoadInst
 
 StoreInst -> StoreInst
 	: 'store' Volatileopt Src=TypeValue ',' Dst=TypeValue (',' Alignment)? Metadata=(',' MetadataAttachment)+?
-	| 'store' Atomic Volatileopt Src=TypeValue ',' Dst=TypeValue SyncScopeopt AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	| 'store' Atomic Volatileopt Src=TypeValue ',' Dst=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2231,7 +2231,7 @@ StoreInst -> StoreInst
 #   ::= 'fence' 'singlethread'? AtomicOrdering
 
 FenceInst -> FenceInst
-	: 'fence' SyncScopeopt AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'fence' SyncScopeopt Ordering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ cmpxchg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2244,7 +2244,7 @@ FenceInst -> FenceInst
 #       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering
 
 CmpXchgInst -> CmpXchgInst
-	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt Success=AtomicOrdering Failure=AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt SuccessOrdering=AtomicOrdering FailureOrdering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
 ;
 
 Weak -> Weak
@@ -2261,7 +2261,7 @@ Weak -> Weak
 #       'singlethread'? AtomicOrdering
 
 AtomicRMWInst -> AtomicRMWInst
-	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt Ordering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
 ;
 
 AtomicOp -> AtomicOp
