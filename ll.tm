@@ -2563,7 +2563,7 @@ VAArgInst -> VAArgInst
 #   ::= 'filter' TypeAndValue ( ',' TypeAndValue )*
 
 LandingPadInst -> LandingPadInst
-	: 'landingpad' Typ=Type Cleanupopt Clauses=Clause* Metadata=(',' MetadataAttachment)+?
+	: 'landingpad' ResultType=Type Cleanupopt Clauses=Clause* Metadata=(',' MetadataAttachment)+?
 ;
 
 Cleanup -> Cleanup
