@@ -1,7 +1,7 @@
 language llvm(go);
 
 lang = "llvm"
-package = "github.com/mewmew/l-tm/asm/ll"
+package = "github.com/llir/ll"
 eventBased = true
 eventFields = true
 eventAST = true
