@@ -4379,6 +4379,8 @@ ExceptionArg -> ExceptionArg
 	| Typ=MetadataType Val=Metadata
 ;
 
+%interface ExceptionScope;
+
 ExceptionScope -> ExceptionScope
 	: NoneConst
 	| LocalIdent
