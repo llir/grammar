@@ -2571,10 +2571,10 @@ Cleanup -> Cleanup
 ;
 
 Clause -> Clause
-	: ClauseKind X=TypeValue
+	: ClauseType X=TypeValue
 ;
 
-ClauseKind
+ClauseType
 	: 'catch'
 	| 'filter'
 ;
