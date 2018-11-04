@@ -2570,19 +2570,13 @@ Cleanup -> Cleanup
 	: 'cleanup'
 ;
 
-%interface Clause;
-
 Clause -> Clause
-	: CatchClause
-	| FilterClause
+	: ClauseKind X=TypeValue
 ;
 
-CatchClause -> CatchClause
-	: 'catch' X=TypeValue
-;
-
-FilterClause -> FilterClause
-	: 'filter' XTyp=Type X=ArrayConst
+ClauseKind
+	: 'catch'
+	| 'filter'
 ;
 
 # ~~~ [ catchpad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
