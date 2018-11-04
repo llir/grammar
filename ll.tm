@@ -2574,7 +2574,7 @@ Clause -> Clause
 	: ClauseType X=TypeValue
 ;
 
-ClauseType
+ClauseType -> ClauseType
 	: 'catch'
 	| 'filter'
 ;
