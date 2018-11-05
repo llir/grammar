@@ -2736,7 +2736,7 @@ ResumeTerm -> ResumeTerm
 #   ::= 'catchswitch' within Parent
 
 CatchSwitchTerm -> CatchSwitchTerm
-	: 'catchswitch' 'within' Scope=ExceptionScope '[' Handlers=(Label separator ',')+ ']' 'unwind' UnwindTarget Metadata=(',' MetadataAttachment)+?
+	: 'catchswitch' 'within' Scope=ExceptionScope '[' Handlers=(Label separator ',')+ ']' 'unwind' UnwindTarget=UnwindTarget Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ catchret ] -------------------------------------------------------------
@@ -4733,8 +4733,12 @@ UnnamedAddr -> UnnamedAddr
 # `'Handlers' cannot be a list, since it precedes UnwindTarget`
 
 UnwindTarget -> UnwindTarget
-	: 'to' 'caller'
+	: UnwindToCaller
 	| Label
+;
+
+UnwindToCaller -> UnwindToCaller
+	: 'to' 'caller'
 ;
 
 # https://llvm.org/docs/LangRef.html#visibility-styles
