@@ -810,13 +810,13 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Alignment)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 # ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GlobalDef -> GlobalDef
-	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Alignment)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 # TODO: Check if ExternallyInitialized can be inlined or handled in a cleaner way. ref: https://github.com/inspirer/textmapper/issues/14
@@ -4491,21 +4491,6 @@ FuncAttr -> FuncAttr
 	| 'strictfp'
 	| 'uwtable'
 	| 'writeonly'
-;
-
-# TODO: consider removing remove GlobalAttr in favour of using (',' Section)?
-# (',' Comdat)? (',' Alignment)? (',' MetadataAttachment)* as was used in the
-# LangRef spec of LLVM IR. Note that the LLVM C++ parser is implemented using
-# GlobalAttr, and does not follow the LangRef spec.
-
-%interface GlobalAttr;
-
-GlobalAttr -> GlobalAttr
-	: Section
-	| Comdat
-	| Alignment
-	#   ::= !dbg !57
-	| MetadataAttachment
 ;
 
 InBounds -> InBounds
