@@ -916,15 +916,15 @@ GC -> GCNode
 ;
 
 Prefix -> Prefix
-	: 'prefix' Typ=Type Val=Constant
+	: 'prefix' TypeConst
 ;
 
 Prologue -> Prologue
-	: 'prologue' Typ=Type Val=Constant
+	: 'prologue' TypeConst
 ;
 
 Personality -> Personality
-	: 'personality' Typ=Type Val=Constant
+	: 'personality' TypeConst
 ;
 
 # ref: ParseFunctionBody
@@ -997,7 +997,7 @@ Distinct -> Distinct
 #   ::= '{' uint32 (',' uint32)+ '}'
 
 UseListOrder -> UseListOrder
-	: 'uselistorder' Typ=Type Val=Value ',' '{' Indicies=(UintLit separator ',')+ '}'
+	: 'uselistorder' TypeValue ',' '{' Indicies=(UintLit separator ',')+ '}'
 ;
 
 # ref: ParseUseListOrderBB
