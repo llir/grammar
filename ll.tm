@@ -114,8 +114,11 @@ name_table_kind_tok : /(GNU)|(None)|(Default)/
 # === [ Integer literals ] =====================================================
 
 #   Integer           [-]?[0-9]+
+#   HexIntConstant    [us]0x[0-9A-Fa-f]+
 
-int_lit_tok : /[-]?[0-9]+/
+int_lit_tok : /[-]?[0-9]+|{_int_hex_lit}/
+
+_int_hex_lit = /[us]0x[0-9A-Fa-f]+/
 
 _decimal_lit = /[-]?{_decimals}/
 
