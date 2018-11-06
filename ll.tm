@@ -819,8 +819,6 @@ GlobalDef -> GlobalDef
 	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Alignment)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
-# TODO: Check if ExternallyInitialized can be inlined or handled in a cleaner way. ref: https://github.com/inspirer/textmapper/issues/14
-
 ExternallyInitialized -> ExternallyInitialized
 	: 'externally_initialized'
 ;
@@ -829,8 +827,6 @@ ExternallyInitialized -> ExternallyInitialized
 #
 #   ::= 'constant'
 #   ::= 'global'
-
-# TODO: Check if Immutable can be inlined or handled in a cleaner way. ref: https://github.com/inspirer/textmapper/issues/14
 
 Immutable -> Immutable
 	: 'constant'
@@ -4162,7 +4158,7 @@ AddrSpace -> AddrSpace
 #   ::= empty
 #   ::= 'align' 4
 
-# TODO: Rename Alignment to Align.
+# TODO: Rename Alignment to Align?
 
 Alignment -> Alignment
 	: 'align' N=UintLit
@@ -4534,8 +4530,15 @@ Label -> Label
 #   ::= 'external'
 
 # TODO: Check if it is possible to merge Linkage and ExternLinkage. Currently,
-# this is not possible as it leads to shift/reduce conflicts. Perhaps when the
-# parser generator is better capable at resolving conflicts.
+# this is not possible as it leads to shift/reduce conflicts (when merging
+# GlobalDecl and GlobalDef). Perhaps when the parser generator is better capable
+# at resolving conflicts.
+#
+#    ll.tm,812: input: TopLevelEntity_optlist GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable Type
+#    shift/reduce conflict (next: global_ident_tok)
+#        GlobalDecl : GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable Type
+#
+#    conflicts: 1 shift/reduce and 0 reduce/reduce
 
 Linkage -> Linkage
 	: 'appending'
@@ -4595,11 +4598,6 @@ ParamAttribute -> ParamAttribute
 	| Dereferenceable
 	| ParamAttr
 ;
-
-# TODO: Figure out a cleaner way of handling ParamAttribute.
-# Written this way as a workaround for `'byval' cannot be used as an interface`
-# which happens when the alternatives of ParamAttribute is inlined
-# with ParamAttribute in the grammar.
 
 ParamAttr -> ParamAttr
 	: 'byval'
@@ -4716,6 +4714,8 @@ UnnamedAddr -> UnnamedAddr
 # TODO: Make UnwindTarget into an interface? The current issue is that
 # catchswitch becomes ambiguous with the following error reported:
 # `'Handlers' cannot be a list, since it precedes UnwindTarget`
+#
+# Upstream issue https://github.com/inspirer/textmapper/issues/25
 
 UnwindTarget -> UnwindTarget
 	: UnwindToCaller
