@@ -810,13 +810,13 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttr)+?
+	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 # ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GlobalDef -> GlobalDef
-	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttr)+?
+	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant GlobalAttrs=(',' GlobalAttr)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 # TODO: Check if ExternallyInitialized can be inlined or handled in a cleaner way. ref: https://github.com/inspirer/textmapper/issues/14
@@ -903,10 +903,10 @@ FuncDef -> FuncDef
 #       OptGC OptionalPrefix OptionalPrologue OptPersonalityFn
 
 # TODO: Add OptAlignment before OptGC once the LR-1 conflict has been resolved.
-# The shift/reduce conflict is present since FuncAttr also contains 'align'.
+# The shift/reduce conflict is present since FuncAttribute also contains 'align'.
 
 FuncHeader -> FuncHeader
-	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttr* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttr* Sectionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
+	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttribute* Sectionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
 ;
 
 # NODE: Named GCNode instead of GC to avoid collisions with 'gc' token. Both
@@ -948,7 +948,7 @@ FuncBody -> FuncBody
 #   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'
 
 AttrGroupDef -> AttrGroupDef
-	: 'attributes' Name=AttrGroupID '=' '{' Attrs=FuncAttr* '}'
+	: 'attributes' Name=AttrGroupID '=' '{' Attrs=FuncAttribute* '}'
 ;
 
 # ~~~ [ Named Metadata Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2529,7 +2529,7 @@ SelectInst -> SelectInst
 #  bundle-tag ::= String Constant
 
 CallInst -> CallInst
-	: Tailopt 'call' FastMathFlags=FastMathFlag* CallingConvopt ReturnAttrs=ReturnAttr* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttr* OperandBundles=('[' (OperandBundle separator ',')+ ']')? Metadata=(',' MetadataAttachment)+?
+	: Tailopt 'call' FastMathFlags=FastMathFlag* CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? Metadata=(',' MetadataAttachment)+?
 ;
 
 Tail -> Tail
@@ -2712,7 +2712,7 @@ IndirectBrTerm -> IndirectBrTerm
 #       OptionalAttrs 'to' TypeAndValue 'unwind' TypeAndValue
 
 InvokeTerm -> InvokeTerm
-	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttr* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttr* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label 'unwind' Exception=Label Metadata=(',' MetadataAttachment)+?
+	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label 'unwind' Exception=Label Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ resume ] ---------------------------------------------------------------
@@ -4207,7 +4207,7 @@ Args -> Args
 #  ::= metadata !"string"
 
 Arg -> Arg
-	: Typ=ConcreteType Attrs=ParamAttr* Val=Value
+	: Typ=ConcreteType Attrs=ParamAttribute* Val=Value
 	| Typ=MetadataType Val=Metadata
 ;
 
@@ -4424,16 +4424,16 @@ FPred -> FPred
 #
 #   ::= <attr> | <attr> '=' <value>
 
-# NOTE: FuncAttr should contain Alignment. However, using LALR(1) this
+# NOTE: FuncAttribute should contain Alignment. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalAttr also contains Alignment.
 #
-# To handle these ambiguities, (FuncAttr | Alignment) is used in those places
-# where FuncAttr is used outside of GlobalDef and GlobalDecl (which also has
+# To handle these ambiguities, (FuncAttribute | Alignment) is used in those places
+# where FuncAttribute is used outside of GlobalDef and GlobalDecl (which also has
 # GlobalAttr).
 
-%interface FuncAttr;
+%interface FuncAttribute;
 
-FuncAttr -> FuncAttr
+FuncAttribute -> FuncAttribute
 	: AttrString
 	| AttrPair
 	# not used in attribute groups.
@@ -4442,14 +4442,14 @@ FuncAttr -> FuncAttr
 	| AlignPair
 	| AlignStackPair
 	# used in functions.
-	# TODO: Figure out how to enable Alignment in FuncAttr again.
+	# TODO: Figure out how to enable Alignment in FuncAttribute again.
 	#| Alignment # NOTE: removed to resolve reduce/reduce conflict, see above.
 	| AllocSize
 	| StackAlignment
-	| FuncAttribute
+	| FuncAttr
 ;
 
-FuncAttribute -> FuncAttribute
+FuncAttr -> FuncAttr
 	: 'alwaysinline'
 	| 'argmemonly'
 	| 'builtin'
@@ -4596,27 +4596,27 @@ Params -> Params
 ;
 
 Param -> Param
-	: Typ=Type Attrs=ParamAttr* Name=LocalIdent?
+	: Typ=Type Attrs=ParamAttribute* Name=LocalIdent?
 ;
 
 # ref: ParseOptionalParamAttrs
 
-%interface ParamAttr;
+%interface ParamAttribute;
 
-ParamAttr -> ParamAttr
+ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
 	| Alignment
 	| Dereferenceable
-	| ParamAttribute
+	| ParamAttr
 ;
 
 # TODO: Figure out a cleaner way of handling ParamAttribute.
 # Written this way as a workaround for `'byval' cannot be used as an interface`
 # which happens when the alternatives of ParamAttribute is inlined
-# with ParamAttr in the grammar.
+# with ParamAttribute in the grammar.
 
-ParamAttribute -> ParamAttribute
+ParamAttr -> ParamAttr
 	: 'byval'
 	| 'inalloca'
 	| 'inreg'
@@ -4646,21 +4646,21 @@ Preemption -> Preemption
 
 # ref: ParseOptionalReturnAttrs
 
-%interface ReturnAttr;
+%interface ReturnAttribute;
 
-ReturnAttr -> ReturnAttr
+ReturnAttribute -> ReturnAttribute
 	# TODO: Figure out how to re-enable without getting these errors in FuncHeader:
-	#    - two unnamed fields share the same type `AttrPair`: ReturnAttr -vs- FuncAttr
+	#    - two unnamed fields share the same type `AttrPair`: ReturnAttribute -vs- FuncAttribute
 	#    - `AttrPair` occurs in both named and unnamed fields
 	#    - `ReturnAttrs` cannot be nullable, since it precedes FuncAttrs
 	#: AttrString
 	#| AttrPair
 	: Alignment
 	| Dereferenceable
-	| ReturnAttribute
+	| ReturnAttr
 ;
 
-ReturnAttribute -> ReturnAttribute
+ReturnAttr -> ReturnAttr
 	: 'inreg'
 	| 'noalias'
 	| 'nonnull'
