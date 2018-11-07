@@ -947,7 +947,7 @@ FuncBody -> FuncBody
 #   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'
 
 AttrGroupDef -> AttrGroupDef
-	: 'attributes' Name=AttrGroupID '=' '{' Attrs=FuncAttribute* '}'
+	: 'attributes' ID=AttrGroupID '=' '{' Attrs=FuncAttribute* '}'
 ;
 
 # ~~~ [ Named Metadata Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
