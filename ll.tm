@@ -859,11 +859,11 @@ IndirectSymbolDef -> IndirectSymbolDef
 ;
 
 AliasDef -> AliasDef
-	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'alias' Typ=Type ',' AliaseeType=Type Aliasee=Constant
+	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'alias' ContentType=Type ',' AliaseeType=Type Aliasee=Constant
 ;
 
 IFuncDef -> IFuncDef
-	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'ifunc' Typ=Type ',' ResolverType=Type Resolver=Constant
+	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'ifunc' ContentType=Type ',' ResolverType=Type Resolver=Constant
 ;
 
 # ~~~ [ Function Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
