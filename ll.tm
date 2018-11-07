@@ -981,8 +981,8 @@ MetadataNode -> MetadataNode
 #   !42 = !{...}
 
 MetadataDef -> MetadataDef
-	: Name=MetadataID '=' Distinctopt MDNode=MDTuple
-	| Name=MetadataID '=' Distinctopt MDNode=SpecializedMDNode
+	: ID=MetadataID '=' Distinctopt MDNode=MDTuple
+	| ID=MetadataID '=' Distinctopt MDNode=SpecializedMDNode
 ;
 
 Distinct -> Distinct
