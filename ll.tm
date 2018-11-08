@@ -2792,6 +2792,8 @@ MDTuple -> MDTuple
 
 # ref: ParseMDField(MDFieldList &)
 
+# TODO: inline MDFields when Textmapper supports declarative inlining.
+
 MDFields -> MDFields
 	: '{' MDFields=(MDField separator',')* '}'
 ;
