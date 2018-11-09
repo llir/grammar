@@ -3725,323 +3725,323 @@ GenericDINodeField -> GenericDINodeField
 # ___ [ Specialized metadata fields ] __________________________________________
 
 AlignField -> AlignField
-	: 'align:' IntLit
+	: 'align:' Align=IntLit
 ;
 
 ArgField -> ArgField
-	: 'arg:' IntLit
+	: 'arg:' Arg=IntLit
 ;
 
 AttributesField -> AttributesField
-	: 'attributes:' IntLit
+	: 'attributes:' Attributes=IntLit
 ;
 
 BaseTypeField -> BaseTypeField
-	: 'baseType:' MDField
+	: 'baseType:' BaseType=MDField
 ;
 
 CCField -> CCField
-	: 'cc:' DwarfCC
+	: 'cc:' CC=DwarfCC
 ;
 
 ChecksumField -> ChecksumField
-	: 'checksum:' StringLit
+	: 'checksum:' Checksum=StringLit
 ;
 
 ChecksumkindField -> ChecksumkindField
-	: 'checksumkind:' ChecksumKind
+	: 'checksumkind:' Checksumkind=ChecksumKind
 ;
 
 ColumnField -> ColumnField
-	: 'column:' IntLit
+	: 'column:' Column=IntLit
 ;
 
 ConfigMacrosField -> ConfigMacrosField
-	: 'configMacros:' StringLit
+	: 'configMacros:' ConfigMacros=StringLit
 ;
 
 ContainingTypeField -> ContainingTypeField
-	: 'containingType:' MDField
+	: 'containingType:' ContainingType=MDField
 ;
 
 CountField -> CountField
-	: 'count:' MDFieldOrInt
+	: 'count:' Count=MDFieldOrInt
 ;
 
 DebugInfoForProfilingField -> DebugInfoForProfilingField
-	: 'debugInfoForProfiling:' BoolLit
+	: 'debugInfoForProfiling:' DebugInfoForProfiling=BoolLit
 ;
 
 DeclarationField -> DeclarationField
-	: 'declaration:' MDField
+	: 'declaration:' Declaration=MDField
 ;
 
 DirectoryField -> DirectoryField
-	: 'directory:' StringLit
+	: 'directory:' Directory=StringLit
 ;
 
 DiscriminatorField -> DiscriminatorField
-	: 'discriminator:' MDField
+	: 'discriminator:' Discriminator=MDField
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
-	: 'discriminator:' IntLit
+	: 'discriminator:' DiscriminatorInt=IntLit
 ;
 
 DwarfAddressSpaceField -> DwarfAddressSpaceField
-	: 'dwarfAddressSpace:' IntLit
+	: 'dwarfAddressSpace:' DwarfAddressSpace=IntLit
 ;
 
 DwoIdField -> DwoIdField
-	: 'dwoId:' IntLit
+	: 'dwoId:' DwoId=IntLit
 ;
 
 ElementsField -> ElementsField
-	: 'elements:' MDField
+	: 'elements:' Elements=MDField
 ;
 
 EmissionKindField -> EmissionKindField
-	: 'emissionKind:' EmissionKind
+	: 'emissionKind:' EmissionKind=EmissionKind
 ;
 
 EncodingField -> EncodingField
-	: 'encoding:' DwarfAttEncoding
+	: 'encoding:' Encoding=DwarfAttEncoding
 ;
 
 EntityField -> EntityField
-	: 'entity:' MDField
+	: 'entity:' Entity=MDField
 ;
 
 EnumsField -> EnumsField
-	: 'enums:' MDField
+	: 'enums:' Enums=MDField
 ;
 
 ExportSymbolsField -> ExportSymbolsField
-	: 'exportSymbols:' BoolLit
+	: 'exportSymbols:' ExportSymbols=BoolLit
 ;
 
 ExprField -> ExprField
-	: 'expr:' MDField
+	: 'expr:' Expr=MDField
 ;
 
 ExtraDataField -> ExtraDataField
-	: 'extraData:' MDField
+	: 'extraData:' ExtraData=MDField
 ;
 
 FileField -> FileField
-	: 'file:' MDField
+	: 'file:' File=MDField
 ;
 
 FilenameField -> FilenameField
-	: 'filename:' StringLit
+	: 'filename:' Filename=StringLit
 ;
 
 FlagsField -> FlagsField
-	: 'flags:' DIFlags
+	: 'flags:' Flags=DIFlags
 ;
 
 FlagsStringField -> FlagsStringField
-	: 'flags:' StringLit
+	: 'flags:' FlagsString=StringLit
 ;
 
 GetterField -> GetterField
-	: 'getter:' StringLit
+	: 'getter:' Getter=StringLit
 ;
 
 GlobalsField -> GlobalsField
-	: 'globals:' MDField
+	: 'globals:' Globals=MDField
 ;
 
 HeaderField -> HeaderField
-	: 'header:' StringLit
+	: 'header:' Header=StringLit
 ;
 
 IdentifierField -> IdentifierField
-	: 'identifier:' StringLit
+	: 'identifier:' Identifier=StringLit
 ;
 
 ImportsField -> ImportsField
-	: 'imports:' MDField
+	: 'imports:' Imports=MDField
 ;
 
 IncludePathField -> IncludePathField
-	: 'includePath:' StringLit
+	: 'includePath:' IncludePath=StringLit
 ;
 
 InlinedAtField -> InlinedAtField
-	: 'inlinedAt:' MDField
+	: 'inlinedAt:' InlinedAt=MDField
 ;
 
 IsDefinitionField -> IsDefinitionField
-	: 'isDefinition:' BoolLit
+	: 'isDefinition:' IsDefinition=BoolLit
 ;
 
 IsImplicitCodeField -> IsImplicitCodeField
-	: 'isImplicitCode:' BoolLit
+	: 'isImplicitCode:' IsImplicitCode=BoolLit
 ;
 
 IsLocalField -> IsLocalField
-	: 'isLocal:' BoolLit
+	: 'isLocal:' IsLocal=BoolLit
 ;
 
 IsOptimizedField -> IsOptimizedField
-	: 'isOptimized:' BoolLit
+	: 'isOptimized:' IsOptimized=BoolLit
 ;
 
 IsUnsignedField -> IsUnsignedField
-	: 'isUnsigned:' BoolLit
+	: 'isUnsigned:' IsUnsigned=BoolLit
 ;
 
 IsysrootField -> IsysrootField
-	: 'isysroot:' StringLit
+	: 'isysroot:' Isysroot=StringLit
 ;
 
 LanguageField -> LanguageField
-	: 'language:' DwarfLang
+	: 'language:' Language=DwarfLang
 ;
 
 LineField -> LineField
-	: 'line:' IntLit
+	: 'line:' Line=IntLit
 ;
 
 LinkageNameField -> LinkageNameField
-	: 'linkageName:' StringLit
+	: 'linkageName:' LinkageName=StringLit
 ;
 
 LowerBoundField -> LowerBoundField
-	: 'lowerBound:' IntLit
+	: 'lowerBound:' LowerBound=IntLit
 ;
 
 MacrosField -> MacrosField
-	: 'macros:' MDField
+	: 'macros:' Macros=MDField
 ;
 
 NameField -> NameField
-	: 'name:' StringLit
+	: 'name:' Name=StringLit
 ;
 
 NameTableKindField -> NameTableKindField
-	: 'nameTableKind:' NameTableKind
+	: 'nameTableKind:' NameTableKind=NameTableKind
 ;
 
 NodesField -> NodesField
-	: 'nodes:' MDField
+	: 'nodes:' Nodes=MDField
 ;
 
 OffsetField -> OffsetField
-	: 'offset:' IntLit
+	: 'offset:' Offset=IntLit
 ;
 
 OperandsField -> OperandsField
-	: 'operands:' MDFields
+	: 'operands:' Operands=MDFields
 ;
 
 ProducerField -> ProducerField
-	: 'producer:' StringLit
+	: 'producer:' Producer=StringLit
 ;
 
 RetainedNodesField -> RetainedNodesField
-	: 'retainedNodes:' MDField
+	: 'retainedNodes:' RetainedNodes=MDField
 ;
 
 RetainedTypesField -> RetainedTypesField
-	: 'retainedTypes:' MDField
+	: 'retainedTypes:' RetainedTypes=MDField
 ;
 
 RuntimeLangField -> RuntimeLangField
-	: 'runtimeLang:' DwarfLang
+	: 'runtimeLang:' RuntimeLang=DwarfLang
 ;
 
 RuntimeVersionField -> RuntimeVersionField
-	: 'runtimeVersion:' IntLit
+	: 'runtimeVersion:' RuntimeVersion=IntLit
 ;
 
 ScopeField -> ScopeField
-	: 'scope:' MDField
+	: 'scope:' Scope=MDField
 ;
 
 ScopeLineField -> ScopeLineField
-	: 'scopeLine:' IntLit
+	: 'scopeLine:' ScopeLine=IntLit
 ;
 
 SetterField -> SetterField
-	: 'setter:' StringLit
+	: 'setter:' Setter=StringLit
 ;
 
 SizeField -> SizeField
-	: 'size:' IntLit
+	: 'size:' Size=IntLit
 ;
 
 SourceField -> SourceField
-	: 'source:' StringLit
+	: 'source:' Source=StringLit
 ;
 
 SplitDebugFilenameField -> SplitDebugFilenameField
-	: 'splitDebugFilename:' StringLit
+	: 'splitDebugFilename:' SplitDebugFilename=StringLit
 ;
 
 SplitDebugInliningField -> SplitDebugInliningField
-	: 'splitDebugInlining:' BoolLit
+	: 'splitDebugInlining:' SplitDebugInlining=BoolLit
 ;
 
 TagField -> TagField
-	: 'tag:' DwarfTag
+	: 'tag:' Tag=DwarfTag
 ;
 
 TemplateParamsField -> TemplateParamsField
-	: 'templateParams:' MDField
+	: 'templateParams:' TemplateParams=MDField
 ;
 
 ThisAdjustmentField -> ThisAdjustmentField
-	: 'thisAdjustment:' IntLit
+	: 'thisAdjustment:' ThisAdjustment=IntLit
 ;
 
 ThrownTypesField -> ThrownTypesField
-	: 'thrownTypes:' MDField
+	: 'thrownTypes:' ThrownTypes=MDField
 ;
 
 TypeField -> TypeField
-	: 'type:' MDField
+	: 'type:' Type=MDField
 ;
 
 TypeMacinfoField -> TypeMacinfoField
-	: 'type:' DwarfMacinfo
+	: 'type:' TypeMacinfo=DwarfMacinfo
 ;
 
 TypesField -> TypesField
-	: 'types:' MDField
+	: 'types:' Types=MDField
 ;
 
 UnitField -> UnitField
-	: 'unit:' MDField
+	: 'unit:' Unit=MDField
 ;
 
 ValueField -> ValueField
-	: 'value:' MDField
+	: 'value:' Value=MDField
 ;
 
 ValueIntField -> ValueIntField
-	: 'value:' IntLit
+	: 'value:' ValueInt=IntLit
 ;
 
 ValueStringField -> ValueStringField
-	: 'value:' StringLit
+	: 'value:' ValueString=StringLit
 ;
 
 VarField -> VarField
-	: 'var:' MDField
+	: 'var:' Var=MDField
 ;
 
 VirtualIndexField -> VirtualIndexField
-	: 'virtualIndex:' IntLit
+	: 'virtualIndex:' VirtualIndex=IntLit
 ;
 
 VirtualityField -> VirtualityField
-	: 'virtuality:' DwarfVirtuality
+	: 'virtuality:' Virtuality=DwarfVirtuality
 ;
 
 VtableHolderField -> VtableHolderField
-	: 'vtableHolder:' MDField
+	: 'vtableHolder:' VtableHolder=MDField
 ;
 
 # ___ [ Specialized metadata values ] __________________________________________
