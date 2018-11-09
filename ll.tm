@@ -3127,7 +3127,7 @@ DIExpression -> DIExpression
 %interface DIExpressionField;
 
 DIExpressionField -> DIExpressionField
-	: IntLit
+	: UintLit
 	| DwarfOp
 ;
 
