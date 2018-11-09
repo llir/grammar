@@ -3929,7 +3929,7 @@ NodesField -> NodesField
 ;
 
 OffsetField -> OffsetField
-	: 'offset:' Offset=IntLit
+	: 'offset:' OffsetField=IntLit
 ;
 
 OperandsField -> OperandsField
