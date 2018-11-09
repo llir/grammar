@@ -3785,7 +3785,7 @@ DiscriminatorField -> DiscriminatorField
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
-	: 'discriminator:' DiscriminatorInt=IntLit
+	: 'discriminator:' Discriminator=IntLit
 ;
 
 DwarfAddressSpaceField -> DwarfAddressSpaceField
@@ -3841,7 +3841,7 @@ FlagsField -> FlagsField
 ;
 
 FlagsStringField -> FlagsStringField
-	: 'flags:' FlagsString=StringLit
+	: 'flags:' Flags=StringLit
 ;
 
 GetterField -> GetterField
@@ -3929,6 +3929,7 @@ NodesField -> NodesField
 ;
 
 OffsetField -> OffsetField
+	# TODO: rename OffsetField= attribute to Offset= when inspirer/textmapper#13 is resolved
 	: 'offset:' OffsetField=IntLit
 ;
 
@@ -4001,7 +4002,7 @@ ThrownTypesField -> ThrownTypesField
 ;
 
 TypeField -> TypeField
-	: 'type:' Type=MDField
+	: 'type:' Typ=MDField
 ;
 
 TypeMacinfoField -> TypeMacinfoField
@@ -4021,11 +4022,11 @@ ValueField -> ValueField
 ;
 
 ValueIntField -> ValueIntField
-	: 'value:' ValueInt=IntLit
+	: 'value:' Value=IntLit
 ;
 
 ValueStringField -> ValueStringField
-	: 'value:' ValueString=StringLit
+	: 'value:' Value=StringLit
 ;
 
 VarField -> VarField
