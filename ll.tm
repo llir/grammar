@@ -813,13 +813,13 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Alignment)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 # ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GlobalDef -> GlobalDef
-	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Alignment)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
 ;
 
 ExternallyInitialized -> ExternallyInitialized
@@ -901,7 +901,7 @@ FuncDef -> FuncDef
 #       '(' ArgList ')' OptAddrSpace OptFuncAttrs OptSection OptionalAlign
 #       OptGC OptionalPrefix OptionalPrologue OptPersonalityFn
 
-# TODO: Add OptAlignment before OptGC once the LR-1 conflict has been resolved.
+# TODO: Add Alignopt before GCopt once the LR-1 conflict has been resolved.
 # The shift/reduce conflict is present since FuncAttribute also contains 'align'.
 
 FuncHeader -> FuncHeader
@@ -2178,7 +2178,7 @@ InsertValueInst -> InsertValueInst
 #       (',' 'align' i32)? (',', 'addrspace(n))?
 
 AllocaInst -> AllocaInst
-	: 'alloca' InAllocaopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Alignment)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
+	: 'alloca' InAllocaopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Align)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
 ;
 
 InAlloca -> InAlloca
@@ -2201,9 +2201,9 @@ SwiftError -> SwiftError
 
 LoadInst -> LoadInst
 	# Load.
-	: 'load' Volatileopt ElemType=Type ',' Src=TypeValue (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	: 'load' Volatileopt ElemType=Type ',' Src=TypeValue (',' Align)? Metadata=(',' MetadataAttachment)+?
 	# Atomic load.
-	| 'load' Atomic Volatileopt ElemType=Type ',' Src=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	| 'load' Atomic Volatileopt ElemType=Type ',' Src=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ store ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2218,9 +2218,9 @@ LoadInst -> LoadInst
 
 StoreInst -> StoreInst
 	# Store.
-	: 'store' Volatileopt Src=TypeValue ',' Dst=TypeValue (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	: 'store' Volatileopt Src=TypeValue ',' Dst=TypeValue (',' Align)? Metadata=(',' MetadataAttachment)+?
 	# Atomic store.
-	| 'store' Atomic Volatileopt Src=TypeValue ',' Dst=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	| 'store' Atomic Volatileopt Src=TypeValue ',' Dst=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ fence ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4166,9 +4166,7 @@ AddrSpace -> AddrSpace
 #   ::= empty
 #   ::= 'align' 4
 
-# TODO: Rename Alignment to Align?
-
-Alignment -> Alignment
+Align -> Align
 	: 'align' N=UintLit
 ;
 
@@ -4428,10 +4426,10 @@ FPred -> FPred
 #
 #   ::= <attr> | <attr> '=' <value>
 
-# NOTE: FuncAttribute should contain Alignment. However, using LALR(1) this
-# produces a reduce/reduce conflict as GlobalAttr also contains Alignment.
+# NOTE: FuncAttribute should contain Align. However, using LALR(1) this
+# produces a reduce/reduce conflict as GlobalAttr also contains Align.
 #
-# To handle these ambiguities, (FuncAttribute | Alignment) is used in those places
+# To handle these ambiguities, (FuncAttribute | Align) is used in those places
 # where FuncAttribute is used outside of GlobalDef and GlobalDecl (which also has
 # GlobalAttr).
 
@@ -4443,11 +4441,11 @@ FuncAttribute -> FuncAttribute
 	# not used in attribute groups.
 	| AttrGroupID
 	# used in attribute groups.
-	| AlignPair
+	| AlignPair # Note, AlignPair is just a different syntax for Align, used in attribute groups.
 	| AlignStackPair
 	# used in functions.
-	# TODO: Figure out how to enable Alignment in FuncAttribute again.
-	#| Alignment # NOTE: removed to resolve reduce/reduce conflict, see above.
+	# TODO: Figure out how to enable Align in FuncAttribute again.
+	#| Align # NOTE: removed to resolve reduce/reduce conflict, see above.
 	| AllocSize
 	| StackAlignment
 	| FuncAttr
@@ -4602,7 +4600,7 @@ Param -> Param
 ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
-	| Alignment
+	| Align
 	| Dereferenceable
 	| ParamAttr
 ;
@@ -4646,7 +4644,7 @@ ReturnAttribute -> ReturnAttribute
 	#    - `ReturnAttrs` cannot be nullable, since it precedes FuncAttrs
 	#: AttrString
 	#| AttrPair
-	: Alignment
+	: Align
 	| Dereferenceable
 	| ReturnAttr
 ;
