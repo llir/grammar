@@ -1000,7 +1000,7 @@ Distinct -> Distinct
 #   ::= '{' uint32 (',' uint32)+ '}'
 
 UseListOrder -> UseListOrder
-	: 'uselistorder' TypeValue ',' '{' Indices=(UintLit separator ',')+ '}'
+	: 'uselistorder' Val=TypeValue ',' '{' Indices=(UintLit separator ',')+ '}'
 ;
 
 # ref: ParseUseListOrderBB
