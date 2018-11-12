@@ -4008,7 +4008,7 @@ TypeField -> TypeField
 ;
 
 TypeMacinfoField -> TypeMacinfoField
-	: 'type:' TypeMacinfo=DwarfMacinfo
+	: 'type:' Typ=DwarfMacinfo
 ;
 
 TypesField -> TypesField
