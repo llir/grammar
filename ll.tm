@@ -4075,42 +4075,52 @@ DIFlags -> DIFlags
 	: Flags=(DIFlag separator '|')+
 ;
 
+%interface DIFlag;
+
 DIFlag -> DIFlag
-	: UintLit
 	# DIFlagFoo
-	| di_flag_tok
+	: di_flag_tok   -> DIFlagEnum
+	| UintLit       -> DIFlagInt
 ;
 
 # ref: ParseMDField(DwarfAttEncodingField &)
 
+%interface DwarfAttEncoding;
+
 DwarfAttEncoding -> DwarfAttEncoding
-	: UintLit
 	# DW_ATE_foo
-	| dwarf_att_encoding_tok
+	: dwarf_att_encoding_tok   -> DwarfAttEncodingEnum
+	| UintLit                  -> DwarfAttEncodingInt
 ;
 
 # ref: ParseMDField(DwarfCCField &Result)
 
+%interface DwarfCC;
+
 DwarfCC -> DwarfCC
-	: UintLit
 	# DW_CC_foo
-	| dwarf_cc_tok
+	: dwarf_cc_tok   -> DwarfCCEnum
+	| UintLit        -> DwarfCCInt
 ;
 
 # ref: ParseMDField(DwarfLangField &)
 
+%interface DwarfLang;
+
 DwarfLang -> DwarfLang
-	: UintLit
 	# DW_LANG_foo
-	| dwarf_lang_tok
+	: dwarf_lang_tok   -> DwarfLangEnum
+	| UintLit          -> DwarfLangInt
 ;
 
 # ref: ParseMDField(DwarfMacinfoTypeField &)
 
+%interface DwarfMacinfo;
+
 DwarfMacinfo -> DwarfMacinfo
-	: UintLit
 	# DW_MACINFO_foo
-	| dwarf_macinfo_tok
+	: dwarf_macinfo_tok   -> DwarfMacinfoEnum
+	| UintLit             -> DwarfMacinfoInt
 ;
 
 DwarfOp -> DwarfOp
@@ -4120,34 +4130,42 @@ DwarfOp -> DwarfOp
 
 # ref: ParseMDField(DwarfTagField &)
 
+%interface DwarfTag;
+
 DwarfTag -> DwarfTag
-	: UintLit
 	# DW_TAG_foo
-	| dwarf_tag_tok
+	: dwarf_tag_tok   -> DwarfTagEnum
+	| UintLit         -> DwarfTagInt
 ;
 
 # ref: ParseMDField(DwarfVirtualityField &)
 
+%interface DwarfVirtuality;
+
 DwarfVirtuality -> DwarfVirtuality
-	: UintLit
 	# DW_VIRTUALITY_foo
-	| dwarf_virtuality_tok
+	: dwarf_virtuality_tok   -> DwarfVirtualityEnum
+	| UintLit                -> DwarfVirtualityInt
 ;
 
 # ref bool LLParser::ParseMDField(EmissionKindField &)
 
+%interface EmissionKind;
+
 EmissionKind -> EmissionKind
-	: UintLit
 	# FullDebug
-	| emission_kind_tok
+	: emission_kind_tok   -> EmissionKindEnum
+	| UintLit             -> EmissionKindInt
 ;
 
 # ref: bool LLParser::ParseMDField(NameTableKindField &)
 
+%interface NameTableKind;
+
 NameTableKind -> NameTableKind
-	: UintLit
 	# GNU
-	| name_table_kind_tok
+	: name_table_kind_tok   -> NameTableKindEnum
+	| UintLit               -> NameTableKindInt
 ;
 
 # ___ [ Helpers ] ______________________________________________________________
