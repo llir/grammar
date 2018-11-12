@@ -1000,7 +1000,7 @@ Distinct -> Distinct
 #   ::= '{' uint32 (',' uint32)+ '}'
 
 UseListOrder -> UseListOrder
-	: 'uselistorder' TypeValue ',' '{' Indicies=(UintLit separator ',')+ '}'
+	: 'uselistorder' TypeValue ',' '{' Indices=(UintLit separator ',')+ '}'
 ;
 
 # ref: ParseUseListOrderBB
@@ -1008,7 +1008,7 @@ UseListOrder -> UseListOrder
 #   ::= 'uselistorder_bb' @foo ',' %bar ',' UseListOrderIndexes
 
 UseListOrderBB -> UseListOrderBB
-	: 'uselistorder_bb' Func=GlobalIdent ',' Block=LocalIdent ',' '{' Indicies=(UintLit separator ',')+ '}'
+	: 'uselistorder_bb' Func=GlobalIdent ',' Block=LocalIdent ',' '{' Indices=(UintLit separator ',')+ '}'
 ;
 
 # === [ Types ] ================================================================
@@ -2217,7 +2217,9 @@ LoadInst -> LoadInst
 #       'singlethread'? AtomicOrdering (',' 'align' i32)?
 
 StoreInst -> StoreInst
+	# Store.
 	: 'store' Volatileopt Src=TypeValue ',' Dst=TypeValue (',' Alignment)? Metadata=(',' MetadataAttachment)+?
+	# Atomic store.
 	| 'store' Atomic Volatileopt Src=TypeValue ',' Dst=TypeValue SyncScopeopt Ordering=AtomicOrdering (',' Alignment)? Metadata=(',' MetadataAttachment)+?
 ;
 
