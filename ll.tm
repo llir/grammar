@@ -4376,7 +4376,7 @@ Comdat -> Comdat
 
 Dereferenceable -> Dereferenceable
 	: 'dereferenceable' '(' N=UintLit ')'
-	| 'dereferenceable_or_null' '(' N=UintLit ')' # TODO: distinguish dereferenceable_or_null from dereferenceable during IR translation.
+	| 'dereferenceable_or_null' '(' N=UintLit ')'   -> DereferenceableOrNull
 ;
 
 # https://llvm.org/docs/LangRef.html#dll-storage-classes
