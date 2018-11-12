@@ -1204,14 +1204,14 @@ Value -> Value
 #             STRINGCONSTANT
 
 InlineAsm -> InlineAsm
-	: 'asm' SideEffectopt AlignStackopt IntelDialectopt Asm=StringLit ',' Constraints=StringLit
+	: 'asm' SideEffectopt AlignStackTokopt IntelDialectopt Asm=StringLit ',' Constraints=StringLit
 ;
 
 SideEffect -> SideEffect
 	: 'sideeffect'
 ;
 
-AlignStack -> AlignStack
+AlignStackTok -> AlignStackTok
 	: 'alignstack'
 ;
 
@@ -4174,6 +4174,14 @@ AlignPair -> AlignPair
 	: 'align' '=' N=UintLit
 ;
 
+# ref: ParseOptionalStackAlignment
+#
+#   ::= empty
+#   ::= 'alignstack' '(' 4 ')'
+AlignStack -> AlignStack
+	: 'alignstack' '(' N=UintLit ')'
+;
+
 AlignStackPair -> AlignStackPair
 	: 'alignstack' '=' N=UintLit
 ;
@@ -4435,19 +4443,20 @@ FPred -> FPred
 
 %interface FuncAttribute;
 
+# TODO: Figure out how to enable Align in FuncAttribute again.
+
 FuncAttribute -> FuncAttribute
 	: AttrString
 	| AttrPair
 	# not used in attribute groups.
 	| AttrGroupID
-	# used in attribute groups.
-	| AlignPair # Note, AlignPair is just a different syntax for Align, used in attribute groups.
-	| AlignStackPair
 	# used in functions.
-	# TODO: Figure out how to enable Align in FuncAttribute again.
 	#| Align # NOTE: removed to resolve reduce/reduce conflict, see above.
+	# used in attribute groups.
+	| AlignPair
+	| AlignStack
+	| AlignStackPair
 	| AllocSize
-	| StackAlignment
 	| FuncAttr
 ;
 
@@ -4659,16 +4668,6 @@ ReturnAttr -> ReturnAttr
 
 Section -> Section
 	: 'section' Name=StringLit
-;
-
-# TODO: rename StackAlignment to AlignStack?
-
-# ref: ParseOptionalStackAlignment
-#
-#   ::= empty
-#   ::= 'alignstack' '(' 4 ')'
-StackAlignment -> StackAlignment
-	: 'alignstack' '(' N=UintLit ')'
 ;
 
 # ref: ParseScope
