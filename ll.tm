@@ -851,19 +851,23 @@ Immutable -> Immutable
 #  IndirectSymbol
 #   ::= TypeAndValue
 
-%interface IndirectSymbolDef;
-
 IndirectSymbolDef -> IndirectSymbolDef
-	: AliasDef
-	| IFuncDef
+	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt IndirectSymbolKind ContentType=Type ',' IndirectSymbol
 ;
 
-AliasDef -> AliasDef
-	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'alias' ContentType=Type ',' Aliasee=TypeConst
+IndirectSymbolKind -> IndirectSymbolKind
+	: 'alias'
+	| 'ifunc'
 ;
 
-IFuncDef -> IFuncDef
-	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt 'ifunc' ContentType=Type ',' Resolver=TypeConst
+%interface IndirectSymbol;
+
+IndirectSymbol -> IndirectSymbol
+	: TypeConst
+	| BitCastExpr
+	| GetElementPtrExpr
+	| AddrSpaceCastExpr
+	| IntToPtrExpr
 ;
 
 # ~~~ [ Function Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
