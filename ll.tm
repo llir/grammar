@@ -2704,7 +2704,7 @@ Case -> Case
 #    ::= 'indirectbr' TypeAndValue ',' '[' LabelList ']'
 
 IndirectBrTerm -> IndirectBrTerm
-	: 'indirectbr' Addr=TypeValue ',' '[' ValidTargets=(Label separator ',')+ ']' Metadata=(',' MetadataAttachment)+?
+	: 'indirectbr' Addr=TypeValue ',' '[' ValidTargets=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ invoke ] ---------------------------------------------------------------
