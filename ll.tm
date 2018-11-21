@@ -757,8 +757,8 @@ ModuleAsm -> ModuleAsm
 # is resolved.
 
 TypeDef -> TypeDef
-	: Alias=LocalIdent '=' 'type' Typ=OpaqueType
-	| Alias=LocalIdent '=' 'type' Typ=Type
+	: Name=LocalIdent '=' 'type' Typ=OpaqueType
+	| Name=LocalIdent '=' 'type' Typ=Type
 ;
 
 # ~~~ [ Comdat Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
