@@ -3731,15 +3731,15 @@ GenericDINodeField -> GenericDINodeField
 # ___ [ Specialized metadata fields ] __________________________________________
 
 AlignField -> AlignField
-	: 'align:' Align=IntLit
+	: 'align:' Align=UintLit
 ;
 
 ArgField -> ArgField
-	: 'arg:' Arg=IntLit
+	: 'arg:' Arg=UintLit
 ;
 
 AttributesField -> AttributesField
-	: 'attributes:' Attributes=IntLit
+	: 'attributes:' Attributes=UintLit
 ;
 
 BaseTypeField -> BaseTypeField
@@ -3791,15 +3791,15 @@ DiscriminatorField -> DiscriminatorField
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
-	: 'discriminator:' Discriminator=IntLit
+	: 'discriminator:' Discriminator=UintLit
 ;
 
 DwarfAddressSpaceField -> DwarfAddressSpaceField
-	: 'dwarfAddressSpace:' DwarfAddressSpace=IntLit
+	: 'dwarfAddressSpace:' DwarfAddressSpace=UintLit
 ;
 
 DwoIdField -> DwoIdField
-	: 'dwoId:' DwoId=IntLit
+	: 'dwoId:' DwoId=UintLit
 ;
 
 ElementsField -> ElementsField
@@ -3936,7 +3936,7 @@ NodesField -> NodesField
 
 OffsetField -> OffsetField
 	# TODO: rename OffsetField= attribute to Offset= when inspirer/textmapper#13 is resolved
-	: 'offset:' OffsetField=IntLit
+	: 'offset:' OffsetField=UintLit
 ;
 
 OperandsField -> OperandsField
@@ -3960,7 +3960,7 @@ RuntimeLangField -> RuntimeLangField
 ;
 
 RuntimeVersionField -> RuntimeVersionField
-	: 'runtimeVersion:' RuntimeVersion=IntLit
+	: 'runtimeVersion:' RuntimeVersion=UintLit
 ;
 
 ScopeField -> ScopeField
@@ -3976,7 +3976,7 @@ SetterField -> SetterField
 ;
 
 SizeField -> SizeField
-	: 'size:' Size=IntLit
+	: 'size:' Size=UintLit
 ;
 
 SourceField -> SourceField
@@ -4040,7 +4040,7 @@ VarField -> VarField
 ;
 
 VirtualIndexField -> VirtualIndexField
-	: 'virtualIndex:' VirtualIndex=IntLit
+	: 'virtualIndex:' VirtualIndex=UintLit
 ;
 
 VirtualityField -> VirtualityField
