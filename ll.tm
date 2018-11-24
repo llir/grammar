@@ -813,13 +813,13 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 ;
 
 # ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GlobalDef -> GlobalDef
-	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=(',' FuncAttribute)+?
+	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 ;
 
 ExternallyInitialized -> ExternallyInitialized
