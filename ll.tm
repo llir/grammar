@@ -154,32 +154,6 @@ _quoted_string = /["][^"]*["]/
 
 int_type_tok : /i[0-9]+/
 
-'!DIBasicType' : /!DIBasicType/
-'!DICompileUnit' : /!DICompileUnit/
-'!DICompositeType' : /!DICompositeType/
-'!DIDerivedType' : /!DIDerivedType/
-'!DIEnumerator' : /!DIEnumerator/
-'!DIExpression' : /!DIExpression/
-'!DIFile' : /!DIFile/
-'!DIGlobalVariable' : /!DIGlobalVariable/
-'!DIGlobalVariableExpression' : /!DIGlobalVariableExpression/
-'!DIImportedEntity' : /!DIImportedEntity/
-'!DILabel' : /!DILabel/
-'!DILexicalBlock' : /!DILexicalBlock/
-'!DILexicalBlockFile' : /!DILexicalBlockFile/
-'!DILocalVariable' : /!DILocalVariable/
-'!DILocation' : /!DILocation/
-'!DIMacro' : /!DIMacro/
-'!DIMacroFile' : /!DIMacroFile/
-'!DIModule' : /!DIModule/
-'!DINamespace' : /!DINamespace/
-'!DIObjCProperty' : /!DIObjCProperty/
-'!DISubprogram' : /!DISubprogram/
-'!DISubrange' : /!DISubrange/
-'!DISubroutineType' : /!DISubroutineType/
-'!DITemplateTypeParameter' : /!DITemplateTypeParameter/
-'!DITemplateValueParameter' : /!DITemplateValueParameter/
-'!GenericDINode' : /!GenericDINode/
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
 'acquire' : /acquire/
@@ -480,6 +454,33 @@ int_type_tok : /i[0-9]+/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
 
+# Specialized metadata node names.
+'!DIBasicType' : /!DIBasicType/
+'!DICompileUnit' : /!DICompileUnit/
+'!DICompositeType' : /!DICompositeType/
+'!DIDerivedType' : /!DIDerivedType/
+'!DIEnumerator' : /!DIEnumerator/
+'!DIExpression' : /!DIExpression/
+'!DIFile' : /!DIFile/
+'!DIGlobalVariable' : /!DIGlobalVariable/
+'!DIGlobalVariableExpression' : /!DIGlobalVariableExpression/
+'!DIImportedEntity' : /!DIImportedEntity/
+'!DILabel' : /!DILabel/
+'!DILexicalBlock' : /!DILexicalBlock/
+'!DILexicalBlockFile' : /!DILexicalBlockFile/
+'!DILocalVariable' : /!DILocalVariable/
+'!DILocation' : /!DILocation/
+'!DIMacro' : /!DIMacro/
+'!DIMacroFile' : /!DIMacroFile/
+'!DIModule' : /!DIModule/
+'!DINamespace' : /!DINamespace/
+'!DIObjCProperty' : /!DIObjCProperty/
+'!DISubprogram' : /!DISubprogram/
+'!DISubrange' : /!DISubrange/
+'!DISubroutineType' : /!DISubroutineType/
+'!DITemplateTypeParameter' : /!DITemplateTypeParameter/
+'!DITemplateValueParameter' : /!DITemplateValueParameter/
+'!GenericDINode' : /!GenericDINode/
 
 # Specialized metadata node field names.
 'align:' : /align:/
