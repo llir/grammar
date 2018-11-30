@@ -2822,7 +2822,20 @@ ResumeTerm -> ResumeTerm
 #   ::= 'catchswitch' within Parent
 
 CatchSwitchTerm -> CatchSwitchTerm
-	: 'catchswitch' 'within' Scope=ExceptionScope '[' Handlers=(Label separator ',')+ ']' 'unwind' UnwindTarget=UnwindTarget Metadata=(',' MetadataAttachment)+?
+	: 'catchswitch' 'within' Scope=ExceptionScope '[' Handlers=Handlers ']' 'unwind' UnwindTarget=UnwindTarget Metadata=(',' MetadataAttachment)+?
+;
+
+# Use distinct production rule for Handlers. This is to avoid the Textmapper
+# error: `'Handlers' cannot be a list, since it precedes UnwindTarget`, as
+# caused by Handlers being a list of labels (i.e. `[]Label`) followed by a
+# label as part of the UnwindTarget interface.
+#
+# Upstream issue https://github.com/inspirer/textmapper/issues/25
+#
+# When declarative inlining is supported, we may want to inline Handlers.
+
+Handlers -> Handlers
+	: Labels=(Label separator ',')+
 ;
 
 # --- [ catchret ] -------------------------------------------------------------
@@ -4819,11 +4832,7 @@ UnnamedAddr -> UnnamedAddr
 	| 'unnamed_addr'
 ;
 
-# TODO: Make UnwindTarget into an interface? The current issue is that
-# catchswitch becomes ambiguous with the following error reported:
-# `'Handlers' cannot be a list, since it precedes UnwindTarget`
-#
-# Upstream issue https://github.com/inspirer/textmapper/issues/25
+%interface UnwindTarget;
 
 UnwindTarget -> UnwindTarget
 	: UnwindToCaller
