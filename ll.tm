@@ -762,7 +762,6 @@ TopLevelEntity -> TopLevelEntity
 	| TypeDef
 	| ComdatDef
 	| GlobalDecl
-	| GlobalDef
 	| IndirectSymbolDef
 	| FuncDecl
 	| FuncDef
@@ -860,7 +859,7 @@ SelectionKind -> SelectionKind
 	| 'samesize'
 ;
 
-# ~~~ [ Global Variable Declaration ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~ [ Global Variable Declaration or Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # https://llvm.org/docs/LangRef.html#global-variables
 
@@ -894,13 +893,8 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
-;
-
-# ~~~ [ Global Variable Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-GlobalDef -> GlobalDef
-	: Name=GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 ;
 
 ExternallyInitialized -> ExternallyInitialized
