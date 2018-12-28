@@ -4299,8 +4299,8 @@ AlignStackPair -> AlignStackPair
 # ref: parseAllocSizeArguments
 
 AllocSize -> AllocSize
-	: 'allocsize' '(' ElemSize=UintLit ')'
-	| 'allocsize' '(' ElemSize=UintLit ',' N=UintLit ')'
+	: 'allocsize' '(' ElemSizeIndex=UintLit ')'
+	| 'allocsize' '(' ElemSizeIndex=UintLit ',' NElemsIndex=UintLit ')'
 ;
 
 # ref: ParseParameterList
