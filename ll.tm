@@ -2874,10 +2874,6 @@ UnreachableTerm -> UnreachableTerm
 
 # ref: ParseMDTuple
 
-MDTuple -> MDTuple
-	: '!' MDFields
-;
-
 # ref: ParseMDNodeVector
 #
 #   ::= { Element (',' Element)* }
@@ -2888,11 +2884,11 @@ MDTuple -> MDTuple
 
 # TODO: inline MDFields when Textmapper supports declarative inlining.
 
-MDFields -> MDFields
-	: '{' MDFields=(MDField separator',')* '}'
-;
-
 # ref: ParseMDField(MDField &)
+
+MDTuple -> MDTuple
+	: '!' '{' MDFields=(MDField separator',')* '}'
+;
 
 %interface MDField;
 
@@ -4028,7 +4024,7 @@ OffsetField -> OffsetField
 ;
 
 OperandsField -> OperandsField
-	: 'operands:' Operands=MDFields
+	: 'operands:' '{' Operands=(MDField separator',')* '}'
 ;
 
 ProducerField -> ProducerField
