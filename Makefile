@@ -1,5 +1,4 @@
-GODIR=`echo ${GOPATH} | awk '{split($$0, arr, ":"); print arr[1]}'`
-TM_DIR=${GODIR}/src/github.com/inspirer/textmapper
+TM_DIR=./tools/textmapper
 
 all: gen
 
