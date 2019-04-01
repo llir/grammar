@@ -85,6 +85,9 @@ dwarf_att_encoding_tok : /DW_ATE_({_ascii_letter}|{_decimal_digit}|[_])*/
 # DIFlagFoo
 di_flag_tok : /DIFlag({_ascii_letter}|{_decimal_digit}|[_])*/
 
+# DISPFlagFoo
+disp_flag_tok : /DISPFlag({_ascii_letter}|{_decimal_digit}|[_])*/
+
 # DW_LANG_foo
 dwarf_lang_tok : /DW_LANG_({_ascii_letter}|{_decimal_digit}|[_])*/
 
@@ -494,6 +497,7 @@ int_type_tok : /i[0-9]+/
 'configMacros:' : /configMacros:/
 'containingType:' : /containingType:/
 'count:' : /count:/
+'debugBaseAddress:' : /debugBaseAddress:/
 'debugInfoForProfiling:' : /debugInfoForProfiling:/
 'declaration:' : /declaration:/
 'directory:' : /directory:/
@@ -544,6 +548,7 @@ int_type_tok : /i[0-9]+/
 'setter:' : /setter:/
 'size:' : /size:/
 'source:' : /source:/
+'spFlags:' : /spFlags:/
 'splitDebugFilename:' : /splitDebugFilename:/
 'splitDebugInlining:' : /splitDebugInlining:/
 'tag:' : /tag:/
@@ -3083,6 +3088,7 @@ DICompileUnitField -> DICompileUnitField
 	| SplitDebugInliningField
 	| DebugInfoForProfilingField
 	| NameTableKindField
+	| DebugBaseAddressField
 ;
 
 # ~~~ [ DICompositeType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3686,6 +3692,7 @@ DISubprogramField -> DISubprogramField
 	| VirtualIndexField
 	| ThisAdjustmentField
 	| FlagsField
+	| SPFlagsField
 	| IsOptimizedField
 	| UnitField
 	| TemplateParamsField
@@ -3856,6 +3863,10 @@ ContainingTypeField -> ContainingTypeField
 
 CountField -> CountField
 	: 'count:' Count=MDFieldOrInt
+;
+
+DebugBaseAddressField -> DebugBaseAddressField
+	: 'debugBaseAddress:' DebugBaseAddress=BoolLit
 ;
 
 DebugInfoForProfilingField -> DebugInfoForProfilingField
@@ -4067,6 +4078,10 @@ SourceField -> SourceField
 	: 'source:' Source=StringLit
 ;
 
+SPFlagsField -> SPFlagsField
+	: 'spFlags:' SPFlags=DISPFlags
+;
+
 SplitDebugFilenameField -> SplitDebugFilenameField
 	: 'splitDebugFilename:' SplitDebugFilename=StringLit
 ;
@@ -4169,6 +4184,24 @@ DIFlag -> DIFlag
 	# DIFlagFoo
 	: di_flag_tok   -> DIFlagEnum
 	| UintLit       -> DIFlagInt
+;
+
+# ref: ParseMDField(DISPFlagField &)
+#
+#  ::= uint32
+#  ::= DISPFlagVector
+#  ::= DISPFlagVector '|' DISPFlag* '|' uint32
+
+DISPFlags -> DISPFlags
+	: Flags=(DISPFlag separator '|')+
+;
+
+%interface DISPFlag;
+
+DISPFlag -> DISPFlag
+	# DISPFlagFoo
+	: disp_flag_tok   -> DISPFlagEnum
+	| UintLit         -> DISPFlagInt
 ;
 
 # ref: ParseMDField(DwarfAttEncodingField &)
