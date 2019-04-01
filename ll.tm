@@ -225,8 +225,8 @@ int_type_tok : /i[0-9]+/
 'declare' : /declare/
 'default' : /default/
 'define' : /define/
-'dereferenceable_or_null' : /dereferenceable_or_null/
 'dereferenceable' : /dereferenceable/
+'dereferenceable_or_null' : /dereferenceable_or_null/
 'distinct' : /distinct/
 'dllexport' : /dllexport/
 'dllimport' : /dllimport/
@@ -251,6 +251,7 @@ int_type_tok : /i[0-9]+/
 'filter' : /filter/
 'float' : /float/
 'fmul' : /fmul/
+'fneg' : /fneg/
 'fp128' : /fp128/
 'fpext' : /fpext/
 'fptosi' : /fptosi/
@@ -289,8 +290,8 @@ int_type_tok : /i[0-9]+/
 'label' : /label/
 'landingpad' : /landingpad/
 'largest' : /largest/
-'linkonce_odr' : /linkonce_odr/
 'linkonce' : /linkonce/
+'linkonce_odr' : /linkonce_odr/
 'load' : /load/
 'local_unnamed_addr' : /local_unnamed_addr/
 'localdynamic' : /localdynamic/
@@ -429,14 +430,14 @@ int_type_tok : /i[0-9]+/
 'unreachable' : /unreachable/
 'unwind' : /unwind/
 'urem' : /urem/
-'uselistorder_bb' : /uselistorder_bb/
 'uselistorder' : /uselistorder/
+'uselistorder_bb' : /uselistorder_bb/
 'uwtable' : /uwtable/
 'va_arg' : /va_arg/
 'void' : /void/
 'volatile' : /volatile/
-'weak_odr' : /weak_odr/
 'weak' : /weak/
+'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
 'win64cc' : /win64cc/
 'within' : /within/
@@ -1459,8 +1460,10 @@ BlockAddressConst -> BlockAddressConst
 %interface ConstantExpr;
 
 ConstantExpr -> ConstantExpr
+	# Unary expressions
+	: FNegExpr
 	# Binary expressions
-	: AddExpr
+	| AddExpr
 	| FAddExpr
 	| SubExpr
 	| FSubExpr
@@ -1506,6 +1509,18 @@ ConstantExpr -> ConstantExpr
 	| ICmpExpr
 	| FCmpExpr
 	| SelectExpr
+;
+
+# --- [ Unary expressions ] ----------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#constant-expressions
+
+# ~~~ [ fneg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ref: ParseValID
+
+FNegExpr -> FNegExpr
+	: 'fneg' '(' X=TypeConst ')'
 ;
 
 # --- [ Binary expressions ] --------------------------------------------------
@@ -1903,8 +1918,10 @@ LocalDefInst -> LocalDefInst
 %interface ValueInstruction;
 
 ValueInstruction -> ValueInstruction
+	# Unary instructions
+	: FNegInst
 	# Binary instructions
-	: AddInst
+	| AddInst
 	| FAddInst
 	| SubInst
 	| FSubInst
@@ -1960,6 +1977,20 @@ ValueInstruction -> ValueInstruction
 	| LandingPadInst
 	| CatchPadInst
 	| CleanupPadInst
+;
+
+# --- [ Unary instructions ] ---------------------------------------------------
+
+# ~~~ [ fneg ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://llvm.org/docs/LangRef.html#fneg-instruction
+
+# ref: ParseUnaryOp
+#
+#  ::= UnaryOp TypeAndValue
+
+FNegInst -> FNegInst
+	: 'fneg' FastMathFlags=FastMathFlag* X=TypeValue Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ Binary instructions ] --------------------------------------------------
