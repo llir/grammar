@@ -4416,6 +4416,16 @@ AttrString -> AttrString
 	: Val=StringLit
 ;
 
+# ref: ParseByValWithOptionalType
+#
+#   ::= byval
+#   ::= byval(<ty>)
+
+Byval -> Byval
+	: 'byval'
+	| 'byval' '(' Typ=Type ')'
+;
+
 # ref: ParseOptionalCallingConv
 #
 #   ::= empty
@@ -4780,13 +4790,13 @@ ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
 	| Align
+	| Byval
 	| Dereferenceable
 	| ParamAttr
 ;
 
 ParamAttr -> ParamAttr
-	: 'byval'
-	| 'inalloca'
+	: 'inalloca'
 	| 'inreg'
 	| 'nest'
 	| 'noalias'
