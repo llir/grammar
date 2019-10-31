@@ -437,6 +437,7 @@ int_type_tok : /i[0-9]+/
 'va_arg' : /va_arg/
 'void' : /void/
 'volatile' : /volatile/
+'vscale' : /vscale/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
@@ -1211,6 +1212,7 @@ PointerType -> PointerType
 
 VectorType -> VectorType
 	: '<' Len=UintLit 'x' Elem=Type '>'
+	| '<' 'vscale' 'x' Len=UintLit 'x' Elem=Type '>' -> VscaleVectorType
 ;
 
 # --- [ Label Types ] ----------------------------------------------------------
