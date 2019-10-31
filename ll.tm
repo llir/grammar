@@ -1212,7 +1212,7 @@ PointerType -> PointerType
 
 VectorType -> VectorType
 	: '<' Len=UintLit 'x' Elem=Type '>'
-	| '<' 'vscale' 'x' Len=UintLit 'x' Elem=Type '>' -> VscaleVectorType
+	| '<' 'vscale' 'x' Len=UintLit 'x' Elem=Type '>' -> ScalableVectorType
 ;
 
 # --- [ Label Types ] ----------------------------------------------------------
