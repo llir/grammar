@@ -2621,7 +2621,7 @@ Inc -> Inc
 #   ::= 'select' TypeAndValue ',' TypeAndValue ',' TypeAndValue
 
 SelectInst -> SelectInst
-	: 'select' Cond=TypeValue ',' X=TypeValue ',' Y=TypeValue Metadata=(',' MetadataAttachment)+?
+	: 'select' FastMathFlags=FastMathFlag* Cond=TypeValue ',' X=TypeValue ',' Y=TypeValue Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
