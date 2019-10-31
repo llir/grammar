@@ -2387,6 +2387,7 @@ AtomicRMWInst -> AtomicRMWInst
 AtomicOp -> AtomicOp
 	: 'add'
 	| 'and'
+	| 'fadd'
 	| 'max'
 	| 'min'
 	| 'nand'
