@@ -2388,6 +2388,7 @@ AtomicOp -> AtomicOp
 	: 'add'
 	| 'and'
 	| 'fadd'
+	| 'fsub'
 	| 'max'
 	| 'min'
 	| 'nand'
