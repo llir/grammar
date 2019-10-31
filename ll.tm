@@ -344,6 +344,7 @@ int_type_tok : /i[0-9]+/
 'optsize' : /optsize/
 'or' : /or/
 'ord' : /ord/
+'partition' : /partition/
 'personality' : /personality/
 'phi' : /phi/
 'ppc_fp128' : /ppc_fp128/
@@ -899,8 +900,8 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
-	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 ;
 
 ExternallyInitialized -> ExternallyInitialized
@@ -927,13 +928,16 @@ Immutable -> Immutable
 #   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
 #                     OptionalVisibility OptionalDLLStorageClass
 #                     OptionalThreadLocal OptionalUnnamedAddr
-#                     'alias|ifunc' IndirectSymbol
+#                     'alias|ifunc' IndirectSymbol IndirectSymbolAttr*
 #
 #  IndirectSymbol
 #   ::= TypeAndValue
+#
+#  IndirectSymbolAttr
+#    ::= ',' 'partition' StringConstant
 
 IndirectSymbolDef -> IndirectSymbolDef
-	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt IndirectSymbolKind ContentType=Type ',' IndirectSymbol
+	: Name=GlobalIdent '=' (ExternLinkage | Linkageopt) Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt IndirectSymbolKind ContentType=Type ',' IndirectSymbol Partitions=(',' Partition)*
 ;
 
 IndirectSymbolKind -> IndirectSymbolKind
@@ -983,14 +987,14 @@ FuncDef -> FuncDef
 #
 #   ::= OptionalLinkage OptionalPreemptionSpecifier OptionalVisibility
 #       OptionalCallingConv OptRetAttrs OptUnnamedAddr Type GlobalName
-#       '(' ArgList ')' OptAddrSpace OptFuncAttrs OptSection OptionalAlign
-#       OptGC OptionalPrefix OptionalPrologue OptPersonalityFn
+#       '(' ArgList ')' OptAddrSpace OptFuncAttrs OptSection OptPartition
+#       OptionalAlign OptGC OptionalPrefix OptionalPrologue OptPersonalityFn
 
 # TODO: Add Alignopt before GCopt once the LR-1 conflict has been resolved.
 # The shift/reduce conflict is present since FuncAttribute also contains 'align'.
 
 FuncHeader -> FuncHeader
-	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttribute* Sectionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
+	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttribute* Sectionopt Partitionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
 ;
 
 # NODE: Named GCNode instead of GC to avoid collisions with 'gc' token. Both
@@ -4811,6 +4815,10 @@ ParamAttr -> ParamAttr
 	| 'swiftself'
 	| 'writeonly'
 	| 'zeroext'
+;
+
+Partition -> Partition
+	: 'partition' StringLit
 ;
 
 # https://llvm.org/docs/LangRef.html#runtime-preemption-model
