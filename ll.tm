@@ -270,6 +270,7 @@ int_type_tok : /i[0-9]+/
 'hidden' : /hidden/
 'icmp' : /icmp/
 'ifunc' : /ifunc/
+'immarg' : /immarg/
 'inaccessiblemem_or_argmemonly' : /inaccessiblemem_or_argmemonly/
 'inaccessiblememonly' : /inaccessiblememonly/
 'inalloca' : /inalloca/
@@ -318,6 +319,7 @@ int_type_tok : /i[0-9]+/
 'nocf_check' : /nocf_check/
 'noduplicate' : /noduplicate/
 'noduplicates' : /noduplicates/
+'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
 'none' : /none/
@@ -326,6 +328,7 @@ int_type_tok : /i[0-9]+/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
+'nosync' : /nosync/
 'notail' : /notail/
 'nounwind' : /nounwind/
 'nsw' : /nsw/
@@ -370,6 +373,7 @@ int_type_tok : /i[0-9]+/
 'sanitize_address' : /sanitize_address/
 'sanitize_hwaddress' : /sanitize_hwaddress/
 'sanitize_memory' : /sanitize_memory/
+'sanitize_memtag' : /sanitize_memtag/
 'sanitize_thread' : /sanitize_thread/
 'sdiv' : /sdiv/
 'section' : /section/
@@ -441,6 +445,7 @@ int_type_tok : /i[0-9]+/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
+'willreturn' : /willreturn/
 'win64cc' : /win64cc/
 'within' : /within/
 'writeonly' : /writeonly/
@@ -1894,7 +1899,7 @@ SelectExpr -> SelectExpr
 
 # ref: ParseBasicBlock
 #
-#   ::= LabelStr? Instruction*
+#   ::= (LabelStr|LabelID)? Instruction*
 
 BasicBlock -> BasicBlock
 	: Name=LabelIdentopt Insts=Instruction* Term=Terminator
@@ -4663,12 +4668,14 @@ FuncAttr -> FuncAttr
 	| 'nobuiltin'
 	| 'nocf_check'
 	| 'noduplicate'
+	| 'nofree'
 	| 'noimplicitfloat'
 	| 'noinline'
 	| 'nonlazybind'
 	| 'norecurse'
 	| 'noredzone'
 	| 'noreturn'
+	| 'nosync'
 	| 'nounwind'
 	| 'optforfuzzing'
 	| 'optnone'
@@ -4680,6 +4687,7 @@ FuncAttr -> FuncAttr
 	| 'sanitize_address'
 	| 'sanitize_hwaddress'
 	| 'sanitize_memory'
+	| 'sanitize_memtag'
 	| 'sanitize_thread'
 	| 'shadowcallstack'
 	| 'speculatable'
@@ -4689,6 +4697,7 @@ FuncAttr -> FuncAttr
 	| 'sspstrong'
 	| 'strictfp'
 	| 'uwtable'
+	| 'willreturn'
 	| 'writeonly'
 ;
 
@@ -4804,7 +4813,8 @@ ParamAttribute -> ParamAttribute
 ;
 
 ParamAttr -> ParamAttr
-	: 'inalloca'
+	: 'immarg'
+	| 'inalloca'
 	| 'inreg'
 	| 'nest'
 	| 'noalias'
