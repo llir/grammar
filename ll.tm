@@ -4822,7 +4822,7 @@ ParamAttr -> ParamAttr
 ;
 
 Partition -> Partition
-	: 'partition' StringLit
+	: 'partition' Name=StringLit
 ;
 
 # https://llvm.org/docs/LangRef.html#runtime-preemption-model
