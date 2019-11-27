@@ -3268,6 +3268,7 @@ DIExpression -> DIExpression
 
 DIExpressionField -> DIExpressionField
 	: UintLit
+	| DwarfAttEncoding
 	| DwarfOp
 ;
 
