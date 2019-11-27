@@ -3951,7 +3951,7 @@ EmissionKindField -> EmissionKindField
 ;
 
 EncodingField -> EncodingField
-	: 'encoding:' Encoding=DwarfAttEncoding
+	: 'encoding:' Encoding=DwarfAttEncodingOrUint
 ;
 
 EntityField -> EntityField
@@ -4256,7 +4256,14 @@ DISPFlag -> DISPFlag
 DwarfAttEncoding -> DwarfAttEncoding
 	# DW_ATE_foo
 	: dwarf_att_encoding_tok   -> DwarfAttEncodingEnum
-	| UintLit                  -> DwarfAttEncodingInt
+;
+
+%interface DwarfAttEncodingOrUint;
+
+DwarfAttEncodingOrUint -> DwarfAttEncodingOrUint
+	# DW_ATE_foo
+	: DwarfAttEncoding
+	| UintLit            -> DwarfAttEncodingInt
 ;
 
 # ref: ParseMDField(DwarfCCField &Result)
