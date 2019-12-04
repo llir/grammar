@@ -1000,14 +1000,14 @@ FuncDef -> FuncDef
 # The shift/reduce conflict is present since FuncAttribute also contains 'align'.
 
 FuncHeader -> FuncHeader
-	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttribute* Sectionopt Partitionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
+	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttributeAndAlign* Sectionopt Partitionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
 ;
 
-# NODE: Named GCNode instead of GC to avoid collisions with 'gc' token. Both
+# NOTE: Named GCNode instead of GC to avoid collisions with 'gc' token. Both
 # define an identifier GC, the former in listener.go and the latter in
 # token.go.
 #
-# Upstream issue https://github.com/inspirer/textmapper/issues/18
+# Upstream issue: https://github.com/inspirer/textmapper/issues/18
 
 GC -> GCNode
 	: 'gc' Name=StringLit
@@ -4661,6 +4661,13 @@ FuncAttribute -> FuncAttribute
 	| FuncAttr
 ;
 
+%interface FuncAttributeAndAlign;
+
+FuncAttributeAndAlign -> FuncAttributeAndAlign
+	: FuncAttribute
+	| Align
+;
+
 FuncAttr -> FuncAttr
 	: 'alwaysinline'
 	| 'argmemonly'
@@ -4863,8 +4870,8 @@ ReturnAttribute -> ReturnAttribute
 	#    - `ReturnAttrs` cannot be nullable, since it precedes FuncAttrs
 	#: AttrString
 	#| AttrPair
-	: Align
-	| Dereferenceable
+	#: Align
+	: Dereferenceable
 	| ReturnAttr
 ;
 
