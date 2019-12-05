@@ -468,6 +468,7 @@ int_type_tok : /i[0-9]+/
 
 # Specialized metadata node names.
 '!DIBasicType' : /!DIBasicType/
+'!DICommonBlock' : /!DICommonBlock/
 '!DICompileUnit' : /!DICompileUnit/
 '!DICompositeType' : /!DICompositeType/
 '!DIDerivedType' : /!DIDerivedType/
@@ -3070,6 +3071,7 @@ MDNode -> MDNode
 
 SpecializedMDNode -> SpecializedMDNode
 	: DIBasicType
+	| DICommonBlock # not in spec as of 2019-12-05
 	| DICompileUnit
 	| DICompositeType
 	| DIDerivedType
@@ -3077,16 +3079,16 @@ SpecializedMDNode -> SpecializedMDNode
 	| DIExpression
 	| DIFile
 	| DIGlobalVariable
-	| DIGlobalVariableExpression # not in spec as of 2018-02-21
+	| DIGlobalVariableExpression
 	| DIImportedEntity
-	| DILabel # not in spec as of 2018-10-14
+	| DILabel # not in spec as of 2018-10-14, still not in spec as of 2019-12-05
 	| DILexicalBlock
 	| DILexicalBlockFile
 	| DILocalVariable
 	| DILocation
 	| DIMacro
 	| DIMacroFile
-	| DIModule # not in spec as of 2018-02-21
+	| DIModule # not in spec as of 2018-02-21, still not in spec as of 2019-12-05
 	| DINamespace
 	| DIObjCProperty
 	| DISubprogram
@@ -3094,7 +3096,7 @@ SpecializedMDNode -> SpecializedMDNode
 	| DISubroutineType
 	| DITemplateTypeParameter
 	| DITemplateValueParameter
-	| GenericDINode # not in spec as of 2018-02-21
+	| GenericDINode # not in spec as of 2018-02-21, still not in spec as of 2019-12-05
 ;
 
 # ~~~ [ DIBasicType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3128,6 +3130,34 @@ DIBasicTypeField -> DIBasicTypeField
 	| FlagsField
 ;
 
+# ~~~ [ DICommonBlock ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# TODO: add link to LangRef.html.
+
+# ref: ParseDICommonBlock
+#
+#   ::= !DICommonBlock(scope: !0, file: !2, name: "COMMON name", line: 9)
+#
+#  REQUIRED(scope, MDField, );
+#  OPTIONAL(declaration, MDField, );
+#  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(file, MDField, );
+#  OPTIONAL(line, LineField, );
+
+DICommonBlock -> DICommonBlock
+	: '!DICommonBlock' '(' Fields=(DICommonBlockField separator ',')* ')'
+;
+
+%interface DICommonBlockField;
+
+DICommonBlockField -> DICommonBlockField
+	: ScopeField
+	| DeclarationField
+	| NameField
+	| FileField
+	| LineField
+;
+
 # ~~~ [ DICompileUnit ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # https://llvm.org/docs/LangRef.html#dicompileunit
@@ -3141,7 +3171,7 @@ DIBasicTypeField -> DIBasicTypeField
 #                      globals: !4, imports: !5, macros: !6, dwoId: 0x0abcd)
 #
 #  REQUIRED(language, DwarfLangField, );
-#  REQUIRED(file, MDField, (AllowNull false));
+#  REQUIRED(file, MDField, (/* AllowNull */ false));
 #  OPTIONAL(producer, MDStringField, );
 #  OPTIONAL(isOptimized, MDBoolField, );
 #  OPTIONAL(flags, MDStringField, );
@@ -3157,7 +3187,7 @@ DIBasicTypeField -> DIBasicTypeField
 #  OPTIONAL(splitDebugInlining, MDBoolField, = true);
 #  OPTIONAL(debugInfoForProfiling, MDBoolField, = false);
 #  OPTIONAL(nameTableKind, NameTableKindField, );
-
+#  OPTIONAL(debugBaseAddress, MDBoolField, = false);
 
 DICompileUnit -> DICompileUnit
 	: '!DICompileUnit' '(' Fields=(DICompileUnitField separator ',')* ')'
@@ -3373,7 +3403,7 @@ DIFileField -> DIFileField
 #  OPTIONAL(type, MDField, );
 #  OPTIONAL(isLocal, MDBoolField, );
 #  OPTIONAL(isDefinition, MDBoolField, (true));
-#  OPTIONAL(templateParams, MDField, );                                         \
+#  OPTIONAL(templateParams, MDField, );
 #  OPTIONAL(declaration, MDField, );
 #  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
 
@@ -3458,9 +3488,9 @@ DIImportedEntityField -> DIImportedEntityField
 #
 #   ::= !DILabel(scope: !0, name: "foo", file: !1, line: 7)
 #
-#  REQUIRED(scope, MDField, (/* AllowNull */ false));                           \
-#  REQUIRED(name, MDStringField, );                                             \
-#  REQUIRED(file, MDField, );                                                   \
+#  REQUIRED(scope, MDField, (/* AllowNull */ false));
+#  REQUIRED(name, MDStringField, );
+#  REQUIRED(file, MDField, );
 #  REQUIRED(line, LineField, );
 
 DILabel -> DILabel
@@ -3539,9 +3569,9 @@ DILexicalBlockFileField -> DILexicalBlockFileField
 #                        file: !1, line: 7, type: !2, arg: 2, flags: 7,
 #                        align: 8)
 #
+#  REQUIRED(scope, MDField, (/* AllowNull */ false));
 #  OPTIONAL(name, MDStringField, );
 #  OPTIONAL(arg, MDUnsignedField, (0, UINT16_MAX));
-#  REQUIRED(scope, MDField, (AllowNull false));
 #  OPTIONAL(file, MDField, );
 #  OPTIONAL(line, LineField, );
 #  OPTIONAL(type, MDField, );
@@ -3555,9 +3585,9 @@ DILocalVariable -> DILocalVariable
 %interface DILocalVariableField;
 
 DILocalVariableField -> DILocalVariableField
-	: NameField
+	: ScopeField
+	| NameField
 	| ArgField
-	| ScopeField
 	| FileField
 	| LineField
 	| TypeField
@@ -3746,25 +3776,25 @@ DIObjCPropertyField -> DIObjCPropertyField
 #                     isOptimized: false, templateParams: !4, declaration: !5,
 #                     retainedNodes: !6, thrownTypes: !7)
 #
-#  OPTIONAL(scope, MDField, );                                                  \
-#  OPTIONAL(name, MDStringField, );                                             \
-#  OPTIONAL(linkageName, MDStringField, );                                      \
-#  OPTIONAL(file, MDField, );                                                   \
-#  OPTIONAL(line, LineField, );                                                 \
-#  OPTIONAL(type, MDField, );                                                   \
-#  OPTIONAL(isLocal, MDBoolField, );                                            \
-#  OPTIONAL(isDefinition, MDBoolField, (true));                                 \
-#  OPTIONAL(scopeLine, LineField, );                                            \
-#  OPTIONAL(containingType, MDField, );                                         \
-#  OPTIONAL(virtuality, DwarfVirtualityField, );                                \
-#  OPTIONAL(virtualIndex, MDUnsignedField, (0, UINT32_MAX));                    \
-#  OPTIONAL(thisAdjustment, MDSignedField, (0, INT32_MIN, INT32_MAX));          \
-#  OPTIONAL(flags, DIFlagField, );                                              \
-#  OPTIONAL(isOptimized, MDBoolField, );                                        \
-#  OPTIONAL(unit, MDField, );                                                   \
-#  OPTIONAL(templateParams, MDField, );                                         \
-#  OPTIONAL(declaration, MDField, );                                            \
-#  OPTIONAL(retainedNodes, MDField, );                                              \
+#  OPTIONAL(scope, MDField, );
+#  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(linkageName, MDStringField, );
+#  OPTIONAL(file, MDField, );
+#  OPTIONAL(line, LineField, );
+#  OPTIONAL(type, MDField, );
+#  OPTIONAL(isLocal, MDBoolField, );
+#  OPTIONAL(isDefinition, MDBoolField, (true));
+#  OPTIONAL(scopeLine, LineField, );
+#  OPTIONAL(containingType, MDField, );
+#  OPTIONAL(virtuality, DwarfVirtualityField, );
+#  OPTIONAL(virtualIndex, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(thisAdjustment, MDSignedField, (0, INT32_MIN, INT32_MAX));
+#  OPTIONAL(flags, DIFlagField, );
+#  OPTIONAL(isOptimized, MDBoolField, );
+#  OPTIONAL(unit, MDField, );
+#  OPTIONAL(templateParams, MDField, );
+#  OPTIONAL(declaration, MDField, );
+#  OPTIONAL(retainedNodes, MDField, );
 #  OPTIONAL(thrownTypes, MDField, );
 
 DISubprogram -> DISubprogram
