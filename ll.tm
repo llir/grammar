@@ -2892,7 +2892,7 @@ InvokeTerm -> InvokeTerm
 #       '[' LabelList ']'
 
 CallBrTerm -> CallBrTerm
-	: 'callbr' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label '[' Other=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
+	: 'callbr' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label '[' Others=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ resume ] ---------------------------------------------------------------
