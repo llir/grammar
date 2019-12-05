@@ -202,6 +202,7 @@ int_type_tok : /i[0-9]+/
 'byval' : /byval/
 'c' : /c/
 'call' : /call/
+'callbr' : /callbr/
 'caller' : /caller/
 'catch' : /catch/
 'catchpad' : /catchpad/
@@ -2791,6 +2792,7 @@ LocalDefTerm -> LocalDefTerm
 
 ValueTerminator -> ValueTerminator
 	: InvokeTerm
+	| CallBrTerm
 	| CatchSwitchTerm
 ;
 
@@ -2877,6 +2879,20 @@ IndirectBrTerm -> IndirectBrTerm
 
 InvokeTerm -> InvokeTerm
 	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label 'unwind' Exception=Label Metadata=(',' MetadataAttachment)+?
+;
+
+# --- [ callbr ] ---------------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#callbr-instruction
+
+# ref: ParseCallBr
+#
+#   ::= 'callbr' OptionalCallingConv OptionalAttrs Type Value ParamList
+#       OptionalAttrs OptionalOperandBundles 'to' TypeAndValue
+#       '[' LabelList ']'
+
+CallBrTerm -> CallBrTerm
+	: 'callbr' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label '[' Other=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ resume ] ---------------------------------------------------------------
