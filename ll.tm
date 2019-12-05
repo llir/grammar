@@ -906,8 +906,22 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
-	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	#: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	#| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type GlobalFields=(',' GlobalField)* Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant GlobalFields=(',' GlobalField)* Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+;
+
+# NOTE: GlobalField is a workaround to handle the LR-1 shift/reduce conflict
+# between FuncAttribute and Align, both of which contain 'align'.
+
+%interface GlobalField;
+
+GlobalField -> GlobalField
+	: Section
+	| Partition
+	| Comdat
+	| Align
 ;
 
 ExternallyInitialized -> ExternallyInitialized
@@ -996,11 +1010,26 @@ FuncDef -> FuncDef
 #       '(' ArgList ')' OptAddrSpace OptFuncAttrs OptSection OptPartition
 #       OptionalAlign OptGC OptionalPrefix OptionalPrologue OptPersonalityFn
 
-# TODO: Add Alignopt before GCopt once the LR-1 conflict has been resolved.
-# The shift/reduce conflict is present since FuncAttribute also contains 'align'.
-
 FuncHeader -> FuncHeader
-	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttributeAndAlign* Sectionopt Partitionopt Comdatopt GCopt Prefixopt Prologueopt Personalityopt
+	#: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncAttrs=FuncAttributeAndAlign* Sectionopt Partitionopt Comdatopt Alignopt GCopt Prefixopt Prologueopt Personalityopt
+	: (Linkage | ExternLinkage)? Preemptionopt Visibilityopt DLLStorageClassopt CallingConvopt ReturnAttrs=ReturnAttribute* RetType=Type Name=GlobalIdent '(' Params ')' UnnamedAddropt AddrSpaceopt FuncHdrFields=FuncHdrField*
+;
+
+# NOTE: FuncHdrField is a workaround to handle the LR-1 shift/reduce conflict
+# between FuncAttribute and Align, both of which contain 'align'.
+
+%interface FuncHdrField;
+
+FuncHdrField -> FuncHdrField
+	: FuncAttribute
+	| Section
+	| Partition
+	| Comdat
+	| Align
+	| GC
+	| Prefix
+	| Prologue
+	| Personality
 ;
 
 # NOTE: Named GCNode instead of GC to avoid collisions with 'gc' token. Both
@@ -2657,6 +2686,8 @@ SelectInst -> SelectInst
 #
 #  bundle-tag ::= String Constant
 
+# TODO: add align as valid function attribute to CallInst.
+
 CallInst -> CallInst
 	: Tailopt 'call' FastMathFlags=FastMathFlag* CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? Metadata=(',' MetadataAttachment)+?
 ;
@@ -2794,7 +2825,9 @@ BrTerm -> BrTerm
 ;
 
 # TODO: replace `IntType Value` with TypeValue when the parser generator
-# is capable of handling the shift/reduce conflict.
+# is capable of handling the shift/reduce conflict. When TypeValue is used, the
+# conflict happens as 'br' 'label' may be the start of either BrTerm or
+# CondBrTerm.
 
 # Conditional branch.
 CondBrTerm -> CondBrTerm
@@ -2839,6 +2872,8 @@ IndirectBrTerm -> IndirectBrTerm
 #
 #   ::= 'invoke' OptionalCallingConv OptionalAttrs Type Value ParamList
 #       OptionalAttrs 'to' TypeAndValue 'unwind' TypeAndValue
+
+# TODO: add align as valid function attribute to InvokeTerm.
 
 InvokeTerm -> InvokeTerm
 	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label 'unwind' Exception=Label Metadata=(',' MetadataAttachment)+?
@@ -3348,7 +3383,7 @@ DIGlobalVariableField -> DIGlobalVariableField
 
 # ~~~ [ DIGlobalVariableExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# TODO: add link to LangRef.html.
+# https://llvm.org/docs/LangRef.html#diglobalvariableexpression
 
 # ref: ParseDIGlobalVariableExpression
 #
@@ -4636,15 +4671,9 @@ FPred -> FPred
 #   ::= <attr> | <attr> '=' <value>
 
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
-# produces a reduce/reduce conflict as GlobalAttr also contains Align.
-#
-# To handle these ambiguities, (FuncAttribute | Align) is used in those places
-# where FuncAttribute is used outside of GlobalDef and GlobalDecl (which also has
-# GlobalAttr).
+# produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
 %interface FuncAttribute;
-
-# TODO: Figure out how to enable Align in FuncAttribute again.
 
 FuncAttribute -> FuncAttribute
 	: AttrString
@@ -4659,13 +4688,6 @@ FuncAttribute -> FuncAttribute
 	| AlignStackPair
 	| AllocSize
 	| FuncAttr
-;
-
-%interface FuncAttributeAndAlign;
-
-FuncAttributeAndAlign -> FuncAttributeAndAlign
-	: FuncAttribute
-	| Align
 ;
 
 FuncAttr -> FuncAttr
@@ -4760,12 +4782,6 @@ Label -> Label
 # this is not possible as it leads to shift/reduce conflicts (when merging
 # GlobalDecl and GlobalDef). Perhaps when the parser generator is better capable
 # at resolving conflicts.
-#
-#    ll.tm,812: input: TopLevelEntity_optlist GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable Type
-#    shift/reduce conflict (next: global_ident_tok)
-#        GlobalDecl : GlobalIdent '=' Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable Type
-#
-#    conflicts: 1 shift/reduce and 0 reduce/reduce
 
 Linkage -> Linkage
 	: 'appending'
@@ -4870,7 +4886,7 @@ ReturnAttribute -> ReturnAttribute
 	#    - `ReturnAttrs` cannot be nullable, since it precedes FuncAttrs
 	#: AttrString
 	#| AttrPair
-	#: Align
+	#| Align
 	: Dereferenceable
 	| ReturnAttr
 ;
