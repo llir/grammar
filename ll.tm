@@ -2659,7 +2659,7 @@ Inc -> Inc
 #   ::= 'select' TypeAndValue ',' TypeAndValue ',' TypeAndValue
 
 SelectInst -> SelectInst
-	: 'select' FastMathFlags=FastMathFlag* Cond=TypeValue ',' X=TypeValue ',' Y=TypeValue Metadata=(',' MetadataAttachment)+?
+	: 'select' FastMathFlags=FastMathFlag* Cond=TypeValue ',' ValueTrue=TypeValue ',' ValueFalse=TypeValue Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2748,7 +2748,7 @@ ClauseType -> ClauseType
 #   ::= 'catchpad' ParamList 'to' TypeAndValue 'unwind' TypeAndValue
 
 CatchPadInst -> CatchPadInst
-	: 'catchpad' 'within' Scope=LocalIdent '[' Args=(ExceptionArg separator ',')* ']' Metadata=(',' MetadataAttachment)+?
+	: 'catchpad' 'within' CatchSwitch=LocalIdent '[' Args=(ExceptionArg separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # ~~~ [ cleanuppad ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2758,7 +2758,7 @@ CatchPadInst -> CatchPadInst
 #   ::= 'cleanuppad' within Parent ParamList
 
 CleanupPadInst -> CleanupPadInst
-	: 'cleanuppad' 'within' Scope=ExceptionScope '[' Args=(ExceptionArg separator ',')* ']' Metadata=(',' MetadataAttachment)+?
+	: 'cleanuppad' 'within' ParentPad=ExceptionPad '[' Args=(ExceptionArg separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # === [ Terminators ] ==========================================================
@@ -2879,7 +2879,7 @@ IndirectBrTerm -> IndirectBrTerm
 # TODO: add align as valid function attribute to InvokeTerm.
 
 InvokeTerm -> InvokeTerm
-	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label 'unwind' Exception=Label Metadata=(',' MetadataAttachment)+?
+	: 'invoke' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Invokee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' NormalRetTarget=Label 'unwind' ExceptionRetTarget=Label Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ callbr ] ---------------------------------------------------------------
@@ -2893,7 +2893,7 @@ InvokeTerm -> InvokeTerm
 #       '[' LabelList ']'
 
 CallBrTerm -> CallBrTerm
-	: 'callbr' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' Normal=Label '[' Others=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
+	: 'callbr' CallingConvopt ReturnAttrs=ReturnAttribute* AddrSpaceopt Typ=Type Callee=Value '(' Args ')' FuncAttrs=FuncAttribute* OperandBundles=('[' (OperandBundle separator ',')+ ']')? 'to' NormalRetTarget=Label '[' OtherRetTargets=(Label separator ',')* ']' Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ resume ] ---------------------------------------------------------------
@@ -2917,7 +2917,7 @@ ResumeTerm -> ResumeTerm
 #   ::= 'catchswitch' within Parent
 
 CatchSwitchTerm -> CatchSwitchTerm
-	: 'catchswitch' 'within' Scope=ExceptionScope '[' Handlers=Handlers ']' 'unwind' UnwindTarget=UnwindTarget Metadata=(',' MetadataAttachment)+?
+	: 'catchswitch' 'within' ParentPad=ExceptionPad '[' Handlers=Handlers ']' 'unwind' DefaultUnwindTarget=UnwindTarget Metadata=(',' MetadataAttachment)+?
 ;
 
 # Use distinct production rule for Handlers. This is to avoid the Textmapper
@@ -2942,7 +2942,7 @@ Handlers -> Handlers
 #   ::= 'catchret' from Parent Value 'to' TypeAndValue
 
 CatchRetTerm -> CatchRetTerm
-	: 'catchret' 'from' From=Value 'to' To=Label Metadata=(',' MetadataAttachment)+?
+	: 'catchret' 'from' CatchPad=Value 'to' Target=Label Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ cleanupret ] -----------------------------------------------------------
@@ -2954,7 +2954,7 @@ CatchRetTerm -> CatchRetTerm
 #   ::= 'cleanupret' from Value unwind ('to' 'caller' | TypeAndValue)
 
 CleanupRetTerm -> CleanupRetTerm
-	: 'cleanupret' 'from' From=Value 'unwind' UnwindTarget Metadata=(',' MetadataAttachment)+?
+	: 'cleanupret' 'from' CleanupPad=Value 'unwind' UnwindTarget Metadata=(',' MetadataAttachment)+?
 ;
 
 # --- [ unreachable ] ----------------------------------------------------------
@@ -4671,9 +4671,9 @@ ExceptionArg -> ExceptionArg
 	| Typ=MetadataType Val=Metadata
 ;
 
-%interface ExceptionScope;
+%interface ExceptionPad;
 
-ExceptionScope -> ExceptionScope
+ExceptionPad -> ExceptionPad
 	: NoneConst
 	| LocalIdent
 ;
