@@ -117,13 +117,11 @@ name_table_kind_tok : /(GNU)|(None)|(Default)/
 # === [ Integer literals ] =====================================================
 
 #   Integer           [-]?[0-9]+
-#   HexIntConstant    [us]0x[0-9A-Fa-f]+
+#   HexIntConstant    [us]0x{_hex_digit}+
 
 int_lit_tok : /[-]?[0-9]+|{_int_hex_lit}/
 
-_int_hex_lit = /[us]0x[0-9A-Fa-f]+/
-
-_decimal_lit = /[-]?{_decimals}/
+_int_hex_lit = /[us]0x{_hex_digit}+/
 
 _decimals = /{_decimal_digit}+/
 
@@ -139,13 +137,13 @@ _sign = /[+-]/
 
 _sci_lit = /{_frac_lit}[eE]{_sign}?{_decimals}/
 
-#   HexFPConstant     0x[0-9A-Fa-f]+     // 16 hex digits
-#   HexFP80Constant   0xK[0-9A-Fa-f]+    // 20 hex digits
-#   HexFP128Constant  0xL[0-9A-Fa-f]+    // 32 hex digits
-#   HexPPC128Constant 0xM[0-9A-Fa-f]+    // 32 hex digits
-#   HexHalfConstant   0xH[0-9A-Fa-f]+    // 4 hex digits
+#   HexFPConstant     0x{_hex_digit}+     // 16 hex digits
+#   HexFP80Constant   0xK{_hex_digit}+    // 20 hex digits
+#   HexFP128Constant  0xL{_hex_digit}+    // 32 hex digits
+#   HexPPC128Constant 0xM{_hex_digit}+    // 32 hex digits
+#   HexHalfConstant   0xH{_hex_digit}+    // 4 hex digits
 
-_float_hex_lit = /0x[KLMH]?[0-9A-Fa-f]+/
+_float_hex_lit = /0x[KLMH]?{_hex_digit}+/
 
 # === [ String literals ] ======================================================
 
@@ -588,7 +586,8 @@ int_type_tok : /i[0-9]+/
 '<' : /[<]/
 '=' : /[=]/
 '>' : /[>]/
-'|' : /[|]/
+# TODO: use '|' (pipe_tok) : /[|]/ when https://github.com/inspirer/textmapper/issues/31 is resolved. See comments at https://github.com/inspirer/textmapper/pull/35#issuecomment-557939771
+pipe_tok : /[|]/
 
 # ### [ Syntax part ] ##########################################################
 
@@ -4298,10 +4297,10 @@ ChecksumKind -> ChecksumKind
 #
 #  ::= uint32
 #  ::= DIFlagVector
-#  ::= DIFlagVector '|' DIFlagFwdDecl '|' uint32 '|' DIFlagPublic
+#  ::= DIFlagVector pipe_tok DIFlagFwdDecl pipe_tok uint32 pipe_tok DIFlagPublic
 
 DIFlags -> DIFlags
-	: Flags=(DIFlag separator '|')+
+	: Flags=(DIFlag separator pipe_tok)+
 ;
 
 %interface DIFlag;
@@ -4316,10 +4315,10 @@ DIFlag -> DIFlag
 #
 #  ::= uint32
 #  ::= DISPFlagVector
-#  ::= DISPFlagVector '|' DISPFlag* '|' uint32
+#  ::= DISPFlagVector pipe_tok DISPFlag* pipe_tok uint32
 
 DISPFlags -> DISPFlags
-	: Flags=(DISPFlag separator '|')+
+	: Flags=(DISPFlag separator pipe_tok)+
 ;
 
 %interface DISPFlag;
