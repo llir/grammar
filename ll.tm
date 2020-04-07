@@ -2642,7 +2642,7 @@ FCmpInst -> FCmpInst
 #   ::= 'phi' FastMathFlag* Type '[' Value ',' Value ']' (',' '[' Value ',' Value ']')*
 
 PhiInst -> PhiInst
-	: 'phi' FastMathFlags=FastMathFlag+? Typ=Type Incs=(Inc separator ',')+ Metadata=(',' MetadataAttachment)+?
+	: 'phi' FastMathFlags=FastMathFlag* Typ=Type Incs=(Inc separator ',')+ Metadata=(',' MetadataAttachment)+?
 ;
 
 Inc -> Inc
