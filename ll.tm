@@ -2639,10 +2639,10 @@ FCmpInst -> FCmpInst
 
 # ref: ParsePHI
 #
-#   ::= 'phi' Type '[' Value ',' Value ']' (',' '[' Value ',' Value ']')*
+#   ::= 'phi' FastMathFlag* Type '[' Value ',' Value ']' (',' '[' Value ',' Value ']')*
 
 PhiInst -> PhiInst
-	: 'phi' Typ=Type Incs=(Inc separator ',')+ Metadata=(',' MetadataAttachment)+?
+	: 'phi' FastMathFlags=FastMathFlag* Typ=Type Incs=(Inc separator ',')+ Metadata=(',' MetadataAttachment)+?
 ;
 
 Inc -> Inc
