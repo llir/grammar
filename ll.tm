@@ -535,7 +535,7 @@ int_type_tok : /i[0-9]+/
 'isLocal:' : /isLocal:/
 'isOptimized:' : /isOptimized:/
 'isUnsigned:' : /isUnsigned:/
-'isysroot:' : /isysroot:/
+'sysroot:' : /sysroot:/
 'language:' : /language:/
 'line:' : /line:/
 'linkageName:' : /linkageName:/
@@ -657,7 +657,7 @@ LabelIdent -> LabelIdent
 	| 'isLocal:'
 	| 'isOptimized:'
 	| 'isUnsigned:'
-	| 'isysroot:'
+	| 'sysroot:'
 	| 'language:'
 	| 'line:'
 	| 'linkageName:'
@@ -3682,13 +3682,13 @@ DIMacroFileField -> DIMacroFileField
 # ref: ParseDIModule
 #
 #   ::= !DIModule(scope: !0, name: 'SomeModule', configMacros: '-DNDEBUG',
-#                 includePath: '/usr/include', isysroot: '/')
+#                 includePath: '/usr/include', sysroot: '/')
 #
 #  REQUIRED(scope, MDField, );
 #  REQUIRED(name, MDStringField, );
 #  OPTIONAL(configMacros, MDStringField, );
 #  OPTIONAL(includePath, MDStringField, );
-#  OPTIONAL(isysroot, MDStringField, );
+#  OPTIONAL(sysroot, MDStringField, );
 
 DIModule -> DIModule
 	: '!DIModule' '(' Fields=(DIModuleField separator ',')* ')'
@@ -3701,7 +3701,7 @@ DIModuleField -> DIModuleField
 	| NameField
 	| ConfigMacrosField
 	| IncludePathField
-	| IsysrootField
+	|  SysrootField
 ;
 
 # ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4118,8 +4118,8 @@ IsUnsignedField -> IsUnsignedField
 	: 'isUnsigned:' IsUnsigned=BoolLit
 ;
 
-IsysrootField -> IsysrootField
-	: 'isysroot:' Isysroot=StringLit
+SysrootField -> SysrootField
+	: 'sysroot:' Sysroot=StringLit
 ;
 
 LanguageField -> LanguageField
