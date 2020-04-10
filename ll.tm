@@ -3701,7 +3701,7 @@ DIModuleField -> DIModuleField
 	| NameField
 	| ConfigMacrosField
 	| IncludePathField
-	|  SysrootField
+	| SysrootField
 ;
 
 # ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
