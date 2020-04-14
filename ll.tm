@@ -155,7 +155,8 @@ _quoted_string = /["][^"]*["]/
 
 int_type_tok : /i[0-9]+/
 
-// List of tokens is sorted alphabetically.
+# List of tokens is sorted alphabetically.
+
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
 'acquire' : /acquire/
@@ -1960,9 +1961,9 @@ LocalDefInst -> LocalDefInst
 
 %interface ValueInstruction;
 
-// List of value instructions is sorted in the same order as the LLVM LangRef.
-//
-// ref: https://llvm.org/docs/LangRef.html#instruction-reference
+# List of value instructions is sorted in the same order as the LLVM LangRef.
+#
+# ref: https://llvm.org/docs/LangRef.html#instruction-reference
 ValueInstruction -> ValueInstruction
 	# Unary instructions
 	: FNegInst
