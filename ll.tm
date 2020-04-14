@@ -349,6 +349,7 @@ int_type_tok : /i[0-9]+/
 'partition' : /partition/
 'personality' : /personality/
 'phi' : /phi/
+'freeze' : /freeze/
 'ppc_fp128' : /ppc_fp128/
 'prefix' : /prefix/
 'preserve_allcc' : /preserve_allcc/
@@ -2018,6 +2019,7 @@ ValueInstruction -> ValueInstruction
 	| LandingPadInst
 	| CatchPadInst
 	| CleanupPadInst
+	| FreezeInst
 ;
 
 # --- [ Unary instructions ] ---------------------------------------------------
@@ -2659,6 +2661,18 @@ Inc -> Inc
 
 SelectInst -> SelectInst
 	: 'select' FastMathFlags=FastMathFlag* Cond=TypeValue ',' ValueTrue=TypeValue ',' ValueFalse=TypeValue Metadata=(',' MetadataAttachment)+?
+;
+
+# ~~~ [ freeze ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://llvm.org/docs/LangRef.html#freeze-instruction
+
+# ref: ParseFreeze
+#
+#   ::= 'freeze' Type Value
+
+FreezeInst -> FreezeInst
+    : 'freeze' X=TypeValue
 ;
 
 # ~~~ [ call ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
