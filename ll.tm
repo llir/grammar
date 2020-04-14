@@ -155,6 +155,7 @@ _quoted_string = /["][^"]*["]/
 
 int_type_tok : /i[0-9]+/
 
+// List of tokens is sorted alphabetically.
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
 'acquire' : /acquire/
@@ -256,6 +257,7 @@ int_type_tok : /i[0-9]+/
 'fptosi' : /fptosi/
 'fptoui' : /fptoui/
 'fptrunc' : /fptrunc/
+'freeze' : /freeze/
 'frem' : /frem/
 'from' : /from/
 'fsub' : /fsub/
@@ -349,7 +351,6 @@ int_type_tok : /i[0-9]+/
 'partition' : /partition/
 'personality' : /personality/
 'phi' : /phi/
-'freeze' : /freeze/
 'ppc_fp128' : /ppc_fp128/
 'prefix' : /prefix/
 'preserve_allcc' : /preserve_allcc/
@@ -1959,6 +1960,9 @@ LocalDefInst -> LocalDefInst
 
 %interface ValueInstruction;
 
+// List of value instructions is sorted in the same order as the LLVM LangRef.
+//
+// ref: https://llvm.org/docs/LangRef.html#instruction-reference
 ValueInstruction -> ValueInstruction
 	# Unary instructions
 	: FNegInst
@@ -2014,12 +2018,12 @@ ValueInstruction -> ValueInstruction
 	| FCmpInst
 	| PhiInst
 	| SelectInst
+	| FreezeInst
 	| CallInst
 	| VAArgInst
 	| LandingPadInst
 	| CatchPadInst
 	| CleanupPadInst
-	| FreezeInst
 ;
 
 # --- [ Unary instructions ] ---------------------------------------------------
