@@ -4914,6 +4914,7 @@ ParamAttr -> ParamAttr
 	| 'nest'
 	| 'noalias'
 	| 'nocapture'
+	| 'nofree'
 	| 'nonnull'
 	| 'readnone'
 	| 'readonly'
