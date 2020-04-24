@@ -157,6 +157,7 @@ int_type_tok : /i[0-9]+/
 
 # List of tokens is sorted alphabetically.
 
+'aarch64_sve_vector_pcs' : /aarch64_sve_vector_pcs/
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
 'acquire' : /acquire/
@@ -187,9 +188,6 @@ int_type_tok : /i[0-9]+/
 'arm_aapcs_vfpcc' : /arm_aapcs_vfpcc/
 'arm_aapcscc' : /arm_aapcscc/
 'arm_apcscc' : /arm_apcscc/
-'cfguard_checkcc' : /cfguard_checkcc/
-'tailcc' : /tailcc/
-'aarch64_sve_vector_pcs' : /aarch64_sve_vector_pcs/
 'ashr' : /ashr/
 'asm' : /asm/
 'atomic' : /atomic/
@@ -213,6 +211,7 @@ int_type_tok : /i[0-9]+/
 'catchswitch' : /catchswitch/
 'cc' : /cc/
 'ccc' : /ccc/
+'cfguard_checkcc' : /cfguard_checkcc/
 'cleanup' : /cleanup/
 'cleanuppad' : /cleanuppad/
 'cleanupret' : /cleanupret/
@@ -415,6 +414,7 @@ int_type_tok : /i[0-9]+/
 'switch' : /switch/
 'syncscope' : /syncscope/
 'tail' : /tail/
+'tailcc' : /tailcc/
 'target' : /target/
 'thread_local' : /thread_local/
 'to' : /to/
@@ -4604,7 +4604,8 @@ CallingConv -> CallingConv
 ;
 
 CallingConvEnum -> CallingConvEnum
-	: 'aarch64_vector_pcs'
+	: 'aarch64_sve_vector_pcs'
+	| 'aarch64_vector_pcs'
 	| 'amdgpu_cs'
 	| 'amdgpu_es'
 	| 'amdgpu_gs'
@@ -4620,13 +4621,11 @@ CallingConvEnum -> CallingConvEnum
 	| 'avr_intrcc'
 	| 'avr_signalcc'
 	| 'ccc'
-	| 'coldcc'
 	| 'cfguard_checkcc'
+	| 'coldcc'
 	| 'cxx_fast_tlscc'
 	| 'fastcc'
 	| 'ghccc'
-	| 'tailcc'
-	| 'aarch64_sve_vector_pcs'
 	| 'hhvm_ccc'
 	| 'hhvmcc'
 	| 'intel_ocl_bicc'
@@ -4638,6 +4637,7 @@ CallingConvEnum -> CallingConvEnum
 	| 'spir_func'
 	| 'spir_kernel'
 	| 'swiftcc'
+	| 'tailcc'
 	| 'webkit_jscc'
 	| 'win64cc'
 	| 'x86_64_sysvcc'
