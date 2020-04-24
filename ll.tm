@@ -187,6 +187,9 @@ int_type_tok : /i[0-9]+/
 'arm_aapcs_vfpcc' : /arm_aapcs_vfpcc/
 'arm_aapcscc' : /arm_aapcscc/
 'arm_apcscc' : /arm_apcscc/
+'cfguard_checkcc' : /cfguard_checkcc/
+'tailcc' : /tailcc/
+'aarch64_sve_vector_pcs' : /aarch64_sve_vector_pcs/
 'ashr' : /ashr/
 'asm' : /asm/
 'atomic' : /atomic/
@@ -4553,6 +4556,7 @@ Byval -> Byval
 #   ::= 'fastcc'
 #   ::= 'intel_ocl_bicc'
 #   ::= 'coldcc'
+#   ::= 'cfguard_checkcc'
 #   ::= 'x86_stdcallcc'
 #   ::= 'x86_fastcallcc'
 #   ::= 'x86_thiscallcc'
@@ -4561,6 +4565,7 @@ Byval -> Byval
 #   ::= 'arm_aapcscc'
 #   ::= 'arm_aapcs_vfpcc'
 #   ::= 'aarch64_vector_pcs'
+#   ::= 'aarch64_sve_vector_pcs'
 #   ::= 'msp430_intrcc'
 #   ::= 'avr_intrcc'
 #   ::= 'avr_signalcc'
@@ -4588,6 +4593,7 @@ Byval -> Byval
 #   ::= 'amdgpu_ps'
 #   ::= 'amdgpu_cs'
 #   ::= 'amdgpu_kernel'
+#   ::= 'tailcc'
 #   ::= 'cc' UINT
 
 %interface CallingConv;
@@ -4615,9 +4621,12 @@ CallingConvEnum -> CallingConvEnum
 	| 'avr_signalcc'
 	| 'ccc'
 	| 'coldcc'
+	| 'cfguard_checkcc'
 	| 'cxx_fast_tlscc'
 	| 'fastcc'
 	| 'ghccc'
+	| 'tailcc'
+	| 'aarch64_sve_vector_pcs'
 	| 'hhvm_ccc'
 	| 'hhvmcc'
 	| 'intel_ocl_bicc'
