@@ -541,7 +541,7 @@ int_type_tok : /i[0-9]+/
 'isLocal:' : /isLocal:/
 'isOptimized:' : /isOptimized:/
 'isUnsigned:' : /isUnsigned:/
-'sysroot:' : /sysroot:/
+'apinotes:' : /apinotes:/
 'language:' : /language:/
 'line:' : /line:/
 'linkageName:' : /linkageName:/
@@ -663,7 +663,7 @@ LabelIdent -> LabelIdent
 	| 'isLocal:'
 	| 'isOptimized:'
 	| 'isUnsigned:'
-	| 'sysroot:'
+	| 'apinotes:'
 	| 'language:'
 	| 'line:'
 	| 'linkageName:'
@@ -3703,14 +3703,17 @@ DIMacroFileField -> DIMacroFileField
 
 # ref: ParseDIModule
 #
-#   ::= !DIModule(scope: !0, name: 'SomeModule', configMacros: '-DNDEBUG',
-#                 includePath: '/usr/include', sysroot: '/')
+#   ::= !DIModule(scope: !0, name: "SomeModule", configMacros:
+#   "-DNDEBUG", includePath: "/usr/include", apinotes: "module.apinotes",
+#   file: !1, line: 4)
 #
 #  REQUIRED(scope, MDField, );
 #  REQUIRED(name, MDStringField, );
 #  OPTIONAL(configMacros, MDStringField, );
 #  OPTIONAL(includePath, MDStringField, );
-#  OPTIONAL(sysroot, MDStringField, );
+#  OPTIONAL(apinotes, MDStringField, );
+#  OPTIONAL(file, MDField, );
+#  OPTIONAL(line, LineField, );
 
 DIModule -> DIModule
 	: '!DIModule' '(' Fields=(DIModuleField separator ',')* ')'
@@ -3723,7 +3726,9 @@ DIModuleField -> DIModuleField
 	| NameField
 	| ConfigMacrosField
 	| IncludePathField
-	| SysrootField
+	| APINotesField
+	| FileField
+	| LineField
 ;
 
 # ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4140,8 +4145,8 @@ IsUnsignedField -> IsUnsignedField
 	: 'isUnsigned:' IsUnsigned=BoolLit
 ;
 
-SysrootField -> SysrootField
-	: 'sysroot:' Sysroot=StringLit
+APINotesField -> APINotesField
+	: 'apinotes:' APINotes=StringLit
 ;
 
 LanguageField -> LanguageField
