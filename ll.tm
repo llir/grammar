@@ -3871,7 +3871,16 @@ DISubprogramField -> DISubprogramField
 #  OPTIONAL(stride, MDSignedOrMDField, );
 
 DISubrange -> DISubrange
-	: '!DISubrange' '(' CountField=CountField? LowerBoundField=LowerBoundField? UpperBoundField=UpperBoundField? StrideField=StrideField? ')'
+	: '!DISubrange' '(' Fields=(DISubrangeField separator ',')* ')'
+;
+
+%interface DISubrangeField;
+
+DISubrangeField -> DISubrangeField
+	: CountField
+	| LowerBoundField
+	| UpperBoundField
+	| StrideField
 ;
 
 # ~~~ [ DISubroutineType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
