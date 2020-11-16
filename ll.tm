@@ -565,6 +565,7 @@ int_type_tok : /i[0-9]+/
 'spFlags:' : /spFlags:/
 'splitDebugFilename:' : /splitDebugFilename:/
 'splitDebugInlining:' : /splitDebugInlining:/
+'stride:' : /stride:/
 'tag:' : /tag:/
 'templateParams:' : /templateParams:/
 'thisAdjustment:' : /thisAdjustment:/
@@ -572,6 +573,7 @@ int_type_tok : /i[0-9]+/
 'type:' : /type:/
 'types:' : /types:/
 'unit:' : /unit:/
+'upperBound:' : /upperBound:/
 'value:' : /value:/
 'var:' : /var:/
 'virtualIndex:' : /virtualIndex:/
@@ -3861,12 +3863,15 @@ DISubprogramField -> DISubprogramField
 #
 #   ::= !DISubrange(count: 30, lowerBound: 2)
 #   ::= !DISubrange(count: !node, lowerBound: 2)
+#   ::= !DISubrange(lowerBound: !node1, upperBound: !node2, stride: !node3)
 #
-#  REQUIRED(count, MDSignedOrMDField, (-1, -1, INT64_MAX, false));
-#  OPTIONAL(lowerBound, MDSignedField, );
+#  OPTIONAL(count, MDSignedOrMDField, (-1, -1, INT64_MAX, false));
+#  OPTIONAL(lowerBound, MDSignedOrMDField, );
+#  OPTIONAL(upperBound, MDSignedOrMDField, );
+#  OPTIONAL(stride, MDSignedOrMDField, );
 
 DISubrange -> DISubrange
-	: '!DISubrange' '(' Fields=(DISubrangeField separator ',')* ')'
+	: '!DISubrange' '(' CountField=CountField? LowerBoundField=LowerBoundField? UpperBoundField=UpperBoundField? StrideField=StrideField? ')'
 ;
 
 %interface DISubrangeField;
@@ -3874,6 +3879,8 @@ DISubrange -> DISubrange
 DISubrangeField -> DISubrangeField
 	: CountField
 	| LowerBoundField
+	| UpperBoundField
+	| StrideField
 ;
 
 # ~~~ [ DISubroutineType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4162,7 +4169,15 @@ LinkageNameField -> LinkageNameField
 ;
 
 LowerBoundField -> LowerBoundField
-	: 'lowerBound:' LowerBound=IntLit
+	: 'lowerBound:' LowerBound=MDFieldOrInt
+;
+
+UpperBoundField -> UpperBoundField
+	: 'upperBound:' UpperBound=MDFieldOrInt
+;
+
+StrideField -> StrideField
+	: 'stride:' Stride=MDFieldOrInt
 ;
 
 MacrosField -> MacrosField
