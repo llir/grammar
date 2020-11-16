@@ -201,6 +201,7 @@ int_type_tok : /i[0-9]+/
 'br' : /br/
 'builtin' : /builtin/
 'byval' : /byval/
+'blockcount': /blockcount/
 'c' : /c/
 'call' : /call/
 'callbr' : /callbr/
@@ -321,6 +322,7 @@ int_type_tok : /i[0-9]+/
 'nobuiltin' : /nobuiltin/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
+'noundef': /noundef/
 'noduplicate' : /noduplicate/
 'noduplicates' : /noduplicates/
 'nofree' : /nofree/
@@ -328,6 +330,7 @@ int_type_tok : /i[0-9]+/
 'noinline' : /noinline/
 'none' : /none/
 'nonlazybind' : /nonlazybind/
+'nomerge' : /nomerge/
 'nonnull' : /nonnull/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
@@ -335,6 +338,7 @@ int_type_tok : /i[0-9]+/
 'nosync' : /nosync/
 'notail' : /notail/
 'nounwind' : /nounwind/
+'null_pointer_is_valid': /null_pointer_is_valid/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -364,6 +368,9 @@ int_type_tok : /i[0-9]+/
 'ptrtoint' : /ptrtoint/
 'ptx_device' : /ptx_device/
 'ptx_kernel' : /ptx_kernel/
+'preallocated': /preallocated/
+'params' : /params/
+'param' : /param/
 'readnone' : /readnone/
 'readonly' : /readonly/
 'reassoc' : /reassoc/
@@ -447,6 +454,7 @@ int_type_tok : /i[0-9]+/
 'void' : /void/
 'volatile' : /volatile/
 'vscale' : /vscale/
+'vcall_visibility' : /vcall_visibility/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
