@@ -3874,15 +3874,6 @@ DISubrange -> DISubrange
 	: '!DISubrange' '(' CountField=CountField? LowerBoundField=LowerBoundField? UpperBoundField=UpperBoundField? StrideField=StrideField? ')'
 ;
 
-%interface DISubrangeField;
-
-DISubrangeField -> DISubrangeField
-	: CountField
-	| LowerBoundField
-	| UpperBoundField
-	| StrideField
-;
-
 # ~~~ [ DISubroutineType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # https://llvm.org/docs/LangRef.html#disubroutinetype
