@@ -198,10 +198,10 @@ int_type_tok : /i[0-9]+/
 'avr_signalcc' : /avr_signalcc/
 'bitcast' : /bitcast/
 'blockaddress' : /blockaddress/
+'blockcount': /blockcount/
 'br' : /br/
 'builtin' : /builtin/
 'byval' : /byval/
-'blockcount': /blockcount/
 'c' : /c/
 'call' : /call/
 'callbr' : /callbr/
@@ -322,26 +322,26 @@ int_type_tok : /i[0-9]+/
 'nobuiltin' : /nobuiltin/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
-'noundef': /noundef/
 'noduplicate' : /noduplicate/
 'noduplicates' : /noduplicates/
 'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
+'nomerge' : /nomerge/
 'none' : /none/
 'nonlazybind' : /nonlazybind/
-'nomerge' : /nomerge/
 'nonnull' : /nonnull/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
 'nosync' : /nosync/
 'notail' : /notail/
+'noundef': /noundef/
 'nounwind' : /nounwind/
-'null_pointer_is_valid': /null_pointer_is_valid/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
+'null_pointer_is_valid': /null_pointer_is_valid/
 'nuw' : /nuw/
 'oeq' : /oeq/
 'oge' : /oge/
@@ -355,10 +355,13 @@ int_type_tok : /i[0-9]+/
 'optsize' : /optsize/
 'or' : /or/
 'ord' : /ord/
+'param' : /param/
+'params' : /params/
 'partition' : /partition/
 'personality' : /personality/
 'phi' : /phi/
 'ppc_fp128' : /ppc_fp128/
+'preallocated': /preallocated/
 'prefix' : /prefix/
 'preserve_allcc' : /preserve_allcc/
 'preserve_mostcc' : /preserve_mostcc/
@@ -368,9 +371,6 @@ int_type_tok : /i[0-9]+/
 'ptrtoint' : /ptrtoint/
 'ptx_device' : /ptx_device/
 'ptx_kernel' : /ptx_kernel/
-'preallocated': /preallocated/
-'params' : /params/
-'param' : /param/
 'readnone' : /readnone/
 'readonly' : /readonly/
 'reassoc' : /reassoc/
@@ -451,10 +451,10 @@ int_type_tok : /i[0-9]+/
 'uselistorder_bb' : /uselistorder_bb/
 'uwtable' : /uwtable/
 'va_arg' : /va_arg/
+'vcall_visibility' : /vcall_visibility/
 'void' : /void/
 'volatile' : /volatile/
 'vscale' : /vscale/
-'vcall_visibility' : /vcall_visibility/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
@@ -4180,14 +4180,6 @@ LowerBoundField -> LowerBoundField
 	: 'lowerBound:' LowerBound=MDFieldOrInt
 ;
 
-UpperBoundField -> UpperBoundField
-	: 'upperBound:' UpperBound=MDFieldOrInt
-;
-
-StrideField -> StrideField
-	: 'stride:' Stride=MDFieldOrInt
-;
-
 MacrosField -> MacrosField
 	: 'macros:' Macros=MDField
 ;
@@ -4265,6 +4257,10 @@ SplitDebugInliningField -> SplitDebugInliningField
 	: 'splitDebugInlining:' SplitDebugInlining=BoolLit
 ;
 
+StrideField -> StrideField
+	: 'stride:' Stride=MDFieldOrInt
+;
+
 TagField -> TagField
 	: 'tag:' Tag=DwarfTag
 ;
@@ -4295,6 +4291,10 @@ TypesField -> TypesField
 
 UnitField -> UnitField
 	: 'unit:' Unit=MDField
+;
+
+UpperBoundField -> UpperBoundField
+	: 'upperBound:' UpperBound=MDFieldOrInt
 ;
 
 ValueField -> ValueField
