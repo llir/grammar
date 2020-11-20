@@ -3360,7 +3360,7 @@ DIEnumerator -> DIEnumerator
 
 DIEnumeratorField -> DIEnumeratorField
 	: NameField
-	| ValueIntField
+	| ValueUIntField
 	| IsUnsignedField
 ;
 
@@ -4301,8 +4301,8 @@ ValueField -> ValueField
 	: 'value:' Value=MDField
 ;
 
-ValueIntField -> ValueIntField
-	: 'value:' Value=IntLit
+ValueUIntField -> ValueUIntField
+	: 'value:' Value=UintLit
 ;
 
 ValueStringField -> ValueStringField
