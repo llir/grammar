@@ -3269,6 +3269,7 @@ DICompileUnitField -> DICompileUnitField
 #  OPTIONAL(templateParams, MDField, );
 #  OPTIONAL(identifier, MDStringField, );
 #  OPTIONAL(discriminator, MDField, );
+#  OPTIONAL(dataLocation, MDField, );
 
 DICompositeType -> DICompositeType
 	: '!DICompositeType' '(' Fields=(DICompositeTypeField separator ',')* ')'
