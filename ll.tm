@@ -3293,6 +3293,7 @@ DICompositeTypeField -> DICompositeTypeField
 	| TemplateParamsField
 	| IdentifierField
 	| DiscriminatorField
+	| DataLocationField
 ;
 
 # ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4050,6 +4051,11 @@ DirectoryField -> DirectoryField
 
 DiscriminatorField -> DiscriminatorField
 	: 'discriminator:' Discriminator=MDField
+;
+
+
+DataLocationField -> DataLocationField
+	: 'dataLocation:' DataLocation=MDField
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
