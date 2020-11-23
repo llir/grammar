@@ -3269,6 +3269,7 @@ DICompileUnitField -> DICompileUnitField
 #  OPTIONAL(templateParams, MDField, );
 #  OPTIONAL(identifier, MDStringField, );
 #  OPTIONAL(discriminator, MDField, );
+#  OPTIONAL(dataLocation, MDField, );
 
 DICompositeType -> DICompositeType
 	: '!DICompositeType' '(' Fields=(DICompositeTypeField separator ',')* ')'
@@ -3293,6 +3294,7 @@ DICompositeTypeField -> DICompositeTypeField
 	| TemplateParamsField
 	| IdentifierField
 	| DiscriminatorField
+	| DataLocationField
 ;
 
 # ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4050,6 +4052,11 @@ DirectoryField -> DirectoryField
 
 DiscriminatorField -> DiscriminatorField
 	: 'discriminator:' Discriminator=MDField
+;
+
+
+DataLocationField -> DataLocationField
+	: 'dataLocation:' DataLocation=MDField
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
