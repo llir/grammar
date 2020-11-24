@@ -519,6 +519,7 @@ int_type_tok : /i[0-9]+/
 'configMacros:' : /configMacros:/
 'containingType:' : /containingType:/
 'count:' : /count:/
+'dataLocation:' : /dataLocation:/
 'debugBaseAddress:' : /debugBaseAddress:/
 'debugInfoForProfiling:' : /debugInfoForProfiling:/
 'declaration:' : /declaration:/
