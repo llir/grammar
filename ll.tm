@@ -142,8 +142,9 @@ _sci_lit = /{_frac_lit}[eE]{_sign}?{_decimals}/
 #   HexFP128Constant  0xL{_hex_digit}+    // 32 hex digits
 #   HexPPC128Constant 0xM{_hex_digit}+    // 32 hex digits
 #   HexHalfConstant   0xH{_hex_digit}+    // 4 hex digits
+#   HexBFloatConstant 0xR{_hex_digit}+    // 4 hex digits
 
-_float_hex_lit = /0x[KLMH]?{_hex_digit}+/
+_float_hex_lit = /0x[KLMHR]?{_hex_digit}+/
 
 # === [ String literals ] ======================================================
 
@@ -202,6 +203,7 @@ int_type_tok : /i[0-9]+/
 'br' : /br/
 'builtin' : /builtin/
 'byval' : /byval/
+'bfloat' : /bfloat/
 'c' : /c/
 'call' : /call/
 'callbr' : /callbr/
@@ -1237,6 +1239,7 @@ FloatType -> FloatType
 
 FloatKind -> FloatKind
 	: 'half'
+	| 'bfloat'
 	| 'float'
 	| 'double'
 	| 'x86_fp80'
