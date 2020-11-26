@@ -197,13 +197,13 @@ int_type_tok : /i[0-9]+/
 'available_externally' : /available_externally/
 'avr_intrcc' : /avr_intrcc/
 'avr_signalcc' : /avr_signalcc/
+'bfloat' : /bfloat/
 'bitcast' : /bitcast/
 'blockaddress' : /blockaddress/
 'blockcount': /blockcount/
 'br' : /br/
 'builtin' : /builtin/
 'byval' : /byval/
-'bfloat' : /bfloat/
 'c' : /c/
 'call' : /call/
 'callbr' : /callbr/
