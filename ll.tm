@@ -568,6 +568,9 @@ int_type_tok : /i[0-9]+/
 'retainedTypes:' : /retainedTypes:/
 'runtimeLang:' : /runtimeLang:/
 'runtimeVersion:' : /runtimeVersion:/
+'rangesBaseAddress:' : /rangesBaseAddress:/
+'sysroot:' : /sysroot:/
+'sdk:' : /sdk:/
 'scope:' : /scope:/
 'scopeLine:' : /scopeLine:/
 'setter:' : /setter:/
@@ -3222,7 +3225,9 @@ DICommonBlockField -> DICommonBlockField
 #  OPTIONAL(splitDebugInlining, MDBoolField, = true);
 #  OPTIONAL(debugInfoForProfiling, MDBoolField, = false);
 #  OPTIONAL(nameTableKind, NameTableKindField, );
-#  OPTIONAL(debugBaseAddress, MDBoolField, = false);
+#  OPTIONAL(rangesBaseAddress, MDBoolField, = false);
+#  OPTIONAL(sysroot, MDStringField, );
+#  OPTIONAL(sdk, MDStringField, );
 
 DICompileUnit -> DICompileUnit
 	: '!DICompileUnit' '(' Fields=(DICompileUnitField separator ',')* ')'
@@ -3248,7 +3253,9 @@ DICompileUnitField -> DICompileUnitField
 	| SplitDebugInliningField
 	| DebugInfoForProfilingField
 	| NameTableKindField
-	| DebugBaseAddressField
+	| RangesBaseAddressField
+	| SysrootField
+	| SdkField
 ;
 
 # ~~~ [ DICompositeType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4038,8 +4045,16 @@ CountField -> CountField
 	: 'count:' Count=MDFieldOrInt
 ;
 
-DebugBaseAddressField -> DebugBaseAddressField
-	: 'debugBaseAddress:' DebugBaseAddress=BoolLit
+RangesBaseAddressField -> RangesBaseAddressField
+	: 'rangesBaseAddress:' RangesBaseAddress=BoolLit
+;
+
+SysrootField -> SysrootField
+	: 'sysroot:' Sysroot=StringLit
+;
+
+SdkField -> SdkField
+	: 'sdk:' Sdk=StringLit
 ;
 
 DebugInfoForProfilingField -> DebugInfoForProfilingField
