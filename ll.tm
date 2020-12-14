@@ -511,6 +511,7 @@ int_type_tok : /i[0-9]+/
 
 # Specialized metadata node field names.
 'align:' : /align:/
+'apinotes:' : /apinotes:/
 'arg:' : /arg:/
 'attributes:' : /attributes:/
 'baseType:' : /baseType:/
@@ -552,7 +553,6 @@ int_type_tok : /i[0-9]+/
 'isLocal:' : /isLocal:/
 'isOptimized:' : /isOptimized:/
 'isUnsigned:' : /isUnsigned:/
-'apinotes:' : /apinotes:/
 'language:' : /language:/
 'line:' : /line:/
 'linkageName:' : /linkageName:/
@@ -564,15 +564,14 @@ int_type_tok : /i[0-9]+/
 'offset:' : /offset:/
 'operands:' : /operands:/
 'producer:' : /producer:/
+'rangesBaseAddress:' : /rangesBaseAddress:/
 'retainedNodes:' : /retainedNodes:/
 'retainedTypes:' : /retainedTypes:/
 'runtimeLang:' : /runtimeLang:/
 'runtimeVersion:' : /runtimeVersion:/
-'rangesBaseAddress:' : /rangesBaseAddress:/
-'sysroot:' : /sysroot:/
-'sdk:' : /sdk:/
 'scope:' : /scope:/
 'scopeLine:' : /scopeLine:/
+'sdk:' : /sdk:/
 'setter:' : /setter:/
 'size:' : /size:/
 'source:' : /source:/
@@ -580,6 +579,7 @@ int_type_tok : /i[0-9]+/
 'splitDebugFilename:' : /splitDebugFilename:/
 'splitDebugInlining:' : /splitDebugInlining:/
 'stride:' : /stride:/
+'sysroot:' : /sysroot:/
 'tag:' : /tag:/
 'templateParams:' : /templateParams:/
 'thisAdjustment:' : /thisAdjustment:/
@@ -3255,7 +3255,7 @@ DICompileUnitField -> DICompileUnitField
 	| NameTableKindField
 	| RangesBaseAddressField
 	| SysrootField
-	| SdkField
+	| SDKField
 ;
 
 # ~~~ [ DICompositeType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4045,18 +4045,6 @@ CountField -> CountField
 	: 'count:' Count=MDFieldOrInt
 ;
 
-RangesBaseAddressField -> RangesBaseAddressField
-	: 'rangesBaseAddress:' RangesBaseAddress=BoolLit
-;
-
-SysrootField -> SysrootField
-	: 'sysroot:' Sysroot=StringLit
-;
-
-SdkField -> SdkField
-	: 'sdk:' Sdk=StringLit
-;
-
 DebugInfoForProfilingField -> DebugInfoForProfilingField
 	: 'debugInfoForProfiling:' DebugInfoForProfiling=BoolLit
 ;
@@ -4235,6 +4223,10 @@ ProducerField -> ProducerField
 	: 'producer:' Producer=StringLit
 ;
 
+RangesBaseAddressField -> RangesBaseAddressField
+	: 'rangesBaseAddress:' RangesBaseAddress=BoolLit
+;
+
 RetainedNodesField -> RetainedNodesField
 	: 'retainedNodes:' RetainedNodes=MDField
 ;
@@ -4257,6 +4249,10 @@ ScopeField -> ScopeField
 
 ScopeLineField -> ScopeLineField
 	: 'scopeLine:' ScopeLine=IntLit
+;
+
+SDKField -> SDKField
+	: 'sdk:' SDK=StringLit
 ;
 
 SetterField -> SetterField
@@ -4285,6 +4281,10 @@ SplitDebugInliningField -> SplitDebugInliningField
 
 StrideField -> StrideField
 	: 'stride:' Stride=MDFieldOrInt
+;
+
+SysrootField -> SysrootField
+	: 'sysroot:' Sysroot=StringLit
 ;
 
 TagField -> TagField
