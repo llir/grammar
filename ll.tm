@@ -4980,6 +4980,8 @@ ParamAttr -> ParamAttr
 	| 'noalias'
 	| 'nocapture'
 	| 'nofree'
+	| 'nomerge'
+	| 'noundef'
 	| 'nonnull'
 	| 'readnone'
 	| 'readonly'
@@ -5025,6 +5027,8 @@ ReturnAttr -> ReturnAttr
 	: 'inreg'
 	| 'noalias'
 	| 'nonnull'
+	| 'nomerge'
+	| 'noundef'
 	| 'signext'
 	| 'zeroext'
 ;
