@@ -525,8 +525,8 @@ int_type_tok : /i[0-9]+/
 'dataLocation:' : /dataLocation:/
 'debugBaseAddress:' : /debugBaseAddress:/
 'debugInfoForProfiling:' : /debugInfoForProfiling:/
-'defaulted:' : /defaulted:/
 'declaration:' : /declaration:/
+'defaulted:' : /defaulted:/
 'directory:' : /directory:/
 'discriminator:' : /discriminator:/
 'dwarfAddressSpace:' : /dwarfAddressSpace:/
@@ -3976,8 +3976,8 @@ DITemplateValueParameterField -> DITemplateValueParameterField
 	: TagField
 	| NameField
 	| TypeField
-	| ValueField
 	| DefaultedField
+	| ValueField
 ;
 
 # ~~~ [ GenericDINode ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
