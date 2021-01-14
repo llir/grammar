@@ -525,6 +525,7 @@ int_type_tok : /i[0-9]+/
 'dataLocation:' : /dataLocation:/
 'debugBaseAddress:' : /debugBaseAddress:/
 'debugInfoForProfiling:' : /debugInfoForProfiling:/
+'defaulted:' : /defaulted:/
 'declaration:' : /declaration:/
 'directory:' : /directory:/
 'discriminator:' : /discriminator:/
@@ -3936,6 +3937,7 @@ DISubroutineTypeField -> DISubroutineTypeField
 #
 #  OPTIONAL(name, MDStringField, );
 #  REQUIRED(type, MDField, );
+#  OPTIONAL(defaulted, MDBoolField, );
 
 DITemplateTypeParameter -> DITemplateTypeParameter
 	: '!DITemplateTypeParameter' '(' Fields=(DITemplateTypeParameterField separator ',')* ')'
@@ -3946,6 +3948,7 @@ DITemplateTypeParameter -> DITemplateTypeParameter
 DITemplateTypeParameterField -> DITemplateTypeParameterField
 	: NameField
 	| TypeField
+	| DefaultedField
 ;
 
 # ~~~ [ DITemplateValueParameter ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3960,6 +3963,7 @@ DITemplateTypeParameterField -> DITemplateTypeParameterField
 #  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_template_value_parameter));
 #  OPTIONAL(name, MDStringField, );
 #  OPTIONAL(type, MDField, );
+#  OPTIONAL(defaulted, MDBoolField, );
 #  REQUIRED(value, MDField, );
 
 DITemplateValueParameter -> DITemplateValueParameter
@@ -3973,6 +3977,7 @@ DITemplateValueParameterField -> DITemplateValueParameterField
 	| NameField
 	| TypeField
 	| ValueField
+	| DefaultedField
 ;
 
 # ~~~ [ GenericDINode ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4064,6 +4069,10 @@ DiscriminatorField -> DiscriminatorField
 
 DataLocationField -> DataLocationField
 	: 'dataLocation:' DataLocation=MDField
+;
+
+DefaultedField -> DefaultedField
+	: 'defaulted:' Name=BoolLit
 ;
 
 DiscriminatorIntField -> DiscriminatorIntField
