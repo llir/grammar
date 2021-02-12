@@ -1159,16 +1159,6 @@ UseListOrderBB -> UseListOrderBB
 	: 'uselistorder_bb' Func=GlobalIdent ',' Block=LocalIdent ',' '{' Indices=(UintLit separator ',')+ '}'
 ;
 
-# ~~~ [ Preallocated ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParsePreallocated
-#
-#   ::= preallocated(<ty>)
-
-Preallocated -> Preallocated
-	: 'preallocated' '(' Type ')'
-;
-
 # === [ Types ] ================================================================
 
 # ref: ParseType
@@ -5017,6 +5007,14 @@ ParamAttr -> ParamAttr
 
 Partition -> Partition
 	: 'partition' Name=StringLit
+;
+
+# ref: ParsePreallocated
+#
+#   ::= preallocated(<ty>)
+
+Preallocated -> Preallocated
+	: 'preallocated' '(' Type ')'
 ;
 
 # https://llvm.org/docs/LangRef.html#runtime-preemption-model
