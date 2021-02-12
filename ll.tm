@@ -807,7 +807,6 @@ TopLevelEntity -> TopLevelEntity
 	| MetadataDef
 	| UseListOrder
 	| UseListOrderBB
-	| Preallocated
 ;
 
 # ~~~ [ Source Filename ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
