@@ -1159,6 +1159,16 @@ UseListOrderBB -> UseListOrderBB
 	: 'uselistorder_bb' Func=GlobalIdent ',' Block=LocalIdent ',' '{' Indices=(UintLit separator ',')+ '}'
 ;
 
+# ~~~ [ Preallocated ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ref: ParsePreallocated
+#
+#   ::= preallocated(<ty>)
+
+Preallocated -> Preallocated
+	: 'preallocated' '(' Type ')'
+;
+
 # === [ Types ] ================================================================
 
 # ref: ParseType
@@ -4824,6 +4834,7 @@ FuncAttribute -> FuncAttribute
 	| AlignStackPair
 	| AllocSize
 	| FuncAttr
+	| Preallocated
 ;
 
 FuncAttr -> FuncAttr
@@ -4979,6 +4990,7 @@ ParamAttribute -> ParamAttribute
 	| Byval
 	| Dereferenceable
 	| ParamAttr
+	| Preallocated
 ;
 
 ParamAttr -> ParamAttr
