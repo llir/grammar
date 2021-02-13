@@ -5014,7 +5014,7 @@ Partition -> Partition
 #   ::= preallocated(<ty>)
 
 Preallocated -> Preallocated
-	: 'preallocated' '(' Type ')'
+	: 'preallocated' '(' Typ=Type ')'
 ;
 
 # https://llvm.org/docs/LangRef.html#runtime-preemption-model
