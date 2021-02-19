@@ -248,6 +248,8 @@ int_type_tok : /i[0-9]+/
 'extractelement' : /extractelement/
 'extractvalue' : /extractvalue/
 'fadd' : /fadd/
+'flags' : /flags/
+':' : /:/
 'false' : /false/
 'fast' : /fast/
 'fastcc' : /fastcc/
@@ -4528,6 +4530,22 @@ Align -> Align
 
 AlignPair -> AlignPair
 	: 'align' '=' N=UintLit
+;
+
+# ref: ParseSummaryIndexFlags
+#
+#   ::= 'flags' ':' UInt64
+
+SummaryIndexFlags -> SummaryIndexFlags
+    : 'flags' ':' N=UintLit
+;
+
+# ref: ParseBlockCount
+#
+#   ::= 'blockcount' ':' UInt64
+
+BlockCount -> BlockCount
+    : 'blockcount' ':' N=UintLit
 ;
 
 # ref: ParseOptionalStackAlignment
