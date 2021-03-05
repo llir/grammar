@@ -3035,7 +3035,6 @@ MDTuple -> MDTuple
 MDField -> MDField
 	# Null is a special case since it is typeless.
 	: NullLit
-	| UintLit
 	| Metadata
 ;
 
