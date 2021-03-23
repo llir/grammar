@@ -793,8 +793,7 @@ Module -> Module
 %interface TopLevelEntity;
 
 TopLevelEntity -> TopLevelEntity
-	: SourceFilename
-	| ModuleAsm
+	: ModuleAsm
 	| TypeDef
 	| ComdatDef
 	| GlobalDecl
@@ -808,7 +807,27 @@ TopLevelEntity -> TopLevelEntity
 	| UseListOrderBB
 ;
 
-# ~~~ [ Source Filename ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~ [ Target Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://llvm.org/docs/LangRef.html#target-triple
+# https://llvm.org/docs/LangRef.html#data-layout
+
+# ref: LLParser::ParseTargetDefinitions
+#
+# ref: ParseTargetDefinition
+#
+#   ::= 'target' 'triple' '=' STRINGCONSTANT
+#   ::= 'target' 'datalayout' '=' STRINGCONSTANT
+
+%interface TargetDef;
+
+TargetDef -> TargetDef
+	: SourceFilename
+	| TargetDataLayout
+	| TargetTriple
+;
+
+# Source Filename
 
 # https://llvm.org/docs/LangRef.html#source-filename
 
@@ -818,23 +837,6 @@ TopLevelEntity -> TopLevelEntity
 
 SourceFilename -> SourceFilename
 	: 'source_filename' '=' Name=StringLit
-;
-
-# ~~~ [ Target Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# https://llvm.org/docs/LangRef.html#target-triple
-# https://llvm.org/docs/LangRef.html#data-layout
-
-# ref: ParseTargetDefinition
-#
-#   ::= 'target' 'triple' '=' STRINGCONSTANT
-#   ::= 'target' 'datalayout' '=' STRINGCONSTANT
-
-%interface TargetDef;
-
-TargetDef -> TargetDef
-	: TargetDataLayout
-	| TargetTriple
 ;
 
 TargetDataLayout -> TargetDataLayout
