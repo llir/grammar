@@ -793,9 +793,7 @@ Module -> Module
 %interface TopLevelEntity;
 
 TopLevelEntity -> TopLevelEntity
-	: SourceFilename
-	| TargetDef
-	| ModuleAsm
+	: ModuleAsm
 	| TypeDef
 	| ComdatDef
 	| GlobalDecl
@@ -807,43 +805,6 @@ TopLevelEntity -> TopLevelEntity
 	| MetadataDef
 	| UseListOrder
 	| UseListOrderBB
-;
-
-# ~~~ [ Source Filename ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# https://llvm.org/docs/LangRef.html#source-filename
-
-# ref: ParseSourceFileName
-#
-#   ::= 'source_filename' '=' STRINGCONSTANT
-
-SourceFilename -> SourceFilename
-	: 'source_filename' '=' Name=StringLit
-;
-
-# ~~~ [ Target Definition ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# https://llvm.org/docs/LangRef.html#target-triple
-# https://llvm.org/docs/LangRef.html#data-layout
-
-# ref: ParseTargetDefinition
-#
-#   ::= 'target' 'triple' '=' STRINGCONSTANT
-#   ::= 'target' 'datalayout' '=' STRINGCONSTANT
-
-%interface TargetDef;
-
-TargetDef -> TargetDef
-	: TargetDataLayout
-	| TargetTriple
-;
-
-TargetDataLayout -> TargetDataLayout
-	: 'target' 'datalayout' '=' DataLayout=StringLit
-;
-
-TargetTriple -> TargetTriple
-	: 'target' 'triple' '=' TargetTriple=StringLit
 ;
 
 # ~~~ [ Module-level Inline Assembly ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
