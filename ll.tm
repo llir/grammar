@@ -4525,6 +4525,7 @@ AddrSpace -> AddrSpace
 
 Align -> Align
 	: 'align' N=UintLit
+	| 'align' '(' N=UintLit ')'
 ;
 
 AlignPair -> AlignPair
