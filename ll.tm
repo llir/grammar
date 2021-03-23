@@ -783,7 +783,7 @@ NullLit -> NullLit
 #   module ::= toplevelentity*
 
 Module -> Module
-	: TopLevelEntities=TopLevelEntity*
+	: TargetDefs=TargetDef* TopLevelEntities=TopLevelEntity*
 ;
 
 # --- [ Top-level Entities ] ---------------------------------------------------
@@ -794,7 +794,6 @@ Module -> Module
 
 TopLevelEntity -> TopLevelEntity
 	: SourceFilename
-	| TargetDef
 	| ModuleAsm
 	| TypeDef
 	| ComdatDef
