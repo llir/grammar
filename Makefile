@@ -4,7 +4,7 @@ all: gen
 
 gen: ll.tm
 	@${TM_DIR}/tm-tool/libs/textmapper.sh $<
-	@go fmt ./... > /dev/null
+	@find . -type f -name '*.go' | xargs -I '{}' goimports -w '{}' > /dev/null
 	@go install ./... > /dev/null
 
 clean:
