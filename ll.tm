@@ -4853,7 +4853,6 @@ FuncAttr -> FuncAttr
 	| 'noredzone'
 	| 'noreturn'
 	| 'nosync'
-	| 'noundef'
 	| 'nounwind'
 	| 'null_pointer_is_valid'
 	| 'optforfuzzing'
