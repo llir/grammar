@@ -479,6 +479,11 @@ int_type_tok : /i[0-9]+/
 'zeroext' : /zeroext/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
+'hot': /hot/
+'mustprogress': /mustprogress/
+'nocallback': /nocallback/
+'noprofile': /noprofile/
+'byref': /byref/
 
 # Specialized metadata node names.
 '!DIBasicType' : /!DIBasicType/
@@ -4877,6 +4882,11 @@ FuncAttr -> FuncAttr
 	| 'uwtable'
 	| 'willreturn'
 	| 'writeonly'
+    | 'hot'
+    | 'mustprogress'
+    | 'nocallback'
+    | 'noprofile'
+    | 'byref'
 ;
 
 InBounds -> InBounds
