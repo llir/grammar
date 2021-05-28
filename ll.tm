@@ -4882,11 +4882,11 @@ FuncAttr -> FuncAttr
 	| 'uwtable'
 	| 'willreturn'
 	| 'writeonly'
-    | 'hot'
-    | 'mustprogress'
-    | 'nocallback'
-    | 'noprofile'
-    | 'byref'
+	| 'hot'
+	| 'mustprogress'
+	| 'nocallback'
+	| 'noprofile'
+	| 'byref'
 ;
 
 InBounds -> InBounds
