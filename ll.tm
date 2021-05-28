@@ -203,6 +203,7 @@ int_type_tok : /i[0-9]+/
 'blockcount': /blockcount/
 'br' : /br/
 'builtin' : /builtin/
+'byref': /byref/
 'byval' : /byval/
 'c' : /c/
 'call' : /call/
@@ -275,6 +276,7 @@ int_type_tok : /i[0-9]+/
 'hhvm_ccc' : /hhvm_ccc/
 'hhvmcc' : /hhvmcc/
 'hidden' : /hidden/
+'hot': /hot/
 'icmp' : /icmp/
 'ifunc' : /ifunc/
 'immarg' : /immarg/
@@ -313,6 +315,7 @@ int_type_tok : /i[0-9]+/
 'monotonic' : /monotonic/
 'msp430_intrcc' : /msp430_intrcc/
 'mul' : /mul/
+'mustprogress': /mustprogress/
 'musttail' : /musttail/
 'naked' : /naked/
 'nand' : /nand/
@@ -322,6 +325,7 @@ int_type_tok : /i[0-9]+/
 'nnan' : /nnan/
 'noalias' : /noalias/
 'nobuiltin' : /nobuiltin/
+'nocallback': /nocallback/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
 'noduplicate' : /noduplicate/
@@ -333,6 +337,7 @@ int_type_tok : /i[0-9]+/
 'none' : /none/
 'nonlazybind' : /nonlazybind/
 'nonnull' : /nonnull/
+'noprofile': /noprofile/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
@@ -464,7 +469,6 @@ int_type_tok : /i[0-9]+/
 'win64cc' : /win64cc/
 'within' : /within/
 'writeonly' : /writeonly/
-'x' : /x/
 'x86_64_sysvcc' : /x86_64_sysvcc/
 'x86_fastcallcc' : /x86_fastcallcc/
 'x86_fp80' : /x86_fp80/
@@ -474,16 +478,12 @@ int_type_tok : /i[0-9]+/
 'x86_stdcallcc' : /x86_stdcallcc/
 'x86_thiscallcc' : /x86_thiscallcc/
 'x86_vectorcallcc' : /x86_vectorcallcc/
+'x' : /x/
 'xchg' : /xchg/
 'xor' : /xor/
 'zeroext' : /zeroext/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
-'hot': /hot/
-'mustprogress': /mustprogress/
-'nocallback': /nocallback/
-'noprofile': /noprofile/
-'byref': /byref/
 
 # Specialized metadata node names.
 '!DIBasicType' : /!DIBasicType/
@@ -4840,13 +4840,16 @@ FuncAttr -> FuncAttr
 	| 'builtin'
 	| 'cold'
 	| 'convergent'
+	| 'hot'
 	| 'inaccessiblemem_or_argmemonly'
 	| 'inaccessiblememonly'
 	| 'inlinehint'
 	| 'jumptable'
 	| 'minsize'
+	| 'mustprogress'
 	| 'naked'
 	| 'nobuiltin'
+	| 'nocallback'
 	| 'nocf_check'
 	| 'noduplicate'
 	| 'nofree'
@@ -4854,6 +4857,7 @@ FuncAttr -> FuncAttr
 	| 'noinline'
 	| 'nomerge'
 	| 'nonlazybind'
+	| 'noprofile'
 	| 'norecurse'
 	| 'noredzone'
 	| 'noreturn'
@@ -4882,11 +4886,6 @@ FuncAttr -> FuncAttr
 	| 'uwtable'
 	| 'willreturn'
 	| 'writeonly'
-	| 'hot'
-	| 'mustprogress'
-	| 'nocallback'
-	| 'noprofile'
-	| 'byref'
 ;
 
 InBounds -> InBounds
@@ -4996,7 +4995,8 @@ ParamAttribute -> ParamAttribute
 ;
 
 ParamAttr -> ParamAttr
-	: 'immarg'
+	: 'byref'
+	| 'immarg'
 	| 'inalloca'
 	| 'inreg'
 	| 'nest'
