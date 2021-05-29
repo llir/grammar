@@ -5062,6 +5062,8 @@ ReturnAttr -> ReturnAttr
 	| 'noundef'
 	| 'signext'
 	| 'zeroext'
+	| 'noprofile'
+	| 'mustprogress'
 ;
 
 Section -> Section
