@@ -4996,7 +4996,6 @@ ParamAttribute -> ParamAttribute
 	| ByRefAttr
 ;
 
-// FIXME: find out help to parse
 StructRetAttr -> StructRetAttr : 'sret' '(' Typ=Type ')' ;
 ByRefAttr -> ByRefAttr : 'byref' '(' Typ=Type ')' ;
 
