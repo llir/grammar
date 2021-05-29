@@ -4992,11 +4992,16 @@ ParamAttribute -> ParamAttribute
 	| Dereferenceable
 	| ParamAttr
 	| Preallocated
+    | StructRetAttr
+    | ByRefAttr
 ;
 
+// FIXME: find out help to parse
+StructRetAttr -> StructRetAttr : ;
+ByRefAttr -> ByRefAttr : ;
+
 ParamAttr -> ParamAttr
-	: 'byref'
-	| 'immarg'
+	: 'immarg'
 	| 'inalloca'
 	| 'inreg'
 	| 'nest'
@@ -5010,11 +5015,12 @@ ParamAttr -> ParamAttr
 	| 'readonly'
 	| 'returned'
 	| 'signext'
-	| 'sret'
 	| 'swifterror'
 	| 'swiftself'
 	| 'writeonly'
 	| 'zeroext'
+	| 'noprofile'
+	| 'mustprogress'
 ;
 
 Partition -> Partition
