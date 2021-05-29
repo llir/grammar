@@ -4992,13 +4992,13 @@ ParamAttribute -> ParamAttribute
 	| Dereferenceable
 	| ParamAttr
 	| Preallocated
-    | StructRetAttr
-    | ByRefAttr
+	| StructRetAttr
+	| ByRefAttr
 ;
 
 // FIXME: find out help to parse
-StructRetAttr -> StructRetAttr : ;
-ByRefAttr -> ByRefAttr : ;
+StructRetAttr -> StructRetAttr : 'sret' '(' Typ=Type ')' ;
+ByRefAttr -> ByRefAttr : 'byref' '(' Typ=Type ')' ;
 
 ParamAttr -> ParamAttr
 	: 'immarg'
