@@ -4988,23 +4988,13 @@ ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
 	| Align
+	| ByRefAttr
 	| Byval
 	| Dereferenceable
 	| ParamAttr
 	| Preallocated
 	| StructRetAttr
-	| ByRefAttr
 ;
-
-# ref: parseRequiredTypeAttr
-#
-#   ::= attr(<type>)
-StructRetAttr -> StructRetAttr : 'sret' '(' Typ=Type ')' ;
-
-# ref: parseByRef
-#
-#   ::= byref(<type>)
-ByRefAttr -> ByRefAttr : 'byref' '(' Typ=Type ')' ;
 
 ParamAttr -> ParamAttr
 	: 'immarg'
@@ -5027,6 +5017,13 @@ ParamAttr -> ParamAttr
 	| 'zeroext'
 ;
 
+# ref: parseByRef
+#
+#   ::= byref(<type>)
+ByRefAttr -> ByRefAttr
+	: 'byref' '(' Typ=Type ')'
+;
+
 Partition -> Partition
 	: 'partition' Name=StringLit
 ;
@@ -5046,6 +5043,13 @@ Preallocated -> Preallocated
 Preemption -> Preemption
 	: 'dso_local'
 	| 'dso_preemptable'
+;
+
+# ref: parseRequiredTypeAttr
+#
+#   ::= attr(<type>)
+StructRetAttr -> StructRetAttr
+	: 'sret' '(' Typ=Type ')'
 ;
 
 # ref: ParseOptionalReturnAttrs
