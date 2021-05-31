@@ -4996,7 +4996,14 @@ ParamAttribute -> ParamAttribute
 	| ByRefAttr
 ;
 
+# ref: parseRequiredTypeAttr
+#
+#   ::= attr(<type>)
 StructRetAttr -> StructRetAttr : 'sret' '(' Typ=Type ')' ;
+
+# ref: parseByRef
+#
+#   ::= byref(<type>)
 ByRefAttr -> ByRefAttr : 'byref' '(' Typ=Type ')' ;
 
 ParamAttr -> ParamAttr
@@ -5018,8 +5025,6 @@ ParamAttr -> ParamAttr
 	| 'swiftself'
 	| 'writeonly'
 	| 'zeroext'
-	| 'noprofile'
-	| 'mustprogress'
 ;
 
 Partition -> Partition
