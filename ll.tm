@@ -4992,11 +4992,22 @@ ParamAttribute -> ParamAttribute
 	| Dereferenceable
 	| ParamAttr
 	| Preallocated
+	| StructRetAttr
+	| ByRefAttr
 ;
 
+# ref: parseRequiredTypeAttr
+#
+#   ::= attr(<type>)
+StructRetAttr -> StructRetAttr : 'sret' '(' Typ=Type ')' ;
+
+# ref: parseByRef
+#
+#   ::= byref(<type>)
+ByRefAttr -> ByRefAttr : 'byref' '(' Typ=Type ')' ;
+
 ParamAttr -> ParamAttr
-	: 'byref'
-	| 'immarg'
+	: 'immarg'
 	| 'inalloca'
 	| 'inreg'
 	| 'nest'
@@ -5010,7 +5021,6 @@ ParamAttr -> ParamAttr
 	| 'readonly'
 	| 'returned'
 	| 'signext'
-	| 'sret'
 	| 'swifterror'
 	| 'swiftself'
 	| 'writeonly'
