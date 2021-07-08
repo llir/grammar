@@ -555,6 +555,7 @@ int_type_tok : /i[0-9]+/
 'includePath:' : /includePath:/
 'inlinedAt:' : /inlinedAt:/
 'isDefinition:' : /isDefinition:/
+'isDecl:' : /isDecl:/
 'isImplicitCode:' : /isImplicitCode:/
 'isLocal:' : /isLocal:/
 'isOptimized:' : /isOptimized:/
@@ -3744,6 +3745,7 @@ DIMacroFileField -> DIMacroFileField
 #  OPTIONAL(apinotes, MDStringField, );
 #  OPTIONAL(file, MDField, );
 #  OPTIONAL(line, LineField, );
+#  OPTIONAL(isDecl, MDBoolField, );
 
 DIModule -> DIModule
 	: '!DIModule' '(' Fields=(DIModuleField separator ',')* ')'
@@ -3759,6 +3761,7 @@ DIModuleField -> DIModuleField
 	| APINotesField
 	| FileField
 	| LineField
+	| IsDeclField
 ;
 
 # ~~~ [ DINamespace ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4127,6 +4130,10 @@ ExtraDataField -> ExtraDataField
 
 FileField -> FileField
 	: 'file:' File=MDField
+;
+
+IsDeclField -> IsDeclField
+	: 'isDecl:' IsDecl=BoolLit
 ;
 
 FilenameField -> FilenameField
