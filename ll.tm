@@ -174,13 +174,13 @@ int_type_tok : /i[0-9]+/
 'alwaysinline' : /alwaysinline/
 'amdgpu_cs' : /amdgpu_cs/
 'amdgpu_es' : /amdgpu_es/
+'amdgpu_gfx' : /amdgpu_gfx/
 'amdgpu_gs' : /amdgpu_gs/
 'amdgpu_hs' : /amdgpu_hs/
 'amdgpu_kernel' : /amdgpu_kernel/
 'amdgpu_ls' : /amdgpu_ls/
 'amdgpu_ps' : /amdgpu_ps/
 'amdgpu_vs' : /amdgpu_vs/
-'amdgpu_gfx' : /amdgpu_gfx/
 'and' : /and/
 'any' : /any/
 'anyregcc' : /anyregcc/
@@ -240,8 +240,8 @@ int_type_tok : /i[0-9]+/
 'dllimport' : /dllimport/
 'double' : /double/
 'dso_local' : /dso_local/
-'dso_preemptable' : /dso_preemptable/
 'dso_local_equivalent' : /dso_local_equivalent/
+'dso_preemptable' : /dso_preemptable/
 'eq' : /eq/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
@@ -4135,10 +4135,6 @@ FileField -> FileField
 	: 'file:' File=MDField
 ;
 
-IsDeclField -> IsDeclField
-	: 'isDecl:' IsDecl=BoolLit
-;
-
 FilenameField -> FilenameField
 	: 'filename:' Filename=StringLit
 ;
@@ -4177,6 +4173,10 @@ IncludePathField -> IncludePathField
 
 InlinedAtField -> InlinedAtField
 	: 'inlinedAt:' InlinedAt=MDField
+;
+
+IsDeclField -> IsDeclField
+	: 'isDecl:' IsDecl=BoolLit
 ;
 
 IsDefinitionField -> IsDefinitionField
