@@ -180,6 +180,7 @@ int_type_tok : /i[0-9]+/
 'amdgpu_ls' : /amdgpu_ls/
 'amdgpu_ps' : /amdgpu_ps/
 'amdgpu_vs' : /amdgpu_vs/
+'amdgpu_gfx' : /amdgpu_gfx/
 'and' : /and/
 'any' : /any/
 'anyregcc' : /anyregcc/
@@ -240,6 +241,7 @@ int_type_tok : /i[0-9]+/
 'double' : /double/
 'dso_local' : /dso_local/
 'dso_preemptable' : /dso_preemptable/
+'dso_local_equivalent' : /dso_local_equivalent/
 'eq' : /eq/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
@@ -367,6 +369,7 @@ int_type_tok : /i[0-9]+/
 'partition' : /partition/
 'personality' : /personality/
 'phi' : /phi/
+'poison' : /poison/
 'ppc_fp128' : /ppc_fp128/
 'preallocated': /preallocated/
 'prefix' : /prefix/
