@@ -4262,7 +4262,7 @@ ProducerField -> ProducerField
 ;
 
 RankField -> RankField
-	: 'rank:' Rank=MDSignedOrMDField
+	: 'rank:' Rank=MDFieldOrInt
 ;
 
 RangesBaseAddressField -> RangesBaseAddressField
