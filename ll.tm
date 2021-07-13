@@ -519,8 +519,10 @@ int_type_tok : /i[0-9]+/
 
 # Specialized metadata node field names.
 'align:' : /align:/
+'allocated:' : /allocated:/
 'apinotes:' : /apinotes:/
 'arg:' : /arg:/
+'associated:' : /associated:/
 'attributes:' : /attributes:/
 'baseType:' : /baseType:/
 'cc:' : /cc:/
@@ -557,8 +559,8 @@ int_type_tok : /i[0-9]+/
 'imports:' : /imports:/
 'includePath:' : /includePath:/
 'inlinedAt:' : /inlinedAt:/
-'isDefinition:' : /isDefinition:/
 'isDecl:' : /isDecl:/
+'isDefinition:' : /isDefinition:/
 'isImplicitCode:' : /isImplicitCode:/
 'isLocal:' : /isLocal:/
 'isOptimized:' : /isOptimized:/
@@ -575,6 +577,7 @@ int_type_tok : /i[0-9]+/
 'operands:' : /operands:/
 'producer:' : /producer:/
 'rangesBaseAddress:' : /rangesBaseAddress:/
+'rank:' : /rank:/
 'retainedNodes:' : /retainedNodes:/
 'retainedTypes:' : /retainedTypes:/
 'runtimeLang:' : /runtimeLang:/
@@ -603,7 +606,6 @@ int_type_tok : /i[0-9]+/
 'virtualIndex:' : /virtualIndex:/
 'virtuality:' : /virtuality:/
 'vtableHolder:' : /vtableHolder:/
-
 
 ',' : /[,]/
 '!' : /[!]/
