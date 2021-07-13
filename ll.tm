@@ -3292,6 +3292,9 @@ DICompileUnitField -> DICompileUnitField
 #  OPTIONAL(identifier, MDStringField, );
 #  OPTIONAL(discriminator, MDField, );
 #  OPTIONAL(dataLocation, MDField, );
+#  OPTIONAL(associated, MDField, );
+#  OPTIONAL(allocated, MDField, );
+#  OPTIONAL(rank, MDSignedOrMDField, );
 
 DICompositeType -> DICompositeType
 	: '!DICompositeType' '(' Fields=(DICompositeTypeField separator ',')* ')'
@@ -3317,6 +3320,9 @@ DICompositeTypeField -> DICompositeTypeField
 	| IdentifierField
 	| DiscriminatorField
 	| DataLocationField
+	| AssociatedField
+	| AllocatedField
+	| RankField
 ;
 
 # ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4018,6 +4024,14 @@ GenericDINodeField -> GenericDINodeField
 
 # ___ [ Specialized metadata fields ] __________________________________________
 
+AssociatedField -> AssociatedField
+	: 'associated:' Associated=MDField
+;
+
+AllocatedField -> AllocatedField
+	: 'allocated:' Allocated=MDField
+;
+
 AlignField -> AlignField
 	: 'align:' Align=UintLit
 ;
@@ -4077,7 +4091,6 @@ DirectoryField -> DirectoryField
 DiscriminatorField -> DiscriminatorField
 	: 'discriminator:' Discriminator=MDField
 ;
-
 
 DataLocationField -> DataLocationField
 	: 'dataLocation:' DataLocation=MDField
@@ -4246,6 +4259,10 @@ OperandsField -> OperandsField
 
 ProducerField -> ProducerField
 	: 'producer:' Producer=StringLit
+;
+
+RankField -> RankField
+	: 'rank:' Rank=MDFieldOrInt
 ;
 
 RangesBaseAddressField -> RangesBaseAddressField
