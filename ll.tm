@@ -4024,20 +4024,20 @@ GenericDINodeField -> GenericDINodeField
 
 # ___ [ Specialized metadata fields ] __________________________________________
 
-AssociatedField -> AssociatedField
-	: 'associated:' Associated=MDField
+AlignField -> AlignField
+	: 'align:' Align=UintLit
 ;
 
 AllocatedField -> AllocatedField
 	: 'allocated:' Allocated=MDField
 ;
 
-AlignField -> AlignField
-	: 'align:' Align=UintLit
-;
-
 ArgField -> ArgField
 	: 'arg:' Arg=UintLit
+;
+
+AssociatedField -> AssociatedField
+	: 'associated:' Associated=MDField
 ;
 
 AttributesField -> AttributesField
@@ -4261,12 +4261,12 @@ ProducerField -> ProducerField
 	: 'producer:' Producer=StringLit
 ;
 
-RankField -> RankField
-	: 'rank:' Rank=MDFieldOrInt
-;
-
 RangesBaseAddressField -> RangesBaseAddressField
 	: 'rangesBaseAddress:' RangesBaseAddress=BoolLit
+;
+
+RankField -> RankField
+	: 'rank:' Rank=MDFieldOrInt
 ;
 
 RetainedNodesField -> RetainedNodesField
