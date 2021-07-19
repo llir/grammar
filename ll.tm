@@ -1403,6 +1403,7 @@ Constant -> Constant
 	# @foo
 	| GlobalIdent
 	| UndefConst
+	| PoisonConst
 	| BlockAddressConst
 	| ConstantExpr
 ;
@@ -1514,6 +1515,16 @@ ZeroInitializerConst -> ZeroInitializerConst
 
 UndefConst -> UndefConst
 	: 'undef'
+;
+
+# --- [ Poison Values ] --------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#poison-values
+
+# ref: ParseValID
+
+PoisonConst -> PoisonConst
+	: 'poison'
 ;
 
 # --- [ Addresses of Basic Blocks ] --------------------------------------------
