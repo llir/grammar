@@ -4707,6 +4707,7 @@ CallingConvEnum -> CallingConvEnum
 	| 'aarch64_vector_pcs'
 	| 'amdgpu_cs'
 	| 'amdgpu_es'
+	| 'amdgpu_gfx'
 	| 'amdgpu_gs'
 	| 'amdgpu_hs'
 	| 'amdgpu_kernel'
