@@ -243,6 +243,7 @@ int_type_tok : /i[0-9]+/
 'dso_local_equivalent' : /dso_local_equivalent/
 'dso_preemptable' : /dso_preemptable/
 'eq' : /eq/
+'elementtype' : /elementtype/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
 'extern_weak' : /extern_weak/
@@ -331,7 +332,7 @@ int_type_tok : /i[0-9]+/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
 'noduplicate' : /noduplicate/
-'noduplicates' : /noduplicates/
+'nodeduplicate' : /nodeduplicate/
 'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
@@ -347,6 +348,7 @@ int_type_tok : /i[0-9]+/
 'notail' : /notail/
 'noundef': /noundef/
 'nounwind' : /nounwind/
+'nosanitize_coverage' : /nosanitize_coverage/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -429,6 +431,8 @@ int_type_tok : /i[0-9]+/
 'swifterror' : /swifterror/
 'swiftself' : /swiftself/
 'switch' : /switch/
+'swifttailcc' : /swifttailcc/
+'swiftasync' : /swiftasync/
 'syncscope' : /syncscope/
 'tail' : /tail/
 'tailcc' : /tailcc/
@@ -464,7 +468,9 @@ int_type_tok : /i[0-9]+/
 'vcall_visibility' : /vcall_visibility/
 'void' : /void/
 'volatile' : /volatile/
+'vscale_range' : /vscale_range/
 'vscale' : /vscale/
+'visibility' : /visibility/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
@@ -904,7 +910,7 @@ SelectionKind -> SelectionKind
 	: 'any'
 	| 'exactmatch'
 	| 'largest'
-	| 'noduplicates'
+	| 'nodeduplicate'
 	| 'samesize'
 ;
 
