@@ -380,6 +380,7 @@ int_type_tok : /i[0-9]+/
 'private' : /private/
 'prologue' : /prologue/
 'protected' : /protected/
+'ptr' : /ptr/
 'ptrtoint' : /ptrtoint/
 'ptx_device' : /ptx_device/
 'ptx_kernel' : /ptx_kernel/
@@ -2460,10 +2461,12 @@ FenceInst -> FenceInst
 # ref: ParseCmpXchg
 #
 #   ::= 'cmpxchg' 'weak'? 'volatile'? TypeAndValue ',' TypeAndValue ','
-#       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering
+#       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering ','
+#       'Align'?
+
 
 CmpXchgInst -> CmpXchgInst
-	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt SuccessOrdering=AtomicOrdering FailureOrdering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt SuccessOrdering=AtomicOrdering FailureOrdering=AtomicOrdering Align=(',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 Weak -> Weak
