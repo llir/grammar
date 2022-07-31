@@ -2401,10 +2401,10 @@ InsertValueInst -> InsertValueInst
 #       (',' 'align' i32)? (',', 'addrspace(n))?
 
 AllocaInst -> AllocaInst
-	: 'alloca' InAllocaopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Align)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
+	: 'alloca' InAllocatokopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Align)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
 ;
 
-InAlloca -> InAlloca
+InAllocatok -> InAllocatok
 	: 'inalloca'
 ;
 
@@ -4963,6 +4963,10 @@ InBounds -> InBounds
 
 # ref: ParseCmpPredicate
 
+InAlloca -> InAlloca
+	: 'inalloca' '(' Typ=Type ')'
+;
+
 IPred -> IPred
 	: 'eq'
 	| 'ne'
@@ -5063,6 +5067,7 @@ ParamAttribute -> ParamAttribute
 	| Byval
 	| Dereferenceable
 	| ElementType
+	| InAlloca
 	| ParamAttr
 	| Preallocated
 	| StructRetAttr
