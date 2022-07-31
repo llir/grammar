@@ -4930,6 +4930,7 @@ FuncAttr -> FuncAttr
 	| 'norecurse'
 	| 'noredzone'
 	| 'noreturn'
+	| 'nosanitize_coverage'
 	| 'nosync'
 	| 'nounwind'
 	| 'null_pointer_is_valid'
