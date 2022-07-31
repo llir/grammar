@@ -5088,6 +5088,7 @@ ParamAttr -> ParamAttr
 	| 'readonly'
 	| 'returned'
 	| 'signext'
+	| 'swiftasync'
 	| 'swifterror'
 	| 'swiftself'
 	| 'writeonly'
