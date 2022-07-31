@@ -2483,7 +2483,7 @@ Weak -> Weak
 #       'singlethread'? AtomicOrdering
 
 AtomicRMWInst -> AtomicRMWInst
-	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt Ordering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt Ordering=AtomicOrdering Align=(',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 AtomicOp -> AtomicOp
