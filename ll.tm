@@ -1378,7 +1378,7 @@ Value -> Value
 #             STRINGCONSTANT
 
 InlineAsm -> InlineAsm
-	: 'asm' SideEffectopt AlignStackTokopt IntelDialectopt Asm=StringLit ',' Constraints=StringLit
+	: 'asm' SideEffectopt AlignStackTokopt IntelDialectopt Unwindopt Asm=StringLit ',' Constraints=StringLit
 ;
 
 SideEffect -> SideEffect
@@ -1391,6 +1391,10 @@ AlignStackTok -> AlignStackTok
 
 IntelDialect -> IntelDialect
 	: 'inteldialect'
+;
+
+Unwind -> Unwind
+	: 'unwind'
 ;
 
 # === [ Constants ] ============================================================
