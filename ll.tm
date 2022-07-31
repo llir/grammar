@@ -4797,6 +4797,10 @@ Dereferenceable -> Dereferenceable
 	| 'dereferenceable_or_null' '(' N=UintLit ')'   -> DereferenceableOrNull
 ;
 
+ElementType -> ElementType
+	: 'elementtype' '(' Typ=Type ')'
+;
+
 # https://llvm.org/docs/LangRef.html#dll-storage-classes
 
 # ref: ParseOptionalDLLStorageClass
@@ -4873,6 +4877,8 @@ FPred -> FPred
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+
 %interface FuncAttribute;
 
 FuncAttribute -> FuncAttribute
@@ -4889,6 +4895,8 @@ FuncAttribute -> FuncAttribute
 	| AllocSize
 	| FuncAttr
 	| Preallocated
+	| VScaleRange
+	| VScaleRangetok
 ;
 
 FuncAttr -> FuncAttr
@@ -5038,6 +5046,7 @@ Param -> Param
 ;
 
 # ref: ParseOptionalParamAttrs
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
 
 %interface ParamAttribute;
 
@@ -5045,9 +5054,11 @@ ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
 	| Align
+	| AlignStack
 	| ByRefAttr
 	| Byval
 	| Dereferenceable
+	| ElementType
 	| ParamAttr
 	| Preallocated
 	| StructRetAttr
@@ -5110,6 +5121,7 @@ StructRetAttr -> StructRetAttr
 ;
 
 # ref: ParseOptionalReturnAttrs
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
 
 %interface ReturnAttribute;
 
@@ -5213,4 +5225,17 @@ Visibility -> Visibility
 
 Volatile -> Volatile
 	: 'volatile'
+;
+
+# ref: parseVScaleRangeArguments
+
+VScaleRangetok -> VScaleRangetok
+	: 'vscale_range'
+;
+
+VScaleRange -> VScaleRange
+	# NOTE: Min should be called Max in the first case. Named Min to resolve textmapper error:
+	#    `Min` cannot be nullable, since it precedes Max
+	: 'vscale_range' '(' Min=UintLit ')'
+	| 'vscale_range' '(' Min=UintLit ',' Max=UintLit ')'
 ;
