@@ -5076,13 +5076,11 @@ ParamAttribute -> ParamAttribute
 
 ParamAttr -> ParamAttr
 	: 'immarg'
-	| 'inalloca'
 	| 'inreg'
 	| 'nest'
 	| 'noalias'
 	| 'nocapture'
 	| 'nofree'
-	| 'nomerge'
 	| 'nonnull'
 	| 'noundef'
 	| 'readnone'
@@ -5151,7 +5149,6 @@ ReturnAttribute -> ReturnAttribute
 ReturnAttr -> ReturnAttr
 	: 'inreg'
 	| 'noalias'
-	| 'nomerge'
 	| 'nonnull'
 	| 'noundef'
 	| 'signext'
