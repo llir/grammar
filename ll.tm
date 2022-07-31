@@ -1277,8 +1277,13 @@ MMXType -> MMXType
 
 # --- [ Pointer Types ] --------------------------------------------------------
 
+# TODO: remove typed pointers in llir/llvm version corresponding to LLVM 16.0.
+#
+# ref: https://llvm.org/docs/OpaquePointers.html#version-support
+
 PointerType -> PointerType
 	: Elem=Type AddrSpaceopt '*'
+	# "ptr" # TODO: enable use of opaque pointer types.
 ;
 
 # --- [ Vector Types ] ---------------------------------------------------------
