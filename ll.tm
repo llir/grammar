@@ -4962,11 +4962,11 @@ InBounds -> InBounds
 	: 'inbounds'
 ;
 
-# ref: ParseCmpPredicate
-
 InAlloca -> InAlloca
 	: 'inalloca' '(' Typ=Type ')'
 ;
+
+# ref: ParseCmpPredicate
 
 IPred -> IPred
 	: 'eq'
