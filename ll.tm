@@ -496,6 +496,7 @@ int_type_tok : /i[0-9]+/
 'zext' : /zext/
 
 # Specialized metadata node names.
+'!DIArgList' : /!DIArgList/
 '!DIBasicType' : /!DIBasicType/
 '!DICommonBlock' : /!DICommonBlock/
 '!DICompileUnit' : /!DICompileUnit/
@@ -3138,7 +3139,21 @@ MDNode -> MDNode
 	: MDTuple
 	# !42
 	| MetadataID
+	| DIArgList
 	| SpecializedMDNode
+;
+
+# --- [ DIArgList ] ------------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#diarglist
+
+# ref: ParseDIArgList:
+#
+#   ::= !DIArgList(i32 7, i64 %0)
+
+# NOTE: TypeValue of DIArgList may include function local values.
+DIArgList -> DIArgList
+	: '!DIArgList' '(' Fields=(TypeValue separator ',')* ')'
 ;
 
 # --- [ Specialized Metadata Nodes ] -------------------------------------------
