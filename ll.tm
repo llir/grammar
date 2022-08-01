@@ -243,6 +243,7 @@ int_type_tok : /i[0-9]+/
 'dso_local_equivalent' : /dso_local_equivalent/
 'dso_preemptable' : /dso_preemptable/
 'eq' : /eq/
+'elementtype' : /elementtype/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
 'extern_weak' : /extern_weak/
@@ -331,7 +332,7 @@ int_type_tok : /i[0-9]+/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
 'noduplicate' : /noduplicate/
-'noduplicates' : /noduplicates/
+'nodeduplicate' : /nodeduplicate/
 'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
@@ -347,6 +348,7 @@ int_type_tok : /i[0-9]+/
 'notail' : /notail/
 'noundef': /noundef/
 'nounwind' : /nounwind/
+'nosanitize_coverage' : /nosanitize_coverage/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -378,6 +380,7 @@ int_type_tok : /i[0-9]+/
 'private' : /private/
 'prologue' : /prologue/
 'protected' : /protected/
+'ptr' : /ptr/
 'ptrtoint' : /ptrtoint/
 'ptx_device' : /ptx_device/
 'ptx_kernel' : /ptx_kernel/
@@ -429,6 +432,8 @@ int_type_tok : /i[0-9]+/
 'swifterror' : /swifterror/
 'swiftself' : /swiftself/
 'switch' : /switch/
+'swifttailcc' : /swifttailcc/
+'swiftasync' : /swiftasync/
 'syncscope' : /syncscope/
 'tail' : /tail/
 'tailcc' : /tailcc/
@@ -464,7 +469,9 @@ int_type_tok : /i[0-9]+/
 'vcall_visibility' : /vcall_visibility/
 'void' : /void/
 'volatile' : /volatile/
+'vscale_range' : /vscale_range/
 'vscale' : /vscale/
+'visibility' : /visibility/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
@@ -489,6 +496,7 @@ int_type_tok : /i[0-9]+/
 'zext' : /zext/
 
 # Specialized metadata node names.
+'!DIArgList' : /!DIArgList/
 '!DIBasicType' : /!DIBasicType/
 '!DICommonBlock' : /!DICommonBlock/
 '!DICompileUnit' : /!DICompileUnit/
@@ -904,7 +912,7 @@ SelectionKind -> SelectionKind
 	: 'any'
 	| 'exactmatch'
 	| 'largest'
-	| 'noduplicates'
+	| 'nodeduplicate'
 	| 'samesize'
 ;
 
@@ -1271,8 +1279,13 @@ MMXType -> MMXType
 
 # --- [ Pointer Types ] --------------------------------------------------------
 
+# TODO: remove typed pointers in llir/llvm version corresponding to LLVM 16.0.
+#
+# ref: https://llvm.org/docs/OpaquePointers.html#version-support
+
 PointerType -> PointerType
 	: Elem=Type AddrSpaceopt '*'
+	# "ptr" # TODO: enable use of opaque pointer types.
 ;
 
 # --- [ Vector Types ] ---------------------------------------------------------
@@ -1366,7 +1379,7 @@ Value -> Value
 #             STRINGCONSTANT
 
 InlineAsm -> InlineAsm
-	: 'asm' SideEffectopt AlignStackTokopt IntelDialectopt Asm=StringLit ',' Constraints=StringLit
+	: 'asm' SideEffectopt AlignStackTokopt IntelDialectopt Unwindopt Asm=StringLit ',' Constraints=StringLit
 ;
 
 SideEffect -> SideEffect
@@ -1379,6 +1392,10 @@ AlignStackTok -> AlignStackTok
 
 IntelDialect -> IntelDialect
 	: 'inteldialect'
+;
+
+Unwind -> Unwind
+	: 'unwind'
 ;
 
 # === [ Constants ] ============================================================
@@ -2385,10 +2402,10 @@ InsertValueInst -> InsertValueInst
 #       (',' 'align' i32)? (',', 'addrspace(n))?
 
 AllocaInst -> AllocaInst
-	: 'alloca' InAllocaopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Align)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
+	: 'alloca' InAllocatokopt SwiftErroropt ElemType=Type NElems=(',' TypeValue)? (',' Align)? (',' AddrSpace)? Metadata=(',' MetadataAttachment)+?
 ;
 
-InAlloca -> InAlloca
+InAllocatok -> InAllocatok
 	: 'inalloca'
 ;
 
@@ -2449,10 +2466,12 @@ FenceInst -> FenceInst
 # ref: ParseCmpXchg
 #
 #   ::= 'cmpxchg' 'weak'? 'volatile'? TypeAndValue ',' TypeAndValue ','
-#       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering
+#       TypeAndValue 'singlethread'? AtomicOrdering AtomicOrdering ','
+#       'Align'?
+
 
 CmpXchgInst -> CmpXchgInst
-	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt SuccessOrdering=AtomicOrdering FailureOrdering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'cmpxchg' Weakopt Volatileopt Ptr=TypeValue ',' Cmp=TypeValue ',' New=TypeValue SyncScopeopt SuccessOrdering=AtomicOrdering FailureOrdering=AtomicOrdering Align=(',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 Weak -> Weak
@@ -2469,7 +2488,7 @@ Weak -> Weak
 #       'singlethread'? AtomicOrdering
 
 AtomicRMWInst -> AtomicRMWInst
-	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt Ordering=AtomicOrdering Metadata=(',' MetadataAttachment)+?
+	: 'atomicrmw' Volatileopt Op=AtomicOp Dst=TypeValue ',' X=TypeValue SyncScopeopt Ordering=AtomicOrdering Align=(',' Align)? Metadata=(',' MetadataAttachment)+?
 ;
 
 AtomicOp -> AtomicOp
@@ -3120,7 +3139,21 @@ MDNode -> MDNode
 	: MDTuple
 	# !42
 	| MetadataID
+	| DIArgList
 	| SpecializedMDNode
+;
+
+# --- [ DIArgList ] ------------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#diarglist
+
+# ref: ParseDIArgList:
+#
+#   ::= !DIArgList(i32 7, i64 %0)
+
+# NOTE: TypeValue of DIArgList may include function local values.
+DIArgList -> DIArgList
+	: '!DIArgList' '(' Fields=(TypeValue separator ',')* ')'
 ;
 
 # --- [ Specialized Metadata Nodes ] -------------------------------------------
@@ -4691,6 +4724,7 @@ Byval -> Byval
 #   ::= 'preserve_allcc'
 #   ::= 'ghccc'
 #   ::= 'swiftcc'
+#   ::= 'swifttailcc'
 #   ::= 'x86_intrcc'
 #   ::= 'hhvmcc'
 #   ::= 'hhvm_ccc'
@@ -4748,6 +4782,7 @@ CallingConvEnum -> CallingConvEnum
 	| 'spir_func'
 	| 'spir_kernel'
 	| 'swiftcc'
+	| 'swifttailcc'
 	| 'tailcc'
 	| 'webkit_jscc'
 	| 'win64cc'
@@ -4779,6 +4814,10 @@ Comdat -> Comdat
 Dereferenceable -> Dereferenceable
 	: 'dereferenceable' '(' N=UintLit ')'
 	| 'dereferenceable_or_null' '(' N=UintLit ')'   -> DereferenceableOrNull
+;
+
+ElementType -> ElementType
+	: 'elementtype' '(' Typ=Type ')'
 ;
 
 # https://llvm.org/docs/LangRef.html#dll-storage-classes
@@ -4857,6 +4896,8 @@ FPred -> FPred
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+
 %interface FuncAttribute;
 
 FuncAttribute -> FuncAttribute
@@ -4873,6 +4914,8 @@ FuncAttribute -> FuncAttribute
 	| AllocSize
 	| FuncAttr
 	| Preallocated
+	| VScaleRange
+	| VScaleRangetok
 ;
 
 FuncAttr -> FuncAttr
@@ -4902,6 +4945,7 @@ FuncAttr -> FuncAttr
 	| 'norecurse'
 	| 'noredzone'
 	| 'noreturn'
+	| 'nosanitize_coverage'
 	| 'nosync'
 	| 'nounwind'
 	| 'null_pointer_is_valid'
@@ -4931,6 +4975,10 @@ FuncAttr -> FuncAttr
 
 InBounds -> InBounds
 	: 'inbounds'
+;
+
+InAlloca -> InAlloca
+	: 'inalloca' '(' Typ=Type ')'
 ;
 
 # ref: ParseCmpPredicate
@@ -5022,6 +5070,7 @@ Param -> Param
 ;
 
 # ref: ParseOptionalParamAttrs
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
 
 %interface ParamAttribute;
 
@@ -5029,9 +5078,12 @@ ParamAttribute -> ParamAttribute
 	: AttrString
 	| AttrPair
 	| Align
+	| AlignStack
 	| ByRefAttr
 	| Byval
 	| Dereferenceable
+	| ElementType
+	| InAlloca
 	| ParamAttr
 	| Preallocated
 	| StructRetAttr
@@ -5039,19 +5091,18 @@ ParamAttribute -> ParamAttribute
 
 ParamAttr -> ParamAttr
 	: 'immarg'
-	| 'inalloca'
 	| 'inreg'
 	| 'nest'
 	| 'noalias'
 	| 'nocapture'
 	| 'nofree'
-	| 'nomerge'
 	| 'nonnull'
 	| 'noundef'
 	| 'readnone'
 	| 'readonly'
 	| 'returned'
 	| 'signext'
+	| 'swiftasync'
 	| 'swifterror'
 	| 'swiftself'
 	| 'writeonly'
@@ -5094,6 +5145,7 @@ StructRetAttr -> StructRetAttr
 ;
 
 # ref: ParseOptionalReturnAttrs
+# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
 
 %interface ReturnAttribute;
 
@@ -5112,7 +5164,6 @@ ReturnAttribute -> ReturnAttribute
 ReturnAttr -> ReturnAttr
 	: 'inreg'
 	| 'noalias'
-	| 'nomerge'
 	| 'nonnull'
 	| 'noundef'
 	| 'signext'
@@ -5197,4 +5248,17 @@ Visibility -> Visibility
 
 Volatile -> Volatile
 	: 'volatile'
+;
+
+# ref: parseVScaleRangeArguments
+
+VScaleRangetok -> VScaleRangetok
+	: 'vscale_range'
+;
+
+VScaleRange -> VScaleRange
+	# NOTE: Min should be called Max in the first case. Named Min to resolve textmapper error:
+	#    `Min` cannot be nullable, since it precedes Max
+	: 'vscale_range' '(' Min=UintLit ')'
+	| 'vscale_range' '(' Min=UintLit ',' Max=UintLit ')'
 ;
