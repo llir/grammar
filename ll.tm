@@ -495,8 +495,10 @@ int_type_tok : /i[0-9]+/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
 
-# Specialized metadata node names.
+# Metadata nodes.
 '!DIArgList' : /!DIArgList/
+
+# Specialized metadata node names.
 '!DIBasicType' : /!DIBasicType/
 '!DICommonBlock' : /!DICommonBlock/
 '!DICompileUnit' : /!DICompileUnit/
@@ -3101,6 +3103,7 @@ Metadata -> Metadata
 	| MDTuple
 	# !7
 	| MetadataID
+	| DIArgList
 	| SpecializedMDNode
 ;
 
@@ -3139,7 +3142,6 @@ MDNode -> MDNode
 	: MDTuple
 	# !42
 	| MetadataID
-	| DIArgList
 	| SpecializedMDNode
 ;
 
