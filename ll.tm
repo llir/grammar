@@ -235,6 +235,7 @@ int_type_tok : /i[0-9]+/
 'define' : /define/
 'dereferenceable' : /dereferenceable/
 'dereferenceable_or_null' : /dereferenceable_or_null/
+'disable_sanitizer_instrumentation' : /disable_sanitizer_instrumentation/
 'distinct' : /distinct/
 'dllexport' : /dllexport/
 'dllimport' : /dllimport/
@@ -242,8 +243,8 @@ int_type_tok : /i[0-9]+/
 'dso_local' : /dso_local/
 'dso_local_equivalent' : /dso_local_equivalent/
 'dso_preemptable' : /dso_preemptable/
-'eq' : /eq/
 'elementtype' : /elementtype/
+'eq' : /eq/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
 'extern_weak' : /extern_weak/
@@ -276,6 +277,7 @@ int_type_tok : /i[0-9]+/
 'ghccc' : /ghccc/
 'global' : /global/
 'half' : /half/
+'hasUnknownCall' : /hasUnknownCall/
 'hhvm_ccc' : /hhvm_ccc/
 'hhvmcc' : /hhvmcc/
 'hidden' : /hidden/
@@ -311,6 +313,7 @@ int_type_tok : /i[0-9]+/
 'localexec' : /localexec/
 'lshr' : /lshr/
 'max' : /max/
+'mayThrow' : /mayThrow/
 'metadata' : /metadata/
 'min' : /min/
 'minsize' : /minsize/
@@ -318,6 +321,7 @@ int_type_tok : /i[0-9]+/
 'monotonic' : /monotonic/
 'msp430_intrcc' : /msp430_intrcc/
 'mul' : /mul/
+'mustBeUnreachable' : /mustBeUnreachable/
 'mustprogress': /mustprogress/
 'musttail' : /musttail/
 'naked' : /naked/
@@ -326,13 +330,15 @@ int_type_tok : /i[0-9]+/
 'nest' : /nest/
 'ninf' : /ninf/
 'nnan' : /nnan/
+'noUnwind' : /noUnwind/
+'no_cfi' : /no_cfi/
 'noalias' : /noalias/
 'nobuiltin' : /nobuiltin/
 'nocallback': /nocallback/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
-'noduplicate' : /noduplicate/
 'nodeduplicate' : /nodeduplicate/
+'noduplicate' : /noduplicate/
 'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
@@ -344,11 +350,11 @@ int_type_tok : /i[0-9]+/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
+'nosanitize_coverage' : /nosanitize_coverage/
 'nosync' : /nosync/
 'notail' : /notail/
 'noundef': /noundef/
 'nounwind' : /nounwind/
-'nosanitize_coverage' : /nosanitize_coverage/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -428,12 +434,12 @@ int_type_tok : /i[0-9]+/
 'store' : /store/
 'strictfp' : /strictfp/
 'sub' : /sub/
+'swiftasync' : /swiftasync/
 'swiftcc' : /swiftcc/
 'swifterror' : /swifterror/
 'swiftself' : /swiftself/
-'switch' : /switch/
 'swifttailcc' : /swifttailcc/
-'swiftasync' : /swiftasync/
+'switch' : /switch/
 'syncscope' : /syncscope/
 'tail' : /tail/
 'tailcc' : /tailcc/
@@ -467,11 +473,11 @@ int_type_tok : /i[0-9]+/
 'uwtable' : /uwtable/
 'va_arg' : /va_arg/
 'vcall_visibility' : /vcall_visibility/
+'visibility' : /visibility/
 'void' : /void/
 'volatile' : /volatile/
-'vscale_range' : /vscale_range/
 'vscale' : /vscale/
-'visibility' : /visibility/
+'vscale_range' : /vscale_range/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
