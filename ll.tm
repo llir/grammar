@@ -267,6 +267,8 @@ int_type_tok : /i[0-9]+/
 'fence' : /fence/
 'filter' : /filter/
 'float' : /float/
+'fmax' : /fmax/
+'fmin' : /fmin/
 'fmul' : /fmul/
 'fneg' : /fneg/
 'fp128' : /fp128/
@@ -2551,6 +2553,8 @@ AtomicOp -> AtomicOp
 	: 'add'
 	| 'and'
 	| 'fadd'
+	| 'fmax'
+	| 'fmin'
 	| 'fsub'
 	| 'max'
 	| 'min'
