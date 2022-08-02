@@ -620,6 +620,7 @@ int_type_tok : /i[0-9]+/
 'stringLocationExpression:' : /stringLocationExpression:/
 'sysroot:' : /sysroot:/
 'tag:' : /tag:/
+'targetFuncName:' : /targetFuncName:/
 'templateParams:' : /templateParams:/
 'thisAdjustment:' : /thisAdjustment:/
 'thrownTypes:' : /thrownTypes:/
@@ -3596,7 +3597,7 @@ DIFileField -> DIFileField
 #                         isDefinition: true, templateParams: !3,
 #                         declaration: !4, align: 8)
 #
-#  REQUIRED(name, MDStringField, (AllowEmpty false));
+#  OPTIONAL(name, MDStringField, (/* AllowEmpty */ false));
 #  OPTIONAL(scope, MDField, );
 #  OPTIONAL(linkageName, MDStringField, );
 #  OPTIONAL(file, MDField, );
@@ -4011,6 +4012,7 @@ DIObjCPropertyField -> DIObjCPropertyField
 #  OPTIONAL(retainedNodes, MDField, );
 #  OPTIONAL(thrownTypes, MDField, );
 #  OPTIONAL(annotations, MDField, );
+#  OPTIONAL(targetFuncName, MDStringField, );
 
 DISubprogram -> DISubprogram
 	: '!DISubprogram' '(' Fields=(DISubprogramField separator ',')* ')'
@@ -4041,6 +4043,7 @@ DISubprogramField -> DISubprogramField
 	| RetainedNodesField
 	| ThrownTypesField
 	| AnnotationsField
+	| TargetFuncNameField
 ;
 
 # ~~~ [ DISubrange ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4495,6 +4498,10 @@ SysrootField -> SysrootField
 
 TagField -> TagField
 	: 'tag:' Tag=DwarfTag
+;
+
+TargetFuncNameField -> TargetFuncNameField
+	: 'targetFuncName:' TargetFuncName=StringLit
 ;
 
 TemplateParamsField -> TemplateParamsField
