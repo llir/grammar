@@ -174,9 +174,12 @@ int_type_tok : /i[0-9]+/
 'afn' : /afn/
 'alias' : /alias/
 'align' : /align/
+'aligned' : /aligned/
 'alignstack' : /alignstack/
+'alloc' : /alloc/
 'alloca' : /alloca/
 'allocalign' : /allocalign/
+'allockind' : /allockind/
 'allocptr' : /allocptr/
 'allocsize' : /allocsize/
 'alwaysinline' : /alwaysinline/
@@ -280,6 +283,7 @@ int_type_tok : /i[0-9]+/
 'fptosi' : /fptosi/
 'fptoui' : /fptoui/
 'fptrunc' : /fptrunc/
+'free' : /free/
 'freeze' : /freeze/
 'frem' : /frem/
 'from' : /from/
@@ -405,6 +409,7 @@ int_type_tok : /i[0-9]+/
 'ptx_kernel' : /ptx_kernel/
 'readnone' : /readnone/
 'readonly' : /readonly/
+'realloc' : /realloc/
 'reassoc' : /reassoc/
 'release' : /release/
 'resume' : /resume/
@@ -476,6 +481,7 @@ int_type_tok : /i[0-9]+/
 'umin' : /umin/
 'undef' : /undef/
 'une' : /une/
+'uninitialized' : /uninitialized/
 'unnamed_addr' : /unnamed_addr/
 'uno' : /uno/
 'unordered' : /unordered/
@@ -511,6 +517,7 @@ int_type_tok : /i[0-9]+/
 'x' : /x/
 'xchg' : /xchg/
 'xor' : /xor/
+'zeroed' : /zeroed/
 'zeroext' : /zeroext/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
@@ -4758,6 +4765,21 @@ AlignStackPair -> AlignStackPair
 	: 'alignstack' '=' N=UintLit
 ;
 
+# ref: parseAllocKind
+
+AllocKind -> AllocKind
+	: 'allockind' '(' AllocKinds=(AllocKindEnum separator ',')+ ')'
+;
+
+AllocKindEnum -> AllocKindEnum
+	: 'aligned'
+	| 'alloc'
+	| 'free'
+	| 'realloc'
+	| 'uninitialized'
+	| 'zeroed'
+;
+
 # ref: parseAllocSizeArguments
 
 AllocSize -> AllocSize
@@ -5047,6 +5069,7 @@ FuncAttribute -> FuncAttribute
 	| AlignPair
 	| AlignStack
 	| AlignStackPair
+	| AllocKind
 	| AllocSize
 	| FuncAttr
 	| Preallocated
