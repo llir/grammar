@@ -542,6 +542,7 @@ int_type_tok : /i[0-9]+/
 # Specialized metadata node field names.
 'align:' : /align:/
 'allocated:' : /allocated:/
+'annotations:' : /annotations:/
 'apinotes:' : /apinotes:/
 'arg:' : /arg:/
 'associated:' : /associated:/
@@ -3430,6 +3431,7 @@ DICompileUnitField -> DICompileUnitField
 #  OPTIONAL(associated, MDField, );
 #  OPTIONAL(allocated, MDField, );
 #  OPTIONAL(rank, MDSignedOrMDField, );
+#  OPTIONAL(annotations, MDField, );
 
 DICompositeType -> DICompositeType
 	: '!DICompositeType' '(' Fields=(DICompositeTypeField separator ',')* ')'
@@ -3458,6 +3460,7 @@ DICompositeTypeField -> DICompositeTypeField
 	| AssociatedField
 	| AllocatedField
 	| RankField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3483,6 +3486,7 @@ DICompositeTypeField -> DICompositeTypeField
 #  OPTIONAL(flags, DIFlagField, );
 #  OPTIONAL(extraData, MDField, );
 #  OPTIONAL(dwarfAddressSpace, MDUnsignedField, (UINT32_MAX, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DIDerivedType -> DIDerivedType
 	: '!DIDerivedType' '(' Fields=(DIDerivedTypeField separator ',')* ')'
@@ -3503,6 +3507,7 @@ DIDerivedTypeField -> DIDerivedTypeField
 	| FlagsField
 	| ExtraDataField
 	| DwarfAddressSpaceField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIEnumerator ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3602,6 +3607,7 @@ DIFileField -> DIFileField
 #  OPTIONAL(templateParams, MDField, );
 #  OPTIONAL(declaration, MDField, );
 #  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DIGlobalVariable -> DIGlobalVariable
 	: '!DIGlobalVariable' '(' Fields=(DIGlobalVariableField separator ',')* ')'
@@ -3621,6 +3627,7 @@ DIGlobalVariableField -> DIGlobalVariableField
 	| TemplateParamsField
 	| DeclarationField
 	| AlignField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIGlobalVariableExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3775,6 +3782,7 @@ DILexicalBlockFileField -> DILexicalBlockFileField
 #  OPTIONAL(type, MDField, );
 #  OPTIONAL(flags, DIFlagField, );
 #  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DILocalVariable -> DILocalVariable
 	: '!DILocalVariable' '(' Fields=(DILocalVariableField separator ',')* ')'
@@ -3791,6 +3799,7 @@ DILocalVariableField -> DILocalVariableField
 	| TypeField
 	| FlagsField
 	| AlignField
+	| AnnotationsField
 ;
 
 # ~~~ [ DILocation ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4001,6 +4010,7 @@ DIObjCPropertyField -> DIObjCPropertyField
 #  OPTIONAL(declaration, MDField, );
 #  OPTIONAL(retainedNodes, MDField, );
 #  OPTIONAL(thrownTypes, MDField, );
+#  OPTIONAL(annotations, MDField, );
 
 DISubprogram -> DISubprogram
 	: '!DISubprogram' '(' Fields=(DISubprogramField separator ',')* ')'
@@ -4030,6 +4040,7 @@ DISubprogramField -> DISubprogramField
 	| DeclarationField
 	| RetainedNodesField
 	| ThrownTypesField
+	| AnnotationsField
 ;
 
 # ~~~ [ DISubrange ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4167,6 +4178,10 @@ AlignField -> AlignField
 
 AllocatedField -> AllocatedField
 	: 'allocated:' Allocated=MDField
+;
+
+AnnotationsField -> AnnotationsField
+	: 'annotations:' Annotations=MDField
 ;
 
 ArgField -> ArgField
@@ -4999,7 +5014,7 @@ FPred -> FPred
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface FuncAttribute;
 
@@ -5021,12 +5036,15 @@ FuncAttribute -> FuncAttribute
 	| VScaleRangetok
 ;
 
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+
 FuncAttr -> FuncAttr
 	: 'alwaysinline'
 	| 'argmemonly'
 	| 'builtin'
 	| 'cold'
 	| 'convergent'
+	| 'disable_sanitizer_instrumentation'
 	| 'hot'
 	| 'inaccessiblemem_or_argmemonly'
 	| 'inaccessiblememonly'
@@ -5173,7 +5191,7 @@ Param -> Param
 ;
 
 # ref: ParseOptionalParamAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface ParamAttribute;
 
@@ -5248,7 +5266,7 @@ StructRetAttr -> StructRetAttr
 ;
 
 # ref: ParseOptionalReturnAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface ReturnAttribute;
 
