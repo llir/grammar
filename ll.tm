@@ -158,6 +158,12 @@ int_type_tok : /i[0-9]+/
 
 # List of tokens is sorted alphabetically.
 
+# TODO: move to alphabetically sorted position.
+#
+# NOTE: moved here as a work-around for Textmapper error:
+#    `'nounwind' cannot be resolved`
+'nounwind' : /nounwind/
+
 'aarch64_sve_vector_pcs' : /aarch64_sve_vector_pcs/
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
@@ -235,6 +241,7 @@ int_type_tok : /i[0-9]+/
 'define' : /define/
 'dereferenceable' : /dereferenceable/
 'dereferenceable_or_null' : /dereferenceable_or_null/
+'disable_sanitizer_instrumentation' : /disable_sanitizer_instrumentation/
 'distinct' : /distinct/
 'dllexport' : /dllexport/
 'dllimport' : /dllimport/
@@ -242,8 +249,8 @@ int_type_tok : /i[0-9]+/
 'dso_local' : /dso_local/
 'dso_local_equivalent' : /dso_local_equivalent/
 'dso_preemptable' : /dso_preemptable/
-'eq' : /eq/
 'elementtype' : /elementtype/
+'eq' : /eq/
 'exact' : /exact/
 'exactmatch' : /exactmatch/
 'extern_weak' : /extern_weak/
@@ -276,6 +283,7 @@ int_type_tok : /i[0-9]+/
 'ghccc' : /ghccc/
 'global' : /global/
 'half' : /half/
+'hasUnknownCall' : /hasUnknownCall/
 'hhvm_ccc' : /hhvm_ccc/
 'hhvmcc' : /hhvmcc/
 'hidden' : /hidden/
@@ -311,6 +319,7 @@ int_type_tok : /i[0-9]+/
 'localexec' : /localexec/
 'lshr' : /lshr/
 'max' : /max/
+'mayThrow' : /mayThrow/
 'metadata' : /metadata/
 'min' : /min/
 'minsize' : /minsize/
@@ -318,6 +327,7 @@ int_type_tok : /i[0-9]+/
 'monotonic' : /monotonic/
 'msp430_intrcc' : /msp430_intrcc/
 'mul' : /mul/
+'mustBeUnreachable' : /mustBeUnreachable/
 'mustprogress': /mustprogress/
 'musttail' : /musttail/
 'naked' : /naked/
@@ -326,13 +336,15 @@ int_type_tok : /i[0-9]+/
 'nest' : /nest/
 'ninf' : /ninf/
 'nnan' : /nnan/
+'noUnwind' : /noUnwind/
+'no_cfi' : /no_cfi/
 'noalias' : /noalias/
 'nobuiltin' : /nobuiltin/
 'nocallback': /nocallback/
 'nocapture' : /nocapture/
 'nocf_check' : /nocf_check/
-'noduplicate' : /noduplicate/
 'nodeduplicate' : /nodeduplicate/
+'noduplicate' : /noduplicate/
 'nofree' : /nofree/
 'noimplicitfloat' : /noimplicitfloat/
 'noinline' : /noinline/
@@ -344,11 +356,10 @@ int_type_tok : /i[0-9]+/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
+'nosanitize_coverage' : /nosanitize_coverage/
 'nosync' : /nosync/
 'notail' : /notail/
 'noundef': /noundef/
-'nounwind' : /nounwind/
-'nosanitize_coverage' : /nosanitize_coverage/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -428,12 +439,12 @@ int_type_tok : /i[0-9]+/
 'store' : /store/
 'strictfp' : /strictfp/
 'sub' : /sub/
+'swiftasync' : /swiftasync/
 'swiftcc' : /swiftcc/
 'swifterror' : /swifterror/
 'swiftself' : /swiftself/
-'switch' : /switch/
 'swifttailcc' : /swifttailcc/
-'swiftasync' : /swiftasync/
+'switch' : /switch/
 'syncscope' : /syncscope/
 'tail' : /tail/
 'tailcc' : /tailcc/
@@ -467,11 +478,11 @@ int_type_tok : /i[0-9]+/
 'uwtable' : /uwtable/
 'va_arg' : /va_arg/
 'vcall_visibility' : /vcall_visibility/
+'visibility' : /visibility/
 'void' : /void/
 'volatile' : /volatile/
-'vscale_range' : /vscale_range/
 'vscale' : /vscale/
-'visibility' : /visibility/
+'vscale_range' : /vscale_range/
 'weak' : /weak/
 'weak_odr' : /weak_odr/
 'webkit_jscc' : /webkit_jscc/
@@ -520,6 +531,7 @@ int_type_tok : /i[0-9]+/
 '!DIModule' : /!DIModule/
 '!DINamespace' : /!DINamespace/
 '!DIObjCProperty' : /!DIObjCProperty/
+'!DIStringType' : /!DIStringType/
 '!DISubprogram' : /!DISubprogram/
 '!DISubrange' : /!DISubrange/
 '!DISubroutineType' : /!DISubroutineType/
@@ -530,6 +542,7 @@ int_type_tok : /i[0-9]+/
 # Specialized metadata node field names.
 'align:' : /align:/
 'allocated:' : /allocated:/
+'annotations:' : /annotations:/
 'apinotes:' : /apinotes:/
 'arg:' : /arg:/
 'associated:' : /associated:/
@@ -602,6 +615,9 @@ int_type_tok : /i[0-9]+/
 'splitDebugFilename:' : /splitDebugFilename:/
 'splitDebugInlining:' : /splitDebugInlining:/
 'stride:' : /stride:/
+'stringLength:' : /stringLength:/
+'stringLengthExpression:' : /stringLengthExpression:/
+'stringLocationExpression:' : /stringLocationExpression:/
 'sysroot:' : /sysroot:/
 'tag:' : /tag:/
 'templateParams:' : /templateParams:/
@@ -994,12 +1010,12 @@ Immutable -> Immutable
 #   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
 #                     OptionalVisibility OptionalDLLStorageClass
 #                     OptionalThreadLocal OptionalUnnamedAddr
-#                     'alias|ifunc' IndirectSymbol IndirectSymbolAttr*
+#                     'alias|ifunc' AliaseeOrResolver SymbolAttrs*
 #
-#  IndirectSymbol
+#  AliaseeOrResolver (previously IndirectSymbol)
 #   ::= TypeAndValue
 #
-#  IndirectSymbolAttr
+#  SymbolAttrs (previously IndirectSymbolAttr)
 #    ::= ',' 'partition' StringConstant
 
 IndirectSymbolDef -> IndirectSymbolDef
@@ -1286,9 +1302,20 @@ MMXType -> MMXType
 # ref: https://llvm.org/docs/OpaquePointers.html#version-support
 
 PointerType -> PointerType
+	# TODO: remove typed pointer type in LLVM 16.0.
 	: Elem=Type AddrSpaceopt '*'
-	# "ptr" # TODO: enable use of opaque pointer types.
+	#| OpaquePointerType
 ;
+
+# TODO: add support for OpaquePointerType.
+
+# ref: parseType
+#
+# Type ::= ptr ('addrspace' '(' uint32 ')')?
+
+#OpaquePointerType -> OpaquePointerType
+#	: 'ptr' AddrSpaceopt
+#;
 
 # --- [ Vector Types ] ---------------------------------------------------------
 
@@ -1424,6 +1451,8 @@ Constant -> Constant
 	| UndefConst
 	| PoisonConst
 	| BlockAddressConst
+	| DSOLocalEquivalentConst
+	| NoCFIConst
 	| ConstantExpr
 ;
 
@@ -1556,6 +1585,30 @@ PoisonConst -> PoisonConst
 
 BlockAddressConst -> BlockAddressConst
 	: 'blockaddress' '(' Func=GlobalIdent ',' Block=LocalIdent ')'
+;
+
+# --- [ DSO Local Equivalent ] -------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#dso-local-equivalent
+
+# ref: parseValID
+#
+# ValID ::= 'dso_local_equivalent' @foo
+
+DSOLocalEquivalentConst -> DSOLocalEquivalentConst
+	: 'dso_local_equivalent' Func=GlobalIdent
+;
+
+# --- [ No CFI ] ---------------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#no-cfi
+
+# ref: parseValID
+#
+# ValID ::= 'no_cfi' @foo
+
+NoCFIConst -> NoCFIConst
+	: 'no_cfi' Func=GlobalIdent
 ;
 
 # === [ Constant expressions ] =================================================
@@ -3188,6 +3241,7 @@ SpecializedMDNode -> SpecializedMDNode
 	| DIModule # not in spec as of 2018-02-21, still not in spec as of 2019-12-05
 	| DINamespace
 	| DIObjCProperty
+	| DIStringType
 	| DISubprogram
 	| DISubrange
 	| DISubroutineType
@@ -3225,6 +3279,40 @@ DIBasicTypeField -> DIBasicTypeField
 	| AlignField
 	| EncodingField
 	| FlagsField
+;
+
+# ~~~ [ DIStringType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://llvm.org/docs/LangRef.html#dibasictype
+
+# ref: parseDIStringType:
+#
+#   ::= !DIStringType(name: "character(4)", size: 32, align: 32)
+#
+#  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_string_type));
+#  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(stringLength, MDField, );
+#  OPTIONAL(stringLengthExpression, MDField, );
+#  OPTIONAL(stringLocationExpression, MDField, );
+#  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+#  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(encoding, DwarfAttEncodingField, );
+
+DIStringType -> DIStringType
+	: '!DIStringType' '(' Fields=(DIStringTypeField separator ',')* ')'
+;
+
+%interface DIStringTypeField;
+
+DIStringTypeField -> DIStringTypeField
+	: TagField
+	| NameField
+	| StringLengthField
+	| StringLengthExpressionField
+	| StringLocationExpressionField
+	| SizeField
+	| AlignField
+	| EncodingField
 ;
 
 # ~~~ [ DICommonBlock ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3343,6 +3431,7 @@ DICompileUnitField -> DICompileUnitField
 #  OPTIONAL(associated, MDField, );
 #  OPTIONAL(allocated, MDField, );
 #  OPTIONAL(rank, MDSignedOrMDField, );
+#  OPTIONAL(annotations, MDField, );
 
 DICompositeType -> DICompositeType
 	: '!DICompositeType' '(' Fields=(DICompositeTypeField separator ',')* ')'
@@ -3371,6 +3460,7 @@ DICompositeTypeField -> DICompositeTypeField
 	| AssociatedField
 	| AllocatedField
 	| RankField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIDerivedType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3396,6 +3486,7 @@ DICompositeTypeField -> DICompositeTypeField
 #  OPTIONAL(flags, DIFlagField, );
 #  OPTIONAL(extraData, MDField, );
 #  OPTIONAL(dwarfAddressSpace, MDUnsignedField, (UINT32_MAX, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DIDerivedType -> DIDerivedType
 	: '!DIDerivedType' '(' Fields=(DIDerivedTypeField separator ',')* ')'
@@ -3416,6 +3507,7 @@ DIDerivedTypeField -> DIDerivedTypeField
 	| FlagsField
 	| ExtraDataField
 	| DwarfAddressSpaceField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIEnumerator ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3427,7 +3519,7 @@ DIDerivedTypeField -> DIDerivedTypeField
 #   ::= !DIEnumerator(value: 30, isUnsigned: true, name: 'SomeKind')
 #
 #  REQUIRED(name, MDStringField, );
-#  REQUIRED(value, MDSignedOrUnsignedField, );
+#  REQUIRED(value, MDAPSIntField, );
 #  OPTIONAL(isUnsigned, MDBoolField, (false));
 
 DIEnumerator -> DIEnumerator
@@ -3515,6 +3607,7 @@ DIFileField -> DIFileField
 #  OPTIONAL(templateParams, MDField, );
 #  OPTIONAL(declaration, MDField, );
 #  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DIGlobalVariable -> DIGlobalVariable
 	: '!DIGlobalVariable' '(' Fields=(DIGlobalVariableField separator ',')* ')'
@@ -3534,6 +3627,7 @@ DIGlobalVariableField -> DIGlobalVariableField
 	| TemplateParamsField
 	| DeclarationField
 	| AlignField
+	| AnnotationsField
 ;
 
 # ~~~ [ DIGlobalVariableExpression ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3573,6 +3667,7 @@ DIGlobalVariableExpressionField -> DIGlobalVariableExpressionField
 #  OPTIONAL(file, MDField, );
 #  OPTIONAL(line, LineField, );
 #  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(elements, MDField, );
 
 DIImportedEntity -> DIImportedEntity
 	: '!DIImportedEntity' '(' Fields=(DIImportedEntityField separator ',')* ')'
@@ -3587,6 +3682,7 @@ DIImportedEntityField -> DIImportedEntityField
 	| FileField
 	| LineField
 	| NameField
+	| ElementsField
 ;
 
 # ~~~ [ DILabel ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3686,6 +3782,7 @@ DILexicalBlockFileField -> DILexicalBlockFileField
 #  OPTIONAL(type, MDField, );
 #  OPTIONAL(flags, DIFlagField, );
 #  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(annotations, MDField, );
 
 DILocalVariable -> DILocalVariable
 	: '!DILocalVariable' '(' Fields=(DILocalVariableField separator ',')* ')'
@@ -3702,6 +3799,7 @@ DILocalVariableField -> DILocalVariableField
 	| TypeField
 	| FlagsField
 	| AlignField
+	| AnnotationsField
 ;
 
 # ~~~ [ DILocation ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3912,6 +4010,7 @@ DIObjCPropertyField -> DIObjCPropertyField
 #  OPTIONAL(declaration, MDField, );
 #  OPTIONAL(retainedNodes, MDField, );
 #  OPTIONAL(thrownTypes, MDField, );
+#  OPTIONAL(annotations, MDField, );
 
 DISubprogram -> DISubprogram
 	: '!DISubprogram' '(' Fields=(DISubprogramField separator ',')* ')'
@@ -3941,6 +4040,7 @@ DISubprogramField -> DISubprogramField
 	| DeclarationField
 	| RetainedNodesField
 	| ThrownTypesField
+	| AnnotationsField
 ;
 
 # ~~~ [ DISubrange ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4078,6 +4178,10 @@ AlignField -> AlignField
 
 AllocatedField -> AllocatedField
 	: 'allocated:' Allocated=MDField
+;
+
+AnnotationsField -> AnnotationsField
+	: 'annotations:' Annotations=MDField
 ;
 
 ArgField -> ArgField
@@ -4371,6 +4475,18 @@ SplitDebugInliningField -> SplitDebugInliningField
 
 StrideField -> StrideField
 	: 'stride:' Stride=MDFieldOrInt
+;
+
+StringLengthField -> StringLengthField
+	: 'stringLength:' StringLength=MDField
+;
+
+StringLengthExpressionField -> StringLengthExpressionField
+	: 'stringLengthExpression:' StringLengthExpression=MDField
+;
+
+StringLocationExpressionField -> StringLocationExpressionField
+	: 'stringLocationExpression:' StringLocationExpression=MDField
 ;
 
 SysrootField -> SysrootField
@@ -4898,7 +5014,7 @@ FPred -> FPred
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface FuncAttribute;
 
@@ -4920,12 +5036,15 @@ FuncAttribute -> FuncAttribute
 	| VScaleRangetok
 ;
 
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+
 FuncAttr -> FuncAttr
 	: 'alwaysinline'
 	| 'argmemonly'
 	| 'builtin'
 	| 'cold'
 	| 'convergent'
+	| 'disable_sanitizer_instrumentation'
 	| 'hot'
 	| 'inaccessiblemem_or_argmemonly'
 	| 'inaccessiblememonly'
@@ -5072,7 +5191,7 @@ Param -> Param
 ;
 
 # ref: ParseOptionalParamAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface ParamAttribute;
 
@@ -5147,7 +5266,7 @@ StructRetAttr -> StructRetAttr
 ;
 
 # ref: ParseOptionalReturnAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 13.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
 
 %interface ReturnAttribute;
 
