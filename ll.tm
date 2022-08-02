@@ -174,9 +174,7 @@ int_type_tok : /i[0-9]+/
 'afn' : /afn/
 'alias' : /alias/
 'align' : /align/
-'aligned' : /aligned/
 'alignstack' : /alignstack/
-'alloc' : /alloc/
 'alloca' : /alloca/
 'allocalign' : /allocalign/
 'allockind' : /allockind/
@@ -283,7 +281,6 @@ int_type_tok : /i[0-9]+/
 'fptosi' : /fptosi/
 'fptoui' : /fptoui/
 'fptrunc' : /fptrunc/
-'free' : /free/
 'freeze' : /freeze/
 'frem' : /frem/
 'from' : /from/
@@ -348,6 +345,8 @@ int_type_tok : /i[0-9]+/
 'nnan' : /nnan/
 'noUnwind' : /noUnwind/
 'no_cfi' : /no_cfi/
+'no_sanitize_address' : /no_sanitize_address/
+'no_sanitize_hwaddress' : /no_sanitize_hwaddress/
 'noalias' : /noalias/
 'nobuiltin' : /nobuiltin/
 'nocallback': /nocallback/
@@ -409,7 +408,6 @@ int_type_tok : /i[0-9]+/
 'ptx_kernel' : /ptx_kernel/
 'readnone' : /readnone/
 'readonly' : /readonly/
-'realloc' : /realloc/
 'reassoc' : /reassoc/
 'release' : /release/
 'resume' : /resume/
@@ -419,6 +417,7 @@ int_type_tok : /i[0-9]+/
 'safestack' : /safestack/
 'samesize' : /samesize/
 'sanitize_address' : /sanitize_address/
+'sanitize_address_dyninit' : /sanitize_address_dyninit/
 'sanitize_hwaddress' : /sanitize_hwaddress/
 'sanitize_memory' : /sanitize_memory/
 'sanitize_memtag' : /sanitize_memtag/
@@ -481,7 +480,6 @@ int_type_tok : /i[0-9]+/
 'umin' : /umin/
 'undef' : /undef/
 'une' : /une/
-'uninitialized' : /uninitialized/
 'unnamed_addr' : /unnamed_addr/
 'uno' : /uno/
 'unordered' : /unordered/
@@ -517,7 +515,6 @@ int_type_tok : /i[0-9]+/
 'x' : /x/
 'xchg' : /xchg/
 'xor' : /xor/
-'zeroed' : /zeroed/
 'zeroext' : /zeroext/
 'zeroinitializer' : /zeroinitializer/
 'zext' : /zext/
@@ -985,8 +982,8 @@ SelectionKind -> SelectionKind
 #       Const OptionalAttrs
 
 GlobalDecl -> GlobalDecl
-	#: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
-	#| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	#: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? (',' SanitizerKind)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
+	#| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant (',' Section)? (',' Partition)? (',' Comdat)? (',' Align)? (',' SanitizerKind)? Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 	: Name=GlobalIdent '=' Linkage=ExternLinkage Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type GlobalFields=(',' GlobalField)* Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 	| Name=GlobalIdent '=' Linkage=Linkageopt Preemptionopt Visibilityopt DLLStorageClassopt ThreadLocalopt UnnamedAddropt AddrSpaceopt ExternallyInitializedopt Immutable ContentType=Type Init=Constant GlobalFields=(',' GlobalField)* Metadata=(',' MetadataAttachment)+? FuncAttrs=FuncAttribute+?
 ;
@@ -1001,6 +998,7 @@ GlobalField -> GlobalField
 	| Partition
 	| Comdat
 	| Align
+	| SanitizerKind
 ;
 
 ExternallyInitialized -> ExternallyInitialized
@@ -4768,16 +4766,7 @@ AlignStackPair -> AlignStackPair
 # ref: parseAllocKind
 
 AllocKind -> AllocKind
-	: 'allockind' '(' AllocKinds=(AllocKindEnum separator ',')+ ')'
-;
-
-AllocKindEnum -> AllocKindEnum
-	: 'aligned'
-	| 'alloc'
-	| 'free'
-	| 'realloc'
-	| 'uninitialized'
-	| 'zeroed'
+	: 'allockind' '(' AllocKinds=StringLit ')'
 ;
 
 # ref: parseAllocSizeArguments
@@ -5335,6 +5324,15 @@ ReturnAttr -> ReturnAttr
 	| 'noundef'
 	| 'signext'
 	| 'zeroext'
+;
+
+# ref: parseSanitizer
+
+SanitizerKind -> SanitizerKind
+	: 'no_sanitize_address'
+	| 'no_sanitize_hwaddress'
+	| 'sanitize_address_dyninit'
+	| 'sanitize_memtag'
 ;
 
 Section -> Section
