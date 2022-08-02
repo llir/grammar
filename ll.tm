@@ -176,6 +176,8 @@ int_type_tok : /i[0-9]+/
 'align' : /align/
 'alignstack' : /alignstack/
 'alloca' : /alloca/
+'allocalign' : /allocalign/
+'allocptr' : /allocptr/
 'allocsize' : /allocsize/
 'alwaysinline' : /alwaysinline/
 'amdgpu_cs' : /amdgpu_cs/
@@ -198,6 +200,7 @@ int_type_tok : /i[0-9]+/
 'arm_apcscc' : /arm_apcscc/
 'ashr' : /ashr/
 'asm' : /asm/
+'async' : /async/
 'atomic' : /atomic/
 'atomicrmw' : /atomicrmw/
 'attributes' : /attributes/
@@ -270,6 +273,7 @@ int_type_tok : /i[0-9]+/
 'fmax' : /fmax/
 'fmin' : /fmin/
 'fmul' : /fmul/
+'fn_ret_thunk_extern' : /fn_ret_thunk_extern/
 'fneg' : /fneg/
 'fp128' : /fp128/
 'fpext' : /fpext/
@@ -358,6 +362,7 @@ int_type_tok : /i[0-9]+/
 'norecurse' : /norecurse/
 'noredzone' : /noredzone/
 'noreturn' : /noreturn/
+'nosanitize_bounds' : /nosanitize_bounds/
 'nosanitize_coverage' : /nosanitize_coverage/
 'nosync' : /nosync/
 'notail' : /notail/
@@ -390,6 +395,7 @@ int_type_tok : /i[0-9]+/
 'prefix' : /prefix/
 'preserve_allcc' : /preserve_allcc/
 'preserve_mostcc' : /preserve_mostcc/
+'presplitcoroutine' : /presplitcoroutine/
 'private' : /private/
 'prologue' : /prologue/
 'protected' : /protected/
@@ -447,6 +453,7 @@ int_type_tok : /i[0-9]+/
 'swiftself' : /swiftself/
 'swifttailcc' : /swifttailcc/
 'switch' : /switch/
+'sync' : /sync/
 'syncscope' : /syncscope/
 'tail' : /tail/
 'tailcc' : /tailcc/
@@ -5025,7 +5032,7 @@ FPred -> FPred
 # NOTE: FuncAttribute should contain Align. However, using LALR(1) this
 # produces a reduce/reduce conflict as GlobalDecl also contains Align.
 
-# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 15.0)
 
 %interface FuncAttribute;
 
@@ -5043,11 +5050,12 @@ FuncAttribute -> FuncAttribute
 	| AllocSize
 	| FuncAttr
 	| Preallocated
-	| VScaleRange
-	| VScaleRangetok
+	| UnwindTable
+	| VectorScaleRange
+	| VectorScaleRangetok
 ;
 
-# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 15.0)
 
 FuncAttr -> FuncAttr
 	: 'alwaysinline'
@@ -5056,6 +5064,7 @@ FuncAttr -> FuncAttr
 	| 'cold'
 	| 'convergent'
 	| 'disable_sanitizer_instrumentation'
+	| 'fn_ret_thunk_extern'
 	| 'hot'
 	| 'inaccessiblemem_or_argmemonly'
 	| 'inaccessiblememonly'
@@ -5077,6 +5086,7 @@ FuncAttr -> FuncAttr
 	| 'norecurse'
 	| 'noredzone'
 	| 'noreturn'
+	| 'nosanitize_bounds'
 	| 'nosanitize_coverage'
 	| 'nosync'
 	| 'nounwind'
@@ -5084,6 +5094,7 @@ FuncAttr -> FuncAttr
 	| 'optforfuzzing'
 	| 'optnone'
 	| 'optsize'
+	| 'presplitcoroutine'
 	| 'readnone'
 	| 'readonly'
 	| 'returns_twice'
@@ -5100,7 +5111,6 @@ FuncAttr -> FuncAttr
 	| 'sspreq'
 	| 'sspstrong'
 	| 'strictfp'
-	| 'uwtable'
 	| 'willreturn'
 	| 'writeonly'
 ;
@@ -5202,7 +5212,7 @@ Param -> Param
 ;
 
 # ref: ParseOptionalParamAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 15.0)
 
 %interface ParamAttribute;
 
@@ -5222,7 +5232,9 @@ ParamAttribute -> ParamAttribute
 ;
 
 ParamAttr -> ParamAttr
-	: 'immarg'
+	: 'allocalign'
+	| 'allocptr'
+	| 'immarg'
 	| 'inreg'
 	| 'nest'
 	| 'noalias'
@@ -5277,7 +5289,7 @@ StructRetAttr -> StructRetAttr
 ;
 
 # ref: ParseOptionalReturnAttrs
-# ref: include/llvm/IR/Attributes.td (LLVM 14.0)
+# ref: include/llvm/IR/Attributes.td (LLVM 15.0)
 
 %interface ReturnAttribute;
 
@@ -5352,6 +5364,16 @@ UnnamedAddr -> UnnamedAddr
 	| 'unnamed_addr'
 ;
 
+UnwindTable -> UnwindTable
+	: 'uwtable'
+	| 'uwtable' '(' Kind=UnwindTableKind ')'
+;
+
+UnwindTableKind -> UnwindTableKind
+	: 'async'
+	| 'sync'
+;
+
 %interface UnwindTarget;
 
 UnwindTarget -> UnwindTarget
@@ -5361,6 +5383,19 @@ UnwindTarget -> UnwindTarget
 
 UnwindToCaller -> UnwindToCaller
 	: 'to' 'caller'
+;
+
+# ref: parseVScaleRangeArguments
+
+VectorScaleRangetok -> VectorScaleRangetok
+	: 'vscale_range'
+;
+
+VectorScaleRange -> VectorScaleRange
+	# NOTE: Min should be called Max in the first case. Named Min to resolve textmapper error:
+	#    `Min` cannot be nullable, since it precedes Max
+	: 'vscale_range' '(' Min=UintLit ')'
+	| 'vscale_range' '(' Min=UintLit ',' Max=UintLit ')'
 ;
 
 # https://llvm.org/docs/LangRef.html#visibility-styles
@@ -5380,17 +5415,4 @@ Visibility -> Visibility
 
 Volatile -> Volatile
 	: 'volatile'
-;
-
-# ref: parseVScaleRangeArguments
-
-VScaleRangetok -> VScaleRangetok
-	: 'vscale_range'
-;
-
-VScaleRange -> VScaleRange
-	# NOTE: Min should be called Max in the first case. Named Min to resolve textmapper error:
-	#    `Min` cannot be nullable, since it precedes Max
-	: 'vscale_range' '(' Min=UintLit ')'
-	| 'vscale_range' '(' Min=UintLit ',' Max=UintLit ')'
 ;
