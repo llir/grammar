@@ -158,6 +158,12 @@ int_type_tok : /i[0-9]+/
 
 # List of tokens is sorted alphabetically.
 
+# TODO: move to alphabetically sorted position.
+#
+# NOTE: moved here as a work-around for Textmapper error:
+#    `'nounwind' cannot be resolved`
+'nounwind' : /nounwind/
+
 'aarch64_sve_vector_pcs' : /aarch64_sve_vector_pcs/
 'aarch64_vector_pcs' : /aarch64_vector_pcs/
 'acq_rel' : /acq_rel/
@@ -354,7 +360,6 @@ int_type_tok : /i[0-9]+/
 'nosync' : /nosync/
 'notail' : /notail/
 'noundef': /noundef/
-'nounwind' : /nounwind/
 'nsw' : /nsw/
 'nsz' : /nsz/
 'null' : /null/
@@ -1000,12 +1005,12 @@ Immutable -> Immutable
 #   ::= GlobalVar '=' OptionalLinkage OptionalPreemptionSpecifier
 #                     OptionalVisibility OptionalDLLStorageClass
 #                     OptionalThreadLocal OptionalUnnamedAddr
-#                     'alias|ifunc' IndirectSymbol IndirectSymbolAttr*
+#                     'alias|ifunc' AliaseeOrResolver SymbolAttrs*
 #
-#  IndirectSymbol
+#  AliaseeOrResolver (previously IndirectSymbol)
 #   ::= TypeAndValue
 #
-#  IndirectSymbolAttr
+#  SymbolAttrs (previously IndirectSymbolAttr)
 #    ::= ',' 'partition' StringConstant
 
 IndirectSymbolDef -> IndirectSymbolDef
@@ -1292,9 +1297,20 @@ MMXType -> MMXType
 # ref: https://llvm.org/docs/OpaquePointers.html#version-support
 
 PointerType -> PointerType
+	# TODO: remove typed pointer type in LLVM 16.0.
 	: Elem=Type AddrSpaceopt '*'
-	# "ptr" # TODO: enable use of opaque pointer types.
+	#| OpaquePointerType
 ;
+
+# TODO: add support for OpaquePointerType.
+
+# ref: parseType
+#
+# Type ::= ptr ('addrspace' '(' uint32 ')')?
+
+#OpaquePointerType -> OpaquePointerType
+#	: 'ptr' AddrSpaceopt
+#;
 
 # --- [ Vector Types ] ---------------------------------------------------------
 
@@ -1430,6 +1446,8 @@ Constant -> Constant
 	| UndefConst
 	| PoisonConst
 	| BlockAddressConst
+	| DSOLocalEquivalentConst
+	| NoCFIConst
 	| ConstantExpr
 ;
 
@@ -1562,6 +1580,30 @@ PoisonConst -> PoisonConst
 
 BlockAddressConst -> BlockAddressConst
 	: 'blockaddress' '(' Func=GlobalIdent ',' Block=LocalIdent ')'
+;
+
+# --- [ DSO Local Equivalent ] -------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#dso-local-equivalent
+
+# ref: parseValID
+#
+# ValID ::= 'dso_local_equivalent' @foo
+
+DSOLocalEquivalentConst -> DSOLocalEquivalentConst
+	: 'dso_local_equivalent' Func=GlobalIdent
+;
+
+# --- [ No CFI ] ---------------------------------------------------------------
+
+# https://llvm.org/docs/LangRef.html#no-cfi
+
+# ref: parseValID
+#
+# ValID ::= 'no_cfi' @foo
+
+NoCFIConst -> NoCFIConst
+	: 'no_cfi' Func=GlobalIdent
 ;
 
 # === [ Constant expressions ] =================================================
