@@ -1639,17 +1639,8 @@ ConstantExpr -> ConstantExpr
 	: FNegExpr
 	# Binary expressions
 	| AddExpr
-	| FAddExpr
 	| SubExpr
-	| FSubExpr
 	| MulExpr
-	| FMulExpr
-	| UDivExpr
-	| SDivExpr
-	| FDivExpr
-	| URemExpr
-	| SRemExpr
-	| FRemExpr
 	# Bitwise expressions
 	| ShlExpr
 	| LShrExpr
@@ -1661,9 +1652,6 @@ ConstantExpr -> ConstantExpr
 	| ExtractElementExpr
 	| InsertElementExpr
 	| ShuffleVectorExpr
-	# Aggregate expressions
-	| ExtractValueExpr
-	| InsertValueExpr
 	# Memory expressions
 	| GetElementPtrExpr
 	# Conversion expressions
@@ -1710,14 +1698,6 @@ AddExpr -> AddExpr
 	: 'add' OverflowFlags=OverflowFlag* '(' X=TypeConst ',' Y=TypeConst ')'
 ;
 
-# ~~~ [ fadd ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-FAddExpr -> FAddExpr
-	: 'fadd' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
 # ~~~ [ sub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ref: ParseValID
@@ -1726,76 +1706,12 @@ SubExpr -> SubExpr
 	: 'sub' OverflowFlags=OverflowFlag* '(' X=TypeConst ',' Y=TypeConst ')'
 ;
 
-# ~~~ [ fsub ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-FSubExpr -> FSubExpr
-	: 'fsub' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
 # ~~~ [ mul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ref: ParseValID
 
 MulExpr -> MulExpr
 	: 'mul' OverflowFlags=OverflowFlag* '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ fmul ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-FMulExpr -> FMulExpr
-	: 'fmul' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ udiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-UDivExpr -> UDivExpr
-	: 'udiv' Exactopt '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ sdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-SDivExpr -> SDivExpr
-	: 'sdiv' Exactopt '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ fdiv ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-FDivExpr -> FDivExpr
-	: 'fdiv' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ urem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-URemExpr -> URemExpr
-	: 'urem' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ srem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-SRemExpr -> SRemExpr
-	: 'srem' '(' X=TypeConst ',' Y=TypeConst ')'
-;
-
-# ~~~ [ frem ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-FRemExpr -> FRemExpr
-	: 'frem' '(' X=TypeConst ',' Y=TypeConst ')'
 ;
 
 # --- [ Bitwise expressions ] --------------------------------------------------
@@ -1881,22 +1797,6 @@ ShuffleVectorExpr -> ShuffleVectorExpr
 # --- [ Aggregate expressions ] ------------------------------------------------
 
 # https://llvm.org/docs/LangRef.html#constant-expressions
-
-# ~~~ [ extractvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-ExtractValueExpr -> ExtractValueExpr
-	: 'extractvalue' '(' X=TypeConst Indices=(',' UintLit)* ')'
-;
-
-# ~~~ [ insertvalue ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# ref: ParseValID
-
-InsertValueExpr -> InsertValueExpr
-	: 'insertvalue' '(' X=TypeConst ',' Elem=TypeConst Indices=(',' UintLit)* ')'
-;
 
 # --- [ Memory expressions ] ---------------------------------------------------
 
