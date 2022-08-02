@@ -531,6 +531,7 @@ int_type_tok : /i[0-9]+/
 '!DIModule' : /!DIModule/
 '!DINamespace' : /!DINamespace/
 '!DIObjCProperty' : /!DIObjCProperty/
+'!DIStringType' : /!DIStringType/
 '!DISubprogram' : /!DISubprogram/
 '!DISubrange' : /!DISubrange/
 '!DISubroutineType' : /!DISubroutineType/
@@ -613,6 +614,9 @@ int_type_tok : /i[0-9]+/
 'splitDebugFilename:' : /splitDebugFilename:/
 'splitDebugInlining:' : /splitDebugInlining:/
 'stride:' : /stride:/
+'stringLength:' : /stringLength:/
+'stringLengthExpression:' : /stringLengthExpression:/
+'stringLocationExpression:' : /stringLocationExpression:/
 'sysroot:' : /sysroot:/
 'tag:' : /tag:/
 'templateParams:' : /templateParams:/
@@ -3236,6 +3240,7 @@ SpecializedMDNode -> SpecializedMDNode
 	| DIModule # not in spec as of 2018-02-21, still not in spec as of 2019-12-05
 	| DINamespace
 	| DIObjCProperty
+	| DIStringType
 	| DISubprogram
 	| DISubrange
 	| DISubroutineType
@@ -3273,6 +3278,40 @@ DIBasicTypeField -> DIBasicTypeField
 	| AlignField
 	| EncodingField
 	| FlagsField
+;
+
+# ~~~ [ DIStringType ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://llvm.org/docs/LangRef.html#dibasictype
+
+# ref: parseDIStringType:
+#
+#   ::= !DIStringType(name: "character(4)", size: 32, align: 32)
+#
+#  OPTIONAL(tag, DwarfTagField, (dwarf::DW_TAG_string_type));
+#  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(stringLength, MDField, );
+#  OPTIONAL(stringLengthExpression, MDField, );
+#  OPTIONAL(stringLocationExpression, MDField, );
+#  OPTIONAL(size, MDUnsignedField, (0, UINT64_MAX));
+#  OPTIONAL(align, MDUnsignedField, (0, UINT32_MAX));
+#  OPTIONAL(encoding, DwarfAttEncodingField, );
+
+DIStringType -> DIStringType
+	: '!DIStringType' '(' Fields=(DIStringTypeField separator ',')* ')'
+;
+
+%interface DIStringTypeField;
+
+DIStringTypeField -> DIStringTypeField
+	: TagField
+	| NameField
+	| StringLengthField
+	| StringLengthExpressionField
+	| StringLocationExpressionField
+	| SizeField
+	| AlignField
+	| EncodingField
 ;
 
 # ~~~ [ DICommonBlock ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3475,7 +3514,7 @@ DIDerivedTypeField -> DIDerivedTypeField
 #   ::= !DIEnumerator(value: 30, isUnsigned: true, name: 'SomeKind')
 #
 #  REQUIRED(name, MDStringField, );
-#  REQUIRED(value, MDSignedOrUnsignedField, );
+#  REQUIRED(value, MDAPSIntField, );
 #  OPTIONAL(isUnsigned, MDBoolField, (false));
 
 DIEnumerator -> DIEnumerator
@@ -3621,6 +3660,7 @@ DIGlobalVariableExpressionField -> DIGlobalVariableExpressionField
 #  OPTIONAL(file, MDField, );
 #  OPTIONAL(line, LineField, );
 #  OPTIONAL(name, MDStringField, );
+#  OPTIONAL(elements, MDField, );
 
 DIImportedEntity -> DIImportedEntity
 	: '!DIImportedEntity' '(' Fields=(DIImportedEntityField separator ',')* ')'
@@ -3635,6 +3675,7 @@ DIImportedEntityField -> DIImportedEntityField
 	| FileField
 	| LineField
 	| NameField
+	| ElementsField
 ;
 
 # ~~~ [ DILabel ] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4419,6 +4460,18 @@ SplitDebugInliningField -> SplitDebugInliningField
 
 StrideField -> StrideField
 	: 'stride:' Stride=MDFieldOrInt
+;
+
+StringLengthField -> StringLengthField
+	: 'stringLength:' StringLength=MDField
+;
+
+StringLengthExpressionField -> StringLengthExpressionField
+	: 'stringLengthExpression:' StringLengthExpression=MDField
+;
+
+StringLocationExpressionField -> StringLocationExpressionField
+	: 'stringLocationExpression:' StringLocationExpression=MDField
 ;
 
 SysrootField -> SysrootField
