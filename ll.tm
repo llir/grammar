@@ -1319,7 +1319,7 @@ MMXType -> MMXType
 PointerType -> PointerType
 	# TODO: remove typed pointer type in LLVM 16.0.
 	: Elem=Type AddrSpaceopt '*'
-	#| OpaquePointerType
+	| OpaquePointerType
 ;
 
 # TODO: add support for OpaquePointerType.
@@ -1328,9 +1328,9 @@ PointerType -> PointerType
 #
 # Type ::= ptr ('addrspace' '(' uint32 ')')?
 
-#OpaquePointerType -> OpaquePointerType
-#	: 'ptr' AddrSpaceopt
-#;
+OpaquePointerType -> OpaquePointerType
+	: 'ptr' AddrSpaceopt
+;
 
 # --- [ Vector Types ] ---------------------------------------------------------
 
